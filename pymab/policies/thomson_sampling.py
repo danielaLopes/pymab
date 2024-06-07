@@ -1,11 +1,19 @@
 import numpy as np
 import math
-from typing import Tuple 
+from typing import Tuple
 
 from pymab.policies.policy import Policy
 
 
+import logging
+
+logger = logging.getLogger(__name__)
+
+
 class ThomsonSamplingPolicy(Policy):
+    """
+    https://www.youtube.com/watch?v=nkyDGGQ5h60
+    """
     n_bandits: int
     optimistic_initilization: int
     _Q_values: np.array
@@ -16,66 +24,58 @@ class ThomsonSamplingPolicy(Policy):
     times_selected: np.array
     actions_estimated_reward: np.array
     variance: float
-    prior_mean: float
-    prior_variance: float
-    posterior_mean: float
-    posterior_variance: float
+
+    times_success: np.array # alpha
+    times_failure: np.array # beta
 
 
     def __init__(self, 
                  n_bandits: int,
                  optimistic_initilization: int=0, 
-                 variance: float=1.0, 
-                 c: int=1) -> None:
+                 variance: float=1.0) -> None:
         super().__init__(n_bandits,
                          optimistic_initilization,
                          variance)
-        self.prior_mean = self.Q_values_mean
-        self.prior_variance = self.Q_values_variance
-        self.posterior_mean = self.Q_values_mean
-        self.posterior_variance = self.Q_values_variance
+        self.times_success = np.zeros(self.n_bandits)
+        self.times_failure = np.zeros(self.n_bandits)
 
 
-    def _update_prior_posterior(self, reward: float) -> Tuple[float, float]:
-        # TODO
-        posterior_mean_num = self.Q_values_variance * reward + 
-        posterior_mean_den = 
-        posterior_mean = posterior_mean_num / posterior_mean_den
-        return posterior_mean, posterior_variance
+    def _update(self, chosen_action_index: int) -> float:
+        # TODO UPDATE SUCCESSES AND FAILURES
+        reward = super()._update(chosen_action_index)
+        actual_mean = self._Q_values[chosen_action_index]
+        #max_reward_action = np.argmax(self._Q_values)
+        # TODO: Can we do this?? Since we shouldn't have access to this knowledge? what is the right way to do this?
+        #if chosen_action_index == max_reward_action:
+        # See how to determine success or failure here: https://visualstudiomagazine.com/articles/2019/06/01/thompson-sampling.aspx
+        if reward < actual_mean:
+            self.times_success[chosen_action_index] += 1
+        else:
+            self.times_failure[chosen_action_index] += 1
 
+        logger.debug(f"\nAction {chosen_action_index} was selected. Successes: {self.times_success[chosen_action_index]}, Failures: {self.times_failure[chosen_action_index]}")
+        logger.debug(
+            f"Q Values {self._Q_values}")
+
+        return reward
 
     def select_action(self) -> Tuple[int, float]:
-        # TODO
-        self._update_prior_posterior(reward)
-        # if self.current_step < self.n_bandits:
-        #     chosen_action_index = self.current_step
-        # else:
-        #     ucb_values = np.zeros(self.n_bandits)
-        #     for action_index in range(0, self.n_bandits):
-        #         if self.times_selected[action_index] > 0:
-        #             ucb_values[action_index] = (
-        #                 math.sqrt(self.c * 
-        #                     math.log(self.current_step + 1)
-        #                     / self.times_selected[action_index]
-        #                 )
-        #             )
-        #     chosen_action_index = np.argmax(
-        #         self.actions_estimated_reward + ucb_values
-        #     )
+        self.actions_estimated_reward = [np.random.beta(self.times_success[i] + 1, self.times_failure[i] + 1) for i in range(self.n_bandits)]
+        chosen_action_index = np.argmax(
+            self.actions_estimated_reward
+        )
         
         return chosen_action_index, self._update(chosen_action_index)
     
 
     def __repr__(self) -> str:
-        return f"{super().__repr__()}(opt_init={self.optimistic_initilization}, c={self.c})"
+        return f"{super().__repr__()}()"
     
 
     def __str__(self):
         return f"""{super().__repr__()}(
                     n_bandits={self.n_bandits}\n
-                    optimistic_initilization={self.optimistic_initilization})\n
                     Q_values={self.Q_values}\n
-                    total_reward={self.current_step}\n
-                    times_selected={self.times_selected}\n
-                    actions_estimated_reward={self.actions_estimated_reward}\n
-                    variance={self.variance})"""
+                    variance={self.variance}\n
+                    times_success={self.times_success}\n
+                    times_failure={self.times_failure}\n"""

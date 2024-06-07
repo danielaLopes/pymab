@@ -148,6 +148,7 @@ class Game:
 
 
     def plot_rate_optimal_actions(self) -> None:
+        # TODO: I don't think this is working well, atleast the y aixs
         fig = plt.figure(figsize=(18, 12), dpi=300)
         
         optimal_actions_expanded = np.repeat(self.optimal_actions[:, np.newaxis], self.n_steps, axis=1)

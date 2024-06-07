@@ -8,6 +8,10 @@ setup(
         # Add your dependencies here
         # e.g., 'numpy', 'pandas'
     ],
+    include_package_data=True,
+    package_data={
+        'pymab': ['pymab/logging.json'],  # Include the logging configuration file
+    },
     author="Daniela Lopes",
     author_email="danielalopes_97@hotmail.com",
     description="A Python library for reinforcement learning algorithms.",
