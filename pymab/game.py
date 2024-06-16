@@ -2,6 +2,9 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib as mpl
 from typing import List
+from functools import lru_cache
+
+from tqdm import tqdm
 from joblib import Parallel, delayed
 
 from pymab.policies.policy import Policy
@@ -17,7 +20,6 @@ class Game:
     policy: Policy
     n_bandits: int
     rewards: np.ndarray
-    avg_rewards: np.ndarray
     is_stationary: bool
 
 
@@ -41,7 +43,6 @@ class Game:
         self.rewards_by_policy = np.zeros(
             (self.n_episodes, self.n_steps, len(self.policies)), dtype=float
         )
-        self.avg_rewards = np.zeros((len(self.policies), self.n_steps), dtype=float)
         self.actions_selected_by_policy = np.zeros(
             (self.n_episodes, self.n_steps, len(self.policies)))
         self.optimal_actions = np.zeros((self.n_episodes))
@@ -81,8 +82,9 @@ class Game:
             self.new_episode(episode)
             self.optimal_actions[episode] = np.argmax(self.Q_values)
     
+            # for policy_index, policy in tqdm(enumerate(self.policies), desc="Running game for each policy...", total=len(self.policies)):
             for policy_index, policy in enumerate(self.policies):
-                rewards = []
+                # for step in tqdm(range(self.n_steps), desc="Running steps...", total=self.n_steps):
                 for step in range(self.n_steps):
                     action, reward = policy.select_action()
                     self.rewards_by_policy[
@@ -91,18 +93,29 @@ class Game:
                     self.actions_selected_by_policy[
                         episode, step, policy_index
                     ] = action
-                    rewards.append(reward)
-                self.avg_rewards[policy_index] += (rewards - self.avg_rewards[policy_index]) / (episode + 1)
+
+    @property
+    @lru_cache(maxsize=None)
+    def average_rewards_by_step(self) -> np.ndarray:
+        return np.mean(self.rewards_by_policy, axis=0)
+
+    @property
+    @lru_cache(maxsize=None)
+    def average_rewards_by_episode(self) -> np.ndarray:
+        return np.mean(self.rewards_by_policy, axis=1)
+
+    @property
+    @lru_cache(maxsize=None)
+    def total_rewards_by_step(self) -> np.ndarray:
+        return np.cumsum(np.mean(self.rewards_by_policy, axis=0), axis=0)
 
 
-    def plot_average_reward(self) -> None:
+    def plot_average_reward_by_step(self) -> None:
         fig = plt.figure(figsize=(18, 12), dpi=300)
-        
-        average_rewards = np.mean(self.rewards_by_policy, axis=0)
 
         for policy_index, policy in enumerate(self.policies):
             plt.plot(
-                average_rewards[:, policy_index],
+                self.average_rewards_by_step[:, policy_index],
                 color=self.colors[policy_index],
                 label=repr(policy),
             )
@@ -114,6 +127,48 @@ class Game:
         )
         plt.xlabel("Steps", fontsize=26)
         plt.ylabel("Average reward", fontsize=26)
+        plt.legend(fontsize=16)
+        plt.show()
+
+
+    def plot_average_reward_by_episode(self) -> None:
+        fig = plt.figure(figsize=(18, 12), dpi=300)
+
+        for policy_index, policy in enumerate(self.policies):
+            plt.plot(
+                self.average_rewards_by_episode[:, policy_index],
+                color=self.colors[policy_index],
+                label=repr(policy),
+            )
+
+        plt.gca().tick_params(axis='both', labelsize=24)
+        plt.title(
+            f"Average reward obtained during the {self.n_steps} steps for {self.n_episodes} episodes",
+            fontsize=30
+        )
+        plt.xlabel("Episodes", fontsize=26)
+        plt.ylabel("Average reward", fontsize=26)
+        plt.legend(fontsize=16)
+        plt.show()
+
+
+    def plot_total_reward_by_step(self) -> None:
+        fig = plt.figure(figsize=(18, 12), dpi=300)
+
+        for policy_index, policy in enumerate(self.policies):
+            plt.plot(
+                self.total_rewards_by_step[:, policy_index],
+                color=self.colors[policy_index],
+                label=repr(policy),
+            )
+
+        plt.gca().tick_params(axis='both', labelsize=24)
+        plt.title(
+            f"Cumulative reward obtained during the {self.n_steps} steps for {self.n_episodes} episodes",
+            fontsize=30
+        )
+        plt.xlabel("Steps", fontsize=26)
+        plt.ylabel("Cumulative reward", fontsize=26)
         plt.legend(fontsize=16)
         plt.show()
 
@@ -124,14 +179,14 @@ class Game:
         return np.convolve(data, np.ones(smooth_factor)/smooth_factor, mode='valid')
 
 
-    def plot_average_reward_smoothed(self, smooth_factor: int=50) -> None:
+    def plot_average_reward_by_step_smoothed(self, smooth_factor: int=50) -> None:
         fig = plt.figure(figsize=(18, 12), dpi=300)
         
         average_rewards = np.mean(self.rewards_by_policy, axis=0)
 
         for policy_index, policy in enumerate(self.policies):
             plt.plot(
-                self._moving_average(average_rewards[:, policy_index], smooth_factor),
+                self._moving_average(self.average_rewards_by_step[:, policy_index], smooth_factor),
                 color=self.colors[policy_index],
                 label=repr(policy),
             )
@@ -147,17 +202,16 @@ class Game:
         plt.show()
 
 
-    def plot_rate_optimal_actions(self) -> None:
-        # TODO: I don't think this is working well, atleast the y aixs
+    def plot_rate_optimal_actions_by_step(self) -> None:
         fig = plt.figure(figsize=(18, 12), dpi=300)
         
         optimal_actions_expanded = np.repeat(self.optimal_actions[:, np.newaxis], self.n_steps, axis=1)
         optimal_action_selections = (self.actions_selected_by_policy == optimal_actions_expanded[:, :, np.newaxis])
-        percentage_optimal_per_step = np.mean(optimal_action_selections, axis=0) * 100
+        percentage_optimal_by_step = np.mean(optimal_action_selections, axis=0) * 100
 
         for policy_index, policy in enumerate(self.policies):
             plt.plot(
-                percentage_optimal_per_step[:, policy_index],
+                percentage_optimal_by_step[:, policy_index],
                 color=self.colors[policy_index],
                 label=repr(policy),
             )
@@ -169,5 +223,6 @@ class Game:
         )
         plt.xlabel("Steps", fontsize=26)
         plt.ylabel("% Optimal actions", fontsize=26)
+        plt.ylim(0, 100)
         plt.legend(fontsize=16)
         plt.show()

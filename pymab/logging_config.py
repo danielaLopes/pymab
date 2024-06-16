@@ -5,7 +5,7 @@ import json
 
 def setup_logging(
     default_path='logging.json',
-    default_level=logging.DEBUG,
+    default_level=logging.INFO,
     env_key='LOG_CFG'
 ):
     """Setup logging configuration"""

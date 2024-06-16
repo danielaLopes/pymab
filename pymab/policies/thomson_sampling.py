@@ -32,38 +32,54 @@ class ThomsonSamplingPolicy(Policy):
     def __init__(self, 
                  n_bandits: int,
                  optimistic_initilization: int=0, 
-                 variance: float=1.0) -> None:
+                 variance: float=1.0,
+                 Q_values_mean: float=0) -> None:
         super().__init__(n_bandits,
                          optimistic_initilization,
                          variance)
         self.times_success = np.zeros(self.n_bandits)
         self.times_failure = np.zeros(self.n_bandits)
+        self.Q_values_mean = Q_values_mean
 
 
     def _update(self, chosen_action_index: int) -> float:
-        # TODO UPDATE SUCCESSES AND FAILURES
         reward = super()._update(chosen_action_index)
         actual_mean = self._Q_values[chosen_action_index]
-        #max_reward_action = np.argmax(self._Q_values)
+        # max_reward_action = np.argmax(self._Q_values)
         # TODO: Can we do this?? Since we shouldn't have access to this knowledge? what is the right way to do this?
         #if chosen_action_index == max_reward_action:
         # See how to determine success or failure here: https://visualstudiomagazine.com/articles/2019/06/01/thompson-sampling.aspx
-        if reward < actual_mean:
+        # if reward < actual_mean:
+        logger.debug(
+            f"reward {reward}")
+        if reward < self._Q_values[chosen_action_index]:
+            # self.times_success[chosen_action_index] += 1
             self.times_success[chosen_action_index] += 1
         else:
+            # self.times_failure[chosen_action_index] += 1
             self.times_failure[chosen_action_index] += 1
 
         logger.debug(f"\nAction {chosen_action_index} was selected. Successes: {self.times_success[chosen_action_index]}, Failures: {self.times_failure[chosen_action_index]}")
         logger.debug(
             f"Q Values {self._Q_values}")
+        logger.debug(
+            f"self.times_success {self.times_success}")
+        logger.debug(
+            f"self.times_failure {self.times_failure}")
 
         return reward
 
     def select_action(self) -> Tuple[int, float]:
-        self.actions_estimated_reward = [np.random.beta(self.times_success[i] + 1, self.times_failure[i] + 1) for i in range(self.n_bandits)]
+        self.thomson_sampled = [np.random.beta(self.times_success[i] + 1, self.times_failure[i] + 1) for i in range(self.n_bandits)]
         chosen_action_index = np.argmax(
-            self.actions_estimated_reward
+            self.thomson_sampled
         )
+        logger.debug(
+            f"-------- self.thomson_sampled {self.thomson_sampled}")
+        logger.debug(
+            f"-------- self.actions_estimated_reward {self.actions_estimated_reward}")
+        logger.debug(
+            f"chosen_action_index {chosen_action_index}")
         
         return chosen_action_index, self._update(chosen_action_index)
     
