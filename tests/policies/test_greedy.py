@@ -8,7 +8,9 @@ def test_greedy_initialization():
     policy = GreedyPolicy(Q_values, optimistic_initilization=1)
     assert policy.optimistic_initilization == 1
     assert np.array_equal(policy.Q_values, Q_values)
-    assert policy.select_action() == 2  # Should initially select the last one due to optimistic initialization
+    assert (
+        policy.select_action() == 2
+    )  # Should initially select the last one due to optimistic initialization
 
 
 def test_greedy_selection():

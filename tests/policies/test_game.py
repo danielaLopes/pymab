@@ -17,4 +17,7 @@ def test_game_loop():
     policy = GreedyPolicy(np.array([0.1, 0.2, 0.3]), optimistic_initilization=1)
     game = Game(n_episodes=1, n_steps=5, policy=policy, n_bandits=3)
     game.game_loop()
-    assert game.rewards_by_policy.shape == (1, 5)  # Check the shape of the rewards matrix for consistency
+    assert game.rewards_by_policy.shape == (
+        1,
+        5,
+    )  # Check the shape of the rewards matrix for consistency

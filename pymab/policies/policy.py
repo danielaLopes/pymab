@@ -1,41 +1,60 @@
 from abc import abstractmethod
 import numpy as np
-from typing import List, Tuple
+from typing import List, Tuple, Type
+
+from pymab.reward_distribution import (
+    RewardDistribution,
+    GaussianRewardDistribution,
+    UniformRewardDistribution,
+    BernoulliRewardDistribution,
+)
 
 
 class Policy:
     n_bandits: int
     optimistic_initilization: int
     _Q_values: np.array
-    Q_values_mean: float
-    Q_values_variance: float
     current_step: int
     total_reward: float
     times_selected: np.array
     actions_estimated_reward: np.array
     variance: float
+    reward_distribution: RewardDistribution
 
-
-    def __init__(self, 
-                 n_bandits: int,
-                 optimistic_initilization: int=0, 
-                 variance: float=1.0) -> None:
+    def __init__(
+        self,
+        n_bandits: int,
+        optimistic_initilization: int = 0,
+        variance: float = 1.0,
+        reward_distribution: str = "gaussian",
+    ) -> None:
         self.n_bandits = n_bandits
         self.optimistic_initilization = optimistic_initilization
         self._Q_values = None
         self.current_step = 0
         self.total_reward = 0
         self.variance = variance
+        self.reward_distribution = self.get_reward_distribution(reward_distribution)
         self.times_selected = np.zeros(self.n_bandits)
-        self.actions_estimated_reward = np.full(self.n_bandits,  
-                                                self.optimistic_initilization, 
-                                                dtype=float)
+        self.actions_estimated_reward = np.full(
+            self.n_bandits, self.optimistic_initilization, dtype=float
+        )
 
+    @staticmethod
+    def get_reward_distribution(name: str) -> Type[RewardDistribution]:
+        distributions = {
+            "gaussian": GaussianRewardDistribution,
+            "bernoulli": BernoulliRewardDistribution,
+            "uniform": UniformRewardDistribution,
+        }
+        if name not in distributions:
+            raise ValueError(f"Unknown reward distribution: {name}")
+        return distributions[name]
 
     def _get_actual_reward(self, action_index: int) -> float:
-        true_reward = np.random.normal(self.Q_values[action_index], self.variance)
-        return true_reward
-
+        return self.reward_distribution.get_reward(
+            self.Q_values[action_index], self.variance
+        )
 
     def _update(self, chosen_action_index: int) -> float:
         self.current_step += 1
@@ -44,11 +63,9 @@ class Policy:
         self.times_selected[chosen_action_index] += 1
         # Calculate average reward per action without storing all rewards
         self.actions_estimated_reward[chosen_action_index] += (
-            (reward - self.actions_estimated_reward[chosen_action_index]) /
-            self.times_selected[chosen_action_index]
-        )
+            reward - self.actions_estimated_reward[chosen_action_index]
+        ) / self.times_selected[chosen_action_index]
         return reward
-    
 
     @property
     def Q_values(self) -> List[float]:
@@ -66,15 +83,13 @@ class Policy:
     def select_action(self) -> Tuple[int, float]:
         pass
 
-
     def reset(self):
         self.current_step = 0
         self.total_reward = 0
         self.times_selected = np.zeros(self.n_bandits)
-        self.actions_estimated_reward = np.full(self.n_bandits,  
-                                                self.optimistic_initilization, 
-                                                dtype=float)
-
+        self.actions_estimated_reward = np.full(
+            self.n_bandits, self.optimistic_initilization, dtype=float
+        )
 
     def __repr__(self) -> str:
         return self.__class__.__name__
