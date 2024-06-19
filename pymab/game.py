@@ -4,10 +4,13 @@ import matplotlib as mpl
 from typing import List
 from functools import lru_cache
 
+from numpy.random import beta
+from scipy.stats import norm
 from tqdm import tqdm
 from joblib import Parallel, delayed
 
 from pymab.policies.policy import Policy
+from pymab.policies.thompson_sampling import BernoulliThompsonSamplingPolicy, GaussianThompsonSamplingPolicy
 
 
 class Game:

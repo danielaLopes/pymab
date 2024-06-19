@@ -2,6 +2,10 @@ import numpy as np
 import math
 from typing import Tuple
 
+from matplotlib import pyplot as plt
+from numpy.random import beta
+from scipy.stats import norm
+
 from pymab.policies.policy import Policy
 
 
@@ -14,10 +18,23 @@ logger = logging.getLogger(__name__)
 
 class BernoulliThompsonSamplingPolicy(Policy):
     """
-    https://www.youtube.com/watch?v=nkyDGGQ5h60
-    https://towardsdatascience.com/multi-armed-bandits-thompson-sampling-algorithm-fea205cf31df
-    """
+    This policy is used for multi-armed bandit problems with Bernoulli-distributed rewards.
+    It uses the Beta distribution to model the probability of success for each action and
+    updates these probabilities based on observed rewards.
 
+    Attributes:
+        n_bandits (int): Number of bandit arms.
+        optimistic_initialization (int): Initial optimistic value for estimated rewards.
+        _Q_values (np.array): True values of the bandit arms.
+        current_step (int): Current step count.
+        total_reward (float): Total accumulated reward.
+        times_selected (np.array): Count of times each bandit arm has been selected.
+        actions_estimated_reward (np.array): Estimated rewards for each action.
+        variance (float): Variance of the reward distribution.
+        reward_distribution (RewardDistribution): Type of reward distribution used. Should always be Bernoulli.
+        times_success (np.array): Alpha values for Beta distribution (success counts).
+        times_failure (np.array): Beta values for Beta distribution (failure counts).
+    """
     n_bandits: int
     optimistic_initilization: int
     _Q_values: np.array
@@ -27,9 +44,8 @@ class BernoulliThompsonSamplingPolicy(Policy):
     actions_estimated_reward: np.array
     variance: float
     reward_distribution: RewardDistribution
-
-    times_success: np.array  # alpha
-    times_failure: np.array  # beta
+    times_success: np.array
+    times_failure: np.array
 
     def __init__(
         self,
@@ -45,27 +61,22 @@ class BernoulliThompsonSamplingPolicy(Policy):
         self.times_failure = np.zeros(self.n_bandits)
 
     def _update(self, chosen_action_index: int) -> float:
+        """
+        Updates the parameters times_success and times_failure used in the Beta distribution, according to the reward obtained.
+        The Bernoulli distribution is conjugate to the Beta distribution, meaning that if the prior distribution of the probability of success is a Beta distribution, then the posterior distribution after observing data is also a Beta distribution. This makes the Bayesian updating process straightforward.
+
+        Args:
+            chosen_action_index (int): Index of the chosen action.
+
+        Returns:
+            float: Observed reward.
+        """
         reward = super()._update(chosen_action_index)
-        actual_mean = self._Q_values[chosen_action_index]
-        # max_reward_action = np.argmax(self._Q_values)
-        # TODO: Can we do this?? Since we shouldn't have access to this knowledge? what is the right way to do this?
-        # if chosen_action_index == max_reward_action:
-        # See how to determine success or failure here: https://visualstudiomagazine.com/articles/2019/06/01/thompson-sampling.aspx
-        # if reward < actual_mean:
-        logger.debug(f"reward {reward}")
-        if reward < self._Q_values[chosen_action_index]:
-            # self.times_success[chosen_action_index] += 1
+
+        if reward > 0:
             self.times_success[chosen_action_index] += 1
         else:
-            # self.times_failure[chosen_action_index] += 1
             self.times_failure[chosen_action_index] += 1
-
-        logger.debug(
-            f"\nAction {chosen_action_index} was selected. Successes: {self.times_success[chosen_action_index]}, Failures: {self.times_failure[chosen_action_index]}"
-        )
-        logger.debug(f"Q Values {self._Q_values}")
-        logger.debug(f"self.times_success {self.times_success}")
-        logger.debug(f"self.times_failure {self.times_failure}")
 
         return reward
 
@@ -75,11 +86,6 @@ class BernoulliThompsonSamplingPolicy(Policy):
             for i in range(self.n_bandits)
         ]
         chosen_action_index = np.argmax(self.thomson_sampled)
-        logger.debug(f"-------- self.thomson_sampled {self.thomson_sampled}")
-        logger.debug(
-            f"-------- self.actions_estimated_reward {self.actions_estimated_reward}"
-        )
-        logger.debug(f"chosen_action_index {chosen_action_index}")
 
         return chosen_action_index, self._update(chosen_action_index)
 
@@ -94,13 +100,49 @@ class BernoulliThompsonSamplingPolicy(Policy):
                     times_success={self.times_success}\n
                     times_failure={self.times_failure}\n"""
 
+    def plot_distribution(self) -> None:
+        """
+        Plots the distributions of the expected reward for the current step.
+
+        Args:
+            policy: The policy instance (either BernoulliThompsonSamplingPolicy or GaussianThompsonSamplingPolicy).
+            step_num (int): The number of steps (iterations) the policy has been executed.
+        """
+        fig, axes = plt.subplots(1, self.n_bandits, figsize=(15, 6), constrained_layout=True)
+        x_range = np.linspace(0, 1, 1000) if isinstance(self, BernoulliThompsonSamplingPolicy) else np.linspace(
+            -2, 2, 1000)
+
+        for i in range(self.n_bandits):
+            a, b = self.times_success[i] + 1, self.times_failure[i] + 1
+            y = beta.pdf(x_range, a, b)
+            axes[i].plot(x_range, y, label=f'Arm {i} Posterior')
+            axes[i].axvline(self.Q_values[i], color='r', linestyle='--', label='True Reward')
+
+            axes[i].legend()
+            axes[i].set_title(f'Arm {i} - Step {self.current_step}')
+
+        plt.show()
+
 
 class GaussianThompsonSamplingPolicy(Policy):
     """
-    https://www.youtube.com/watch?v=nkyDGGQ5h60
-    https://towardsdatascience.com/multi-armed-bandits-thompson-sampling-algorithm-fea205cf31df
-    """
+    This policy is used for multi-armed bandit problems with Gaussian-distributed rewards.
+    It models the mean reward for each action using a Gaussian distribution and updates
+    these means based on observed rewards.
 
+    Attributes:
+        n_bandits (int): Number of bandit arms.
+        optimistic_initialization (int): Initial optimistic value for estimated rewards.
+        _Q_values (np.array): True values of the bandit arms.
+        current_step (int): Current step count.
+        total_reward (float): Total accumulated reward.
+        times_selected (np.array): Count of times each bandit arm has been selected.
+        actions_estimated_reward (np.array): Estimated rewards for each action.
+        variance (float): Variance of the reward distribution.
+        reward_distribution (RewardDistribution): Type of reward distribution used. Should always be Gaussian.
+        means (np.array): Mean rewards for each action.
+        precisions (np.array): Precision (inverse of variance) for each action.
+    """
     n_bandits: int
     optimistic_initilization: int
     _Q_values: np.array
@@ -110,7 +152,6 @@ class GaussianThompsonSamplingPolicy(Policy):
     actions_estimated_reward: np.array
     variance: float
     reward_distribution: RewardDistribution
-
     means: np.array
     precisions: np.array
 
@@ -128,6 +169,17 @@ class GaussianThompsonSamplingPolicy(Policy):
         self.precisions = np.ones(n_bandits) / variance
 
     def _update(self, chosen_action_index: int) -> float:
+        """
+        Updates the Guassian prior distribution according to the observed reward. The conjugate prior for the mean of a Gaussian distribution with known variance is also Gaussian.
+	    The posterior distribution of the mean given Gaussian observations remains Gaussian, which allows for a Bayesian update, but it involves maintaining and updating the mean and variance parameters.
+        The means and precisions (tau) arrays maintain the posterior mean and precision (inverse of variance) for each action. These are updated after each observed reward using Bayesian inference.
+
+        Args:
+            chosen_action_index (int): Index of the chosen action.
+
+        Returns:
+            float: Observed reward.
+        """
         reward = super()._update(chosen_action_index)
 
         prior_mean = self.means[chosen_action_index]
@@ -160,6 +212,30 @@ class GaussianThompsonSamplingPolicy(Policy):
                     variance={self.variance}\n
                     means={self.means}\n
                     precisions={self.precisions}\n"""
+
+    def plot_distribution(self) -> None:
+        """
+        Plots the distributions of the expected reward for the current step.
+
+        Args:
+            policy: The policy instance (either BernoulliThompsonSamplingPolicy or GaussianThompsonSamplingPolicy).
+            step_num (int): The number of steps (iterations) the policy has been executed.
+        """
+        fig, axes = plt.subplots(1, self.n_bandits, figsize=(15, 6), constrained_layout=True)
+        x_range = np.linspace(0, 1, 1000) if isinstance(self, BernoulliThompsonSamplingPolicy) else np.linspace(
+            -2, 2, 1000)
+
+        for i in range(self.n_bandits):
+            mean, precision = self.means[i], self.precisions[i]
+            std_dev = 1 / np.sqrt(precision)
+            y = norm.pdf(x_range, mean, std_dev)
+            axes[i].plot(x_range, y, label=f'Arm {i} Posterior')
+            axes[i].axvline(self.Q_values[i], color='r', linestyle='--', label='True Reward')
+
+            axes[i].legend()
+            axes[i].set_title(f'Arm {i} - Step {self.current_step}')
+
+        plt.show()
 
 
 class ThompsonSamplingPolicy:
