@@ -1,6 +1,11 @@
-from abc import abstractmethod
+from abc import ABC, abstractmethod
+
 import numpy as np
-from typing import List, Tuple, Type
+from typing import List, Tuple
+
+from matplotlib import pyplot as plt
+from numpy.random import beta
+from scipy.stats import norm
 
 from pymab.reward_distribution import (
     RewardDistribution,
@@ -10,7 +15,7 @@ from pymab.reward_distribution import (
 )
 
 
-class Policy:
+class Policy(ABC):
     n_bandits: int
     optimistic_initilization: int
     _Q_values: np.array
@@ -41,7 +46,7 @@ class Policy:
         )
 
     @staticmethod
-    def get_reward_distribution(name: str) -> Type[RewardDistribution]:
+    def get_reward_distribution(name: str) -> RewardDistribution:
         distributions = {
             "gaussian": GaussianRewardDistribution,
             "bernoulli": BernoulliRewardDistribution,
@@ -49,7 +54,7 @@ class Policy:
         }
         if name not in distributions:
             raise ValueError(f"Unknown reward distribution: {name}")
-        return distributions[name]
+        return distributions[name]()
 
     def _get_actual_reward(self, action_index: int) -> float:
         return self.reward_distribution.get_reward(
@@ -93,3 +98,49 @@ class Policy:
 
     def __repr__(self) -> str:
         return self.__class__.__name__
+
+    def plot_distribution(self) -> None:
+        """
+        Plots the distributions of the expected reward for the current step.
+
+        This method handles both Bernoulli and Gaussian reward distributions.
+        """
+        fig, axes = plt.subplots(
+            1, self.n_bandits, figsize=(15, 6), constrained_layout=True
+        )
+        x_range = (
+            np.linspace(0, 1, 1000)
+            if isinstance(self.reward_distribution, BernoulliRewardDistribution)
+            else np.linspace(-2, 2, 1000)
+        )
+
+        for i in range(self.n_bandits):
+            if isinstance(self.reward_distribution, BernoulliRewardDistribution):
+                a, b = (
+                    self.times_selected[i] + 1,
+                    self.times_selected[i] - self.actions_estimated_reward[i] + 1,
+                )
+                y = beta.pdf(x_range, a, b)
+            elif isinstance(self.reward_distribution, GaussianRewardDistribution):
+                mean, std_dev = self.actions_estimated_reward[i], np.sqrt(self.variance)
+                y = norm.pdf(x_range, mean, std_dev)
+            else:
+                raise ValueError("Unsupported reward distribution")
+
+            axes[i].plot(x_range, y, label=f"Arm {i} Posterior")
+            axes[i].axvline(
+                self.Q_values[i], color="r", linestyle="--", label="True Reward"
+            )
+            axes[i].legend()
+            axes[i].set_title(f"Arm {i} - Step {self.current_step}")
+            axes[i].text(
+                0.5,
+                -0.1,
+                f"Mean espected reward: {round(self.actions_estimated_reward[i], 2)}, Std: {round(np.sqrt(self.variance), 2)}",
+                transform=axes[i].transAxes,
+                ha="center",
+                va="top",
+            )
+
+        fig.suptitle(f"Reward distribution for {self.__class__.__name__}")
+        plt.show()

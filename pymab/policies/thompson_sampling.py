@@ -35,6 +35,7 @@ class BernoulliThompsonSamplingPolicy(Policy):
         times_success (np.array): Alpha values for Beta distribution (success counts).
         times_failure (np.array): Beta values for Beta distribution (failure counts).
     """
+
     n_bandits: int
     optimistic_initilization: int
     _Q_values: np.array
@@ -108,19 +109,35 @@ class BernoulliThompsonSamplingPolicy(Policy):
             policy: The policy instance (either BernoulliThompsonSamplingPolicy or GaussianThompsonSamplingPolicy).
             step_num (int): The number of steps (iterations) the policy has been executed.
         """
-        fig, axes = plt.subplots(1, self.n_bandits, figsize=(15, 6), constrained_layout=True)
-        x_range = np.linspace(0, 1, 1000) if isinstance(self, BernoulliThompsonSamplingPolicy) else np.linspace(
-            -2, 2, 1000)
+        fig, axes = plt.subplots(
+            1, self.n_bandits, figsize=(15, 6), constrained_layout=True
+        )
+        x_range = (
+            np.linspace(0, 1, 1000)
+            if isinstance(self, BernoulliThompsonSamplingPolicy)
+            else np.linspace(-2, 2, 1000)
+        )
 
         for i in range(self.n_bandits):
             a, b = self.times_success[i] + 1, self.times_failure[i] + 1
             y = beta.pdf(x_range, a, b)
-            axes[i].plot(x_range, y, label=f'Arm {i} Posterior')
-            axes[i].axvline(self.Q_values[i], color='r', linestyle='--', label='True Reward')
+            axes[i].plot(x_range, y, label=f"Arm {i} Posterior")
+            axes[i].axvline(
+                self.Q_values[i], color="r", linestyle="--", label="True Reward"
+            )
 
             axes[i].legend()
-            axes[i].set_title(f'Arm {i} - Step {self.current_step}')
+            axes[i].set_title(f"Arm {i} - Step {self.current_step}")
+            axes[i].text(
+                0.5,
+                -0.1,
+                f"Successes: {self.times_success[i]}, Failures: {self.times_failure[i]}",
+                transform=axes[i].transAxes,
+                ha="center",
+                va="top",
+            )
 
+        fig.suptitle(f"Reward distribution for {self.__class__.__name__}")
         plt.show()
 
 
@@ -143,6 +160,7 @@ class GaussianThompsonSamplingPolicy(Policy):
         means (np.array): Mean rewards for each action.
         precisions (np.array): Precision (inverse of variance) for each action.
     """
+
     n_bandits: int
     optimistic_initilization: int
     _Q_values: np.array
@@ -171,7 +189,7 @@ class GaussianThompsonSamplingPolicy(Policy):
     def _update(self, chosen_action_index: int) -> float:
         """
         Updates the Guassian prior distribution according to the observed reward. The conjugate prior for the mean of a Gaussian distribution with known variance is also Gaussian.
-	    The posterior distribution of the mean given Gaussian observations remains Gaussian, which allows for a Bayesian update, but it involves maintaining and updating the mean and variance parameters.
+            The posterior distribution of the mean given Gaussian observations remains Gaussian, which allows for a Bayesian update, but it involves maintaining and updating the mean and variance parameters.
         The means and precisions (tau) arrays maintain the posterior mean and precision (inverse of variance) for each action. These are updated after each observed reward using Bayesian inference.
 
         Args:
@@ -221,20 +239,36 @@ class GaussianThompsonSamplingPolicy(Policy):
             policy: The policy instance (either BernoulliThompsonSamplingPolicy or GaussianThompsonSamplingPolicy).
             step_num (int): The number of steps (iterations) the policy has been executed.
         """
-        fig, axes = plt.subplots(1, self.n_bandits, figsize=(15, 6), constrained_layout=True)
-        x_range = np.linspace(0, 1, 1000) if isinstance(self, BernoulliThompsonSamplingPolicy) else np.linspace(
-            -2, 2, 1000)
+        fig, axes = plt.subplots(
+            1, self.n_bandits, figsize=(15, 6), constrained_layout=True
+        )
+        x_range = (
+            np.linspace(0, 1, 1000)
+            if isinstance(self, BernoulliThompsonSamplingPolicy)
+            else np.linspace(-2, 2, 1000)
+        )
 
         for i in range(self.n_bandits):
             mean, precision = self.means[i], self.precisions[i]
             std_dev = 1 / np.sqrt(precision)
             y = norm.pdf(x_range, mean, std_dev)
-            axes[i].plot(x_range, y, label=f'Arm {i} Posterior')
-            axes[i].axvline(self.Q_values[i], color='r', linestyle='--', label='True Reward')
+            axes[i].plot(x_range, y, label=f"Arm {i} Posterior")
+            axes[i].axvline(
+                self.Q_values[i], color="r", linestyle="--", label="True Reward"
+            )
 
             axes[i].legend()
-            axes[i].set_title(f'Arm {i} - Step {self.current_step}')
+            axes[i].set_title(f"Arm {i} - Step {self.current_step}")
+            axes[i].text(
+                0.5,
+                -0.1,
+                f"Mean: {round(self.means[i], 2)}, Precisions: {round(self.precisions[i], 2)}",
+                transform=axes[i].transAxes,
+                ha="center",
+                va="top",
+            )
 
+        fig.suptitle(f"Reward distribution for {self.__class__.__name__}")
         plt.show()
 
 

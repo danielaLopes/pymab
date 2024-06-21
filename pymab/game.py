@@ -10,7 +10,10 @@ from tqdm import tqdm
 from joblib import Parallel, delayed
 
 from pymab.policies.policy import Policy
-from pymab.policies.thompson_sampling import BernoulliThompsonSamplingPolicy, GaussianThompsonSamplingPolicy
+from pymab.policies.thompson_sampling import (
+    BernoulliThompsonSamplingPolicy,
+    GaussianThompsonSamplingPolicy,
+)
 
 
 class Game:
@@ -23,6 +26,9 @@ class Game:
     policy: Policy
     n_bandits: int
     rewards: np.ndarray
+    actions_selected_by_policy: np.ndarray
+    optimal_actions: np.ndarray
+    regret_by_policy: np.ndarray
     is_stationary: bool
 
     def __init__(
@@ -50,7 +56,10 @@ class Game:
         self.actions_selected_by_policy = np.zeros(
             (self.n_episodes, self.n_steps, len(self.policies))
         )
-        self.optimal_actions = np.zeros((self.n_episodes))
+        self.optimal_actions = np.zeros((self.n_episodes,))
+        self.regret_by_policy = np.zeros(
+            (self.n_episodes, self.n_steps, len(self.policies))
+        )
 
         self.is_stationary = is_stationary
 
@@ -84,7 +93,7 @@ class Game:
         for episode in range(self.n_episodes):
             self.new_episode(episode)
             self.optimal_actions[episode] = np.argmax(self.Q_values)
-
+            optimal_reward = self.Q_values[int(self.optimal_actions[episode])]
             # for policy_index, policy in tqdm(enumerate(self.policies), desc="Running game for each policy...", total=len(self.policies)):
             for policy_index, policy in enumerate(self.policies):
                 # for step in tqdm(range(self.n_steps), desc="Running steps...", total=self.n_steps):
@@ -93,6 +102,9 @@ class Game:
                     self.rewards_by_policy[episode, step, policy_index] = reward
                     self.actions_selected_by_policy[episode, step, policy_index] = (
                         action
+                    )
+                    self.regret_by_policy[episode, step, policy_index] = (
+                        optimal_reward - reward
                     )
 
     @property
@@ -109,6 +121,19 @@ class Game:
     @lru_cache(maxsize=None)
     def total_rewards_by_step(self) -> np.ndarray:
         return np.cumsum(np.mean(self.rewards_by_policy, axis=0), axis=0)
+
+    @property
+    @lru_cache(maxsize=None)
+    def cumulative_regret_by_step(self) -> np.ndarray:
+        """
+        Calculate the cumulative regret for each policy. The regret measures how much worse a chosen strategy performs
+        compared to the optimal strategy. It quantifies the difference between the reward obtained by the policy and
+        the reward that would have been obtained by always selecting the best possible action
+
+        Returns:
+            np.ndarray: The cumulative regret for each policy.
+        """
+        return np.cumsum(np.mean(self.regret_by_policy, axis=0), axis=0)
 
     def plot_average_reward_by_step(self) -> None:
         fig = plt.figure(figsize=(18, 12), dpi=300)
@@ -224,5 +249,28 @@ class Game:
         plt.xlabel("Steps", fontsize=26)
         plt.ylabel("% Optimal actions", fontsize=26)
         plt.ylim(0, 100)
+        plt.legend(fontsize=16)
+        plt.show()
+
+    def plot_cumulative_regret_by_step(self) -> None:
+        """
+        Plots the cumulative regret over steps for each policy.
+        """
+        fig = plt.figure(figsize=(18, 12), dpi=300)
+
+        for policy_index, policy in enumerate(self.policies):
+            plt.plot(
+                self.cumulative_regret_by_step[:, policy_index],
+                color=self.colors[policy_index],
+                label=repr(policy),
+            )
+
+        plt.gca().tick_params(axis="both", labelsize=24)
+        plt.title(
+            f"Cumulative regret during the {self.n_steps} steps for {self.n_episodes} episodes",
+            fontsize=30,
+        )
+        plt.xlabel("Steps", fontsize=26)
+        plt.ylabel("Cumulative Regret", fontsize=26)
         plt.legend(fontsize=16)
         plt.show()
