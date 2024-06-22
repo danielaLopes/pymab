@@ -1,9 +1,15 @@
+from __future__ import annotations
+
+import logging
+
 import numpy as np
 import random
-from typing import Tuple
+from typing import Tuple, Type
 
 from pymab.policies.greedy import GreedyPolicy
 from pymab.reward_distribution import RewardDistribution
+
+logger = logging.getLogger(__name__)
 
 
 class EpsilonGreedyPolicy(GreedyPolicy):
@@ -15,7 +21,7 @@ class EpsilonGreedyPolicy(GreedyPolicy):
     times_selected: np.array
     actions_estimated_reward: np.array
     variance: float
-    reward_distribution: RewardDistribution
+    reward_distribution: Type[RewardDistribution]
     epsilon: float
 
     def __init__(

@@ -1,8 +1,10 @@
+import logging
+from typing import List, Type
+from functools import lru_cache
+
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib as mpl
-from typing import List
-from functools import lru_cache
 
 from numpy.random import beta
 from scipy.stats import norm
@@ -10,10 +12,9 @@ from tqdm import tqdm
 from joblib import Parallel, delayed
 
 from pymab.policies.policy import Policy
-from pymab.policies.thompson_sampling import (
-    BernoulliThompsonSamplingPolicy,
-    GaussianThompsonSamplingPolicy,
-)
+from pymab.reward_distribution import RewardDistribution
+
+logger = logging.getLogger(__name__)
 
 
 class Game:
@@ -23,7 +24,8 @@ class Game:
     set_Q_values_flag: bool
     Q_values_mean: float
     Q_values_variance: float
-    policy: Policy
+    reward_distribution: Type[RewardDistribution]
+    policies: List[Policy]
     n_bandits: int
     rewards: np.ndarray
     actions_selected_by_policy: np.ndarray
@@ -37,11 +39,14 @@ class Game:
         n_steps: int,
         policies: List[Policy],
         n_bandits: int,
-        Q_values: List[float] = [],
+        Q_values: List[float] = None,
         Q_values_mean: float = 0.0,
         Q_values_variance: float = 1.0,
         is_stationary: bool = False,
     ) -> None:
+        if Q_values is None:
+            Q_values = []
+
         self.n_episodes = n_episodes
         self.n_steps = n_steps
         self.policies = policies
@@ -50,6 +55,16 @@ class Game:
         self.set_Q_values_flag = len(self.Q_values) == 0
         self.Q_values_mean = Q_values_mean
         self.Q_values_variance = Q_values_variance
+
+        reward_distributions = set()
+        for policy in self.policies:
+            reward_distributions.add(policy.reward_distribution)
+        if len(reward_distributions) > 1:
+            raise ValueError(
+                "All the policies used in a single game should have the same reward distribution"
+            )
+        self.reward_distribution = reward_distributions.pop()
+
         self.rewards_by_policy = np.zeros(
             (self.n_episodes, self.n_steps, len(self.policies)), dtype=float
         )
@@ -70,13 +85,13 @@ class Game:
         if self.is_stationary == False or episode_idx == 0:
             if self.set_Q_values_flag == True:
                 self.generate_Q_values()
+
         for policy in self.policies:
             policy.Q_values = self.Q_values
             policy.reset()
 
     def generate_Q_values(self) -> None:
-        # Default uses Gaussian distribution
-        self.Q_values = np.random.normal(
+        self.Q_values = self.reward_distribution.generate_Q_values(
             self.Q_values_mean, self.Q_values_variance, self.n_bandits
         )
 
@@ -200,8 +215,6 @@ class Game:
 
     def plot_average_reward_by_step_smoothed(self, smooth_factor: int = 50) -> None:
         fig = plt.figure(figsize=(18, 12), dpi=300)
-
-        average_rewards = np.mean(self.rewards_by_policy, axis=0)
 
         for policy_index, policy in enumerate(self.policies):
             plt.plot(

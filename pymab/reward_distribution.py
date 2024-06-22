@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from abc import ABC, abstractmethod
 
 import numpy as np
@@ -22,6 +24,29 @@ class RewardDistribution(ABC):
         """
         pass
 
+    @staticmethod
+    @abstractmethod
+    def generate_Q_values(
+        q_value: float, variance: float, size: int
+    ) -> np.ndarray[float]:
+        """Abstract method to get a set of Q values.
+
+        Args:
+            q_value (float): The mean or central value of the distribution.
+            variance (float): The variance or spread of the distribution.
+            size (int): The number of Q values to generate.
+
+        Returns:
+            np.ndarray[float]: A list of Q-values sampled from the distribution.
+        """
+        pass
+
+    def __eq__(self, other):
+        return isinstance(other, self.__class__)
+
+    def __hash__(self):
+        return hash(self.__class__.__name__)
+
 
 class GaussianRewardDistribution(RewardDistribution):
     """Gaussian (Normal) reward distribution."""
@@ -38,9 +63,27 @@ class GaussianRewardDistribution(RewardDistribution):
             float: A reward sampled from the Gaussian distribution.
 
         Example:
-            If q_value = 0.3 and variance = 1, it is likely that the sampled value will be between -0.7 and 1.3, and most will be around 0.3.
+            If q_value = 0.3 and variance = 1, approximately 68% of the data will be between -0.7 and 1.3
+            (mean ± variance), approximately 95% of the data will be between -1.7 and 2.3 (mean ± 2 * variance),
+            and approximately 99.7% of the data will be between -2.7 and 3.3 (mean ± 3 * variance).
         """
         return np.random.normal(q_value, variance)
+
+    @staticmethod
+    def generate_Q_values(
+        q_value: float, variance: float, size: int
+    ) -> np.ndarray[float]:
+        """Get a set of Q values sampled from a Gaussian distribution.
+
+        Args:
+            q_value (float): The mean or central value of the distribution.
+            variance (float): The variance or spread of the distribution.
+            size (int): The number of Q values to generate.
+
+        Returns:
+            np.ndarray[float]: A list of Q-values sampled from the distribution.
+        """
+        return np.random.normal(q_value, variance, size)
 
 
 class BernoulliRewardDistribution(RewardDistribution):
@@ -62,6 +105,22 @@ class BernoulliRewardDistribution(RewardDistribution):
         """
         return np.random.binomial(1, q_value, size=1)
 
+    @staticmethod
+    def generate_Q_values(
+        q_value: float, variance: float, size: int
+    ) -> np.ndarray[float]:
+        """Get a set of Q values sampled from a Bernoulli distribution.
+
+        Args:
+            q_value (float): The mean or central value of the distribution.
+            variance (float): The variance or spread of the distribution.
+            size (int): The number of Q values to generate.
+
+        Returns:
+            np.ndarray[float]: A list of Q-values sampled from the distribution.
+        """
+        return np.random.binomial(1, q_value, size)
+
 
 class UniformRewardDistribution(RewardDistribution):
     """Uniform reward distribution."""
@@ -81,3 +140,19 @@ class UniformRewardDistribution(RewardDistribution):
             If q_value = 0.3 and variance = 1, every value between -0.7 and 1.3 has equal probability of being sampled.
         """
         return np.random.uniform(q_value - variance, q_value + variance)
+
+    @staticmethod
+    def generate_Q_values(
+        q_value: float, variance: float, size: int
+    ) -> np.ndarray[float]:
+        """Get a set of Q values sampled from a Uniform distribution.
+
+        Args:
+            q_value (float): The mean or central value of the distribution.
+            variance (float): The variance or spread of the distribution.
+            size (int): The number of Q values to generate.
+
+        Returns:
+            np.ndarray[float]: A list of Q-values sampled from the distribution.
+        """
+        return np.random.uniform(q_value - variance, q_value + variance, size)

@@ -1,6 +1,7 @@
+from __future__ import annotations
+
 import numpy as np
-import math
-from typing import Tuple
+from typing import Tuple, Type
 
 from matplotlib import pyplot as plt
 from numpy.random import beta
@@ -44,7 +45,7 @@ class BernoulliThompsonSamplingPolicy(Policy):
     times_selected: np.array
     actions_estimated_reward: np.array
     variance: float
-    reward_distribution: RewardDistribution
+    reward_distribution: Type[RewardDistribution]
     times_success: np.array
     times_failure: np.array
 

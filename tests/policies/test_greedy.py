@@ -1,22 +1,28 @@
+import unittest
 import numpy as np
-import pytest
 from pymab.policies.greedy import GreedyPolicy
+from pymab.reward_distribution import GaussianRewardDistribution, BernoulliRewardDistribution, UniformRewardDistribution
+from tests.policies.test_policy import TestPolicy
 
 
-def test_greedy_initialization():
-    Q_values = np.array([0.1, 0.2, 0.3])
-    policy = GreedyPolicy(Q_values, optimistic_initilization=1)
-    assert policy.optimistic_initilization == 1
-    assert np.array_equal(policy.Q_values, Q_values)
-    assert (
-        policy.select_action() == 2
-    )  # Should initially select the last one due to optimistic initialization
+class TestGreedyPolicy(TestPolicy):
+
+    def setUp(self):
+        self.n_bandits = 3
+        self.policy = GreedyPolicy(
+            n_bandits=self.n_bandits,
+            optimistic_initilization=1.0,
+            variance=1.0,
+            reward_distribution="gaussian"
+        )
+
+    def test_select_action(self):
+        self.policy.Q_values = [0.1, 0.5, 0.9]
+        action, reward = self.policy.select_action()
+        self.assertEqual(action, np.argmax(self.policy.actions_estimated_reward))
+        self.assertTrue(self.policy.times_selected[action] > 0)
+        self.assertTrue(self.policy.total_reward > 0)
 
 
-def test_greedy_selection():
-    Q_values = np.array([0.1, 0.2, 0.3])
-    policy = GreedyPolicy(Q_values, optimistic_initilization=1)
-    # Assuming the select_action function updates the estimated rewards based on some logic
-    for _ in range(10):
-        policy.select_action()  # this will keep selecting the best estimated action
-    assert policy.select_action() == 2  # Still should select the highest Q value
+if __name__ == '__main__':
+    unittest.main()

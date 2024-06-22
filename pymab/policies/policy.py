@@ -1,7 +1,10 @@
+from __future__ import annotations
+
+import logging
 from abc import ABC, abstractmethod
 
 import numpy as np
-from typing import List, Tuple
+from typing import List, Tuple, Type
 
 from matplotlib import pyplot as plt
 from numpy.random import beta
@@ -14,6 +17,8 @@ from pymab.reward_distribution import (
     BernoulliRewardDistribution,
 )
 
+logger = logging.getLogger(__name__)
+
 
 class Policy(ABC):
     n_bandits: int
@@ -24,7 +29,7 @@ class Policy(ABC):
     times_selected: np.array
     actions_estimated_reward: np.array
     variance: float
-    reward_distribution: RewardDistribution
+    reward_distribution: Type[RewardDistribution]
 
     def __init__(
         self,
@@ -46,7 +51,7 @@ class Policy(ABC):
         )
 
     @staticmethod
-    def get_reward_distribution(name: str) -> RewardDistribution:
+    def get_reward_distribution(name: str) -> Type[RewardDistribution]:
         distributions = {
             "gaussian": GaussianRewardDistribution,
             "bernoulli": BernoulliRewardDistribution,
@@ -54,7 +59,7 @@ class Policy(ABC):
         }
         if name not in distributions:
             raise ValueError(f"Unknown reward distribution: {name}")
-        return distributions[name]()
+        return distributions[name]
 
     def _get_actual_reward(self, action_index: int) -> float:
         return self.reward_distribution.get_reward(
@@ -115,13 +120,13 @@ class Policy(ABC):
         )
 
         for i in range(self.n_bandits):
-            if isinstance(self.reward_distribution, BernoulliRewardDistribution):
+            if issubclass(self.reward_distribution, BernoulliRewardDistribution):
                 a, b = (
                     self.times_selected[i] + 1,
                     self.times_selected[i] - self.actions_estimated_reward[i] + 1,
                 )
                 y = beta.pdf(x_range, a, b)
-            elif isinstance(self.reward_distribution, GaussianRewardDistribution):
+            elif issubclass(self.reward_distribution, GaussianRewardDistribution):
                 mean, std_dev = self.actions_estimated_reward[i], np.sqrt(self.variance)
                 y = norm.pdf(x_range, mean, std_dev)
             else:
