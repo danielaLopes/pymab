@@ -1,1 +1,1 @@
-python -m unittest tests/test_game.py
+python -m unittest tests/policies/test_greedy.py

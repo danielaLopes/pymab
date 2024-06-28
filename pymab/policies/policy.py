@@ -22,7 +22,7 @@ logger = logging.getLogger(__name__)
 
 class Policy(ABC):
     n_bandits: int
-    optimistic_initilization: int
+    optimistic_initialization: float
     _Q_values: np.array
     current_step: int
     total_reward: float
@@ -34,12 +34,12 @@ class Policy(ABC):
     def __init__(
         self,
         n_bandits: int,
-        optimistic_initilization: int = 0,
+        optimistic_initialization: float = 0,
         variance: float = 1.0,
         reward_distribution: str = "gaussian",
     ) -> None:
         self.n_bandits = n_bandits
-        self.optimistic_initilization = optimistic_initilization
+        self.optimistic_initialization = optimistic_initialization
         self._Q_values = None
         self.current_step = 0
         self.total_reward = 0
@@ -47,7 +47,7 @@ class Policy(ABC):
         self.reward_distribution = self.get_reward_distribution(reward_distribution)
         self.times_selected = np.zeros(self.n_bandits)
         self.actions_estimated_reward = np.full(
-            self.n_bandits, self.optimistic_initilization, dtype=float
+            self.n_bandits, self.optimistic_initialization, dtype=float
         )
 
     @staticmethod
@@ -75,6 +75,7 @@ class Policy(ABC):
         self.actions_estimated_reward[chosen_action_index] += (
             reward - self.actions_estimated_reward[chosen_action_index]
         ) / self.times_selected[chosen_action_index]
+
         return reward
 
     @property
@@ -98,7 +99,7 @@ class Policy(ABC):
         self.total_reward = 0
         self.times_selected = np.zeros(self.n_bandits)
         self.actions_estimated_reward = np.full(
-            self.n_bandits, self.optimistic_initilization, dtype=float
+            self.n_bandits, self.optimistic_initialization, dtype=float
         )
 
     def __repr__(self) -> str:

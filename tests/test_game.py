@@ -21,7 +21,7 @@ class TestGame(unittest.TestCase):
         self.reward_distribution = "gaussian"
         self.policies = [
             GreedyPolicy(
-                optimistic_initilization=1,
+                optimistic_initialization=1,
                 n_bandits=self.n_bandits,
                 reward_distribution=self.reward_distribution,
             ),

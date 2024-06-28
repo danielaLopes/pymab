@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 
 class EpsilonGreedyPolicy(GreedyPolicy):
     n_bandits: int
-    optimistic_initilization: int
+    optimistic_initialization: float
     _Q_values: np.array
     current_step: int
     total_reward: float
@@ -27,13 +27,13 @@ class EpsilonGreedyPolicy(GreedyPolicy):
     def __init__(
         self,
         n_bandits: int,
-        optimistic_initilization: int = 0,
+        optimistic_initialization: float = 0,
         variance: float = 1.0,
         reward_distribution: str = "gaussian",
         epsilon: float = 0.1,
     ) -> None:
         super().__init__(
-            n_bandits, optimistic_initilization, variance, reward_distribution
+            n_bandits, optimistic_initialization, variance, reward_distribution
         )
         self.epsilon = epsilon
 
@@ -44,11 +44,11 @@ class EpsilonGreedyPolicy(GreedyPolicy):
         chosen_action_index = np.argmax(
             self.actions_estimated_reward
         )  # Find index of highest value action
-        column_indexes = list(range(0, self.n_bandits))
-
         # Epsilon: choose a random action
         if r < self.epsilon:
-            # column_indexes.remove(chosen_action_index)
+            column_indexes = list(range(0, self.n_bandits))
+            # Remove greedy action from possibilities to force exploration
+            column_indexes.pop(chosen_action_index)
             chosen_action_index = random.choice(
                 column_indexes
             )  # Choose a random action index that is not the greedy choice
@@ -58,4 +58,4 @@ class EpsilonGreedyPolicy(GreedyPolicy):
             return chosen_action_index, self._update(chosen_action_index)
 
     def __repr__(self):
-        return f"{self.__class__.__name__}(opt_init={self.optimistic_initilization}, ε={self.epsilon})"
+        return f"{self.__class__.__name__}(opt_init={self.optimistic_initialization}, ε={self.epsilon})"

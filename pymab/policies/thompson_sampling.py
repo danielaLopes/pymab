@@ -25,7 +25,7 @@ class BernoulliThompsonSamplingPolicy(Policy):
 
     Attributes:
         n_bandits (int): Number of bandit arms.
-        optimistic_initialization (int): Initial optimistic value for estimated rewards.
+        optimistic_initialization (float): Initial optimistic value for estimated rewards.
         _Q_values (np.array): True values of the bandit arms.
         current_step (int): Current step count.
         total_reward (float): Total accumulated reward.
@@ -38,7 +38,7 @@ class BernoulliThompsonSamplingPolicy(Policy):
     """
 
     n_bandits: int
-    optimistic_initilization: int
+    optimistic_initialization: float
     _Q_values: np.array
     current_step: int
     total_reward: float
@@ -52,12 +52,12 @@ class BernoulliThompsonSamplingPolicy(Policy):
     def __init__(
         self,
         n_bandits: int,
-        optimistic_initilization: int = 0,
+        optimistic_initialization: float = 0,
         variance: float = 1.0,
         reward_distribution: str = "gaussian",
     ) -> None:
         super().__init__(
-            n_bandits, optimistic_initilization, variance, reward_distribution
+            n_bandits, optimistic_initialization, variance, reward_distribution
         )
         self.times_success = np.zeros(self.n_bandits)
         self.times_failure = np.zeros(self.n_bandits)
@@ -150,7 +150,7 @@ class GaussianThompsonSamplingPolicy(Policy):
 
     Attributes:
         n_bandits (int): Number of bandit arms.
-        optimistic_initialization (int): Initial optimistic value for estimated rewards.
+        optimistic_initialization (float): Initial optimistic value for estimated rewards.
         _Q_values (np.array): True values of the bandit arms.
         current_step (int): Current step count.
         total_reward (float): Total accumulated reward.
@@ -163,7 +163,7 @@ class GaussianThompsonSamplingPolicy(Policy):
     """
 
     n_bandits: int
-    optimistic_initilization: int
+    optimistic_initialization: float
     _Q_values: np.array
     current_step: int
     total_reward: float
@@ -177,12 +177,12 @@ class GaussianThompsonSamplingPolicy(Policy):
     def __init__(
         self,
         n_bandits: int,
-        optimistic_initilization: int = 0,
+        optimistic_initialization: float = 0,
         variance: float = 1.0,
         reward_distribution: str = "gaussian",
     ) -> None:
         super().__init__(
-            n_bandits, optimistic_initilization, variance, reward_distribution
+            n_bandits, optimistic_initialization, variance, reward_distribution
         )
         self.means = np.zeros(n_bandits)
         self.precisions = np.ones(n_bandits) / variance

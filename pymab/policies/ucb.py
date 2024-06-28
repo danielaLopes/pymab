@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 
 class UCBPolicy(Policy):
     n_bandits: int
-    optimistic_initilization: int
+    optimistic_initialization: int
     _Q_values: np.array
     current_step: int
     total_reward: float
@@ -27,13 +27,13 @@ class UCBPolicy(Policy):
     def __init__(
         self,
         n_bandits: int,
-        optimistic_initilization: int = 0,
+        optimistic_initialization: int = 0,
         variance: float = 1.0,
         reward_distribution: str = "gaussian",
         c: int = 1,
     ) -> None:
         super().__init__(
-            n_bandits, optimistic_initilization, variance, reward_distribution
+            n_bandits, optimistic_initialization, variance, reward_distribution
         )
         self.c = c
 
@@ -54,12 +54,12 @@ class UCBPolicy(Policy):
         return chosen_action_index, self._update(chosen_action_index)
 
     def __repr__(self) -> str:
-        return f"{super().__repr__()}(opt_init={self.optimistic_initilization}, c={self.c})"
+        return f"{super().__repr__()}(opt_init={self.optimistic_initialization}, c={self.c})"
 
     def __str__(self):
         return f"""{self.__class__.__name__}(
                     n_bandits={self.n_bandits}\n
-                    optimistic_initilization={self.optimistic_initilization})\n
+                    optimistic_initialization={self.optimistic_initialization})\n
                     Q_values={self.Q_values}\n
                     total_reward={self.current_step}\n
                     times_selected={self.times_selected}\n

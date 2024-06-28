@@ -1,28 +1,43 @@
 import unittest
 import numpy as np
 from pymab.policies.greedy import GreedyPolicy
-from pymab.reward_distribution import GaussianRewardDistribution, BernoulliRewardDistribution, UniformRewardDistribution
+from pymab.reward_distribution import (
+    GaussianRewardDistribution,
+    BernoulliRewardDistribution,
+    UniformRewardDistribution,
+)
 from tests.policies.test_policy import TestPolicy
 
 
-class TestGreedyPolicy(TestPolicy):
-
+class TestOptimisticGreedyPolicy(TestPolicy):
     def setUp(self):
+        self.policy_class = GreedyPolicy
         self.n_bandits = 3
-        self.policy = GreedyPolicy(
+        self.optimistic_initialization = 1.0
+        self.variance = 1.0
+        self.reward_distribution = "gaussian"
+        self.policy = self.policy_class(
             n_bandits=self.n_bandits,
-            optimistic_initilization=1.0,
-            variance=1.0,
-            reward_distribution="gaussian"
+            optimistic_initialization=self.optimistic_initialization,
+            variance=self.variance,
+            reward_distribution=self.reward_distribution,
         )
 
-    def test_select_action(self):
-        self.policy.Q_values = [0.1, 0.5, 0.9]
-        action, reward = self.policy.select_action()
-        self.assertEqual(action, np.argmax(self.policy.actions_estimated_reward))
-        self.assertTrue(self.policy.times_selected[action] > 0)
-        self.assertTrue(self.policy.total_reward > 0)
+
+class TestGreedyPolicy(TestPolicy):
+    def setUp(self):
+        self.policy_class = GreedyPolicy
+        self.n_bandits = 3
+        self.optimistic_initialization = 0.0
+        self.variance = 1.0
+        self.reward_distribution = "gaussian"
+        self.policy = self.policy_class(
+            n_bandits=self.n_bandits,
+            optimistic_initialization=self.optimistic_initialization,
+            variance=self.variance,
+            reward_distribution=self.reward_distribution,
+        )
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()
