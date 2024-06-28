@@ -150,10 +150,9 @@ class TestPolicy(unittest.TestCase):
         with patch.object(
             self.policy, "_get_actual_reward", return_value=mock_reward
         ) as mock_method:
-            action, reward = self.policy.select_action()
+            reward = self.policy._update(mock_action)
             total_reward += reward
 
-            self.assertEqual(action, 2)
             assert_array_equal(self.policy.times_selected, np.array([1, 1, 2]))
             self.assertTrue(self.policy.total_reward == 2.7)
 

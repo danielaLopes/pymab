@@ -1,10 +1,10 @@
-import random
 import unittest
 from unittest.mock import patch
 
 import numpy as np
+from numpy.testing import assert_array_equal, assert_allclose
+
 from pymab.policies.epsilon_greedy import EpsilonGreedyPolicy
-from pymab.reward_distribution import GaussianRewardDistribution
 from tests.policies.test_policy import TestPolicy
 
 

@@ -217,6 +217,7 @@ class GaussianThompsonSamplingPolicy(Policy):
             np.random.normal(self.means[i], 1 / np.sqrt(self.precisions[i]))
             for i in range(self.n_bandits)
         ]
+        print("\n\n\n======== samples", samples)
         chosen_action_index = np.argmax(samples)
 
         return chosen_action_index, self._update(chosen_action_index)
@@ -277,6 +278,7 @@ class ThompsonSamplingPolicy:
     def __new__(
         cls,
         n_bandits: int,
+        optimistic_initialization: float = 0,
         variance: float = 1.0,
         reward_distribution: str = "gaussian",
     ) -> Policy:
