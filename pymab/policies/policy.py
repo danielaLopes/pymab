@@ -4,7 +4,7 @@ import logging
 from abc import ABC, abstractmethod
 
 import numpy as np
-from typing import List, Tuple, Type
+from typing import Callable, List, Tuple, Type
 
 from matplotlib import pyplot as plt
 from numpy.random import beta
@@ -20,6 +20,13 @@ from pymab.reward_distribution import (
 logger = logging.getLogger(__name__)
 
 
+def no_context_func():
+    """
+    Dummy context function that does not generate any context.
+    """
+    pass
+
+
 class Policy(ABC):
     n_bandits: int
     optimistic_initialization: float
@@ -30,6 +37,7 @@ class Policy(ABC):
     actions_estimated_reward: np.array
     variance: float
     reward_distribution: Type[RewardDistribution]
+    context_func: Callable
 
     def __init__(
         self,
@@ -37,6 +45,7 @@ class Policy(ABC):
         optimistic_initialization: float = 0,
         variance: float = 1.0,
         reward_distribution: str = "gaussian",
+        context_func: Callable = no_context_func,
     ) -> None:
         self.n_bandits = n_bandits
         self.optimistic_initialization = optimistic_initialization
@@ -49,6 +58,7 @@ class Policy(ABC):
         self.actions_estimated_reward = np.full(
             self.n_bandits, self.optimistic_initialization, dtype=float
         )
+        self.context_func = context_func
 
     @staticmethod
     def get_reward_distribution(name: str) -> Type[RewardDistribution]:
@@ -66,7 +76,7 @@ class Policy(ABC):
             self.Q_values[action_index], self.variance
         )
 
-    def _update(self, chosen_action_index: int) -> float:
+    def _update(self, chosen_action_index: int, *args, **kwargs) -> float:
         self.current_step += 1
         reward = self._get_actual_reward(chosen_action_index)
         self.total_reward += reward
@@ -91,7 +101,7 @@ class Policy(ABC):
         self._Q_values = Q_values
 
     @abstractmethod
-    def select_action(self) -> Tuple[int, float]:
+    def select_action(self, *args, **kwargs) -> Tuple[int, float]:
         pass
 
     def reset(self):

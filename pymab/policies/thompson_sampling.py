@@ -62,7 +62,7 @@ class BernoulliThompsonSamplingPolicy(Policy):
         self.times_success = np.zeros(self.n_bandits)
         self.times_failure = np.zeros(self.n_bandits)
 
-    def _update(self, chosen_action_index: int) -> float:
+    def _update(self, chosen_action_index: int, *args, **kwargs) -> float:
         """
         Updates the parameters times_success and times_failure used in the Beta distribution, according to the reward obtained.
         The Bernoulli distribution is conjugate to the Beta distribution, meaning that if the prior distribution of the probability of success is a Beta distribution, then the posterior distribution after observing data is also a Beta distribution. This makes the Bayesian updating process straightforward.
@@ -187,7 +187,7 @@ class GaussianThompsonSamplingPolicy(Policy):
         self.means = np.zeros(n_bandits)
         self.precisions = np.ones(n_bandits) / variance
 
-    def _update(self, chosen_action_index: int) -> float:
+    def _update(self, chosen_action_index: int, *args, **kwargs) -> float:
         """
         Updates the Guassian prior distribution according to the observed reward. The conjugate prior for the mean of a Gaussian distribution with known variance is also Gaussian.
             The posterior distribution of the mean given Gaussian observations remains Gaussian, which allows for a Bayesian update, but it involves maintaining and updating the mean and variance parameters.
@@ -212,12 +212,11 @@ class GaussianThompsonSamplingPolicy(Policy):
 
         return reward
 
-    def select_action(self) -> Tuple[int, float]:
+    def select_action(self, *args, **kwargs) -> Tuple[int, float]:
         samples = [
             np.random.normal(self.means[i], 1 / np.sqrt(self.precisions[i]))
             for i in range(self.n_bandits)
         ]
-        print("\n\n\n======== samples", samples)
         chosen_action_index = np.argmax(samples)
 
         return chosen_action_index, self._update(chosen_action_index)

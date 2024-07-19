@@ -167,7 +167,9 @@ class TestGaussianThompsonSamplingPolicy(TestPolicy):
         self.policy.Q_values = [0.1, 0.5, 0.9]
         total_reward = 0
 
-        with patch("numpy.random.normal", side_effect=[0.1, 0.2, 0.3, 0.4]) as mock_normal:
+        with patch(
+            "numpy.random.normal", side_effect=[0.1, 0.2, 0.3, 0.4]
+        ) as mock_normal:
             action, reward = self.policy.select_action()
             total_reward += reward
             self.assertEqual(action, 2)
@@ -176,7 +178,9 @@ class TestGaussianThompsonSamplingPolicy(TestPolicy):
 
             self.assertEqual(mock_normal.call_count, 4)
 
-        with patch("numpy.random.normal", side_effect=[0.3, 0.2, 0.2, 0.4]) as mock_normal:
+        with patch(
+            "numpy.random.normal", side_effect=[0.3, 0.2, 0.2, 0.4]
+        ) as mock_normal:
             action, reward = self.policy.select_action()
             total_reward += reward
             self.assertEqual(action, 0)
@@ -185,7 +189,9 @@ class TestGaussianThompsonSamplingPolicy(TestPolicy):
 
             self.assertEqual(mock_normal.call_count, 4)
 
-        with patch("numpy.random.normal", side_effect=[0.1, 0.3, 0.2, 0.4]) as mock_normal:
+        with patch(
+            "numpy.random.normal", side_effect=[0.1, 0.3, 0.2, 0.4]
+        ) as mock_normal:
             action, reward = self.policy.select_action()
             total_reward += reward
             self.assertEqual(action, 1)

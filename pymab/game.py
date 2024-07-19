@@ -113,7 +113,9 @@ class Game:
             for policy_index, policy in enumerate(self.policies):
                 # for step in tqdm(range(self.n_steps), desc="Running steps...", total=self.n_steps):
                 for step in range(self.n_steps):
-                    action, reward = policy.select_action()
+                    # print("\n\n========= Episode: ", episode, "Step: ", step)
+                    context = policy.context_func()
+                    action, reward = policy.select_action(context=context)
                     self.rewards_by_policy[episode, step, policy_index] = reward
                     self.actions_selected_by_policy[episode, step, policy_index] = (
                         action

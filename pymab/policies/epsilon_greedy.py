@@ -37,7 +37,7 @@ class EpsilonGreedyPolicy(GreedyPolicy):
         )
         self.epsilon = epsilon
 
-    def select_action(self) -> Tuple[int, float]:
+    def select_action(self, *args, **kwargs) -> Tuple[int, float]:
         r = random.uniform(
             0, 1
         )  # Choose random value to simulate whether the agent chooses greedy or non greedy, according to epsilon

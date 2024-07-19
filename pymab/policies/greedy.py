@@ -33,7 +33,7 @@ class GreedyPolicy(Policy):
             n_bandits, optimistic_initialization, variance, reward_distribution
         )
 
-    def select_action(self) -> Tuple[int, float]:
+    def select_action(self, *args, **kwargs) -> Tuple[int, float]:
         chosen_action_index = np.argmax(self.actions_estimated_reward)
         return chosen_action_index, self._update(chosen_action_index)
 
