@@ -7,8 +7,7 @@ import numpy as np
 from typing import Callable, List, Tuple, Type
 
 from matplotlib import pyplot as plt
-from numpy.random import beta
-from scipy.stats import norm
+from scipy.stats import beta, norm
 
 from pymab.reward_distribution import (
     RewardDistribution,

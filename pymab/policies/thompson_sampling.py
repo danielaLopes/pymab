@@ -4,8 +4,7 @@ import numpy as np
 from typing import Tuple, Type
 
 from matplotlib import pyplot as plt
-from numpy.random import beta
-from scipy.stats import norm
+from scipy.stats import beta, norm
 
 from pymab.policies.policy import Policy
 
@@ -82,7 +81,7 @@ class BernoulliThompsonSamplingPolicy(Policy):
 
         return reward
 
-    def select_action(self) -> Tuple[int, float]:
+    def select_action(self, *args, **kwargs) -> Tuple[int, float]:
         self.thomson_sampled = [
             np.random.beta(self.times_success[i] + 1, self.times_failure[i] + 1)
             for i in range(self.n_bandits)

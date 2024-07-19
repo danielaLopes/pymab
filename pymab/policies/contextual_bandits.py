@@ -90,27 +90,24 @@ class ContextualBanditPolicy(Policy):
             )
         if context.shape[1] != self.n_bandits:
             raise ValueError("Context dimension does not match the expected n_bandits.")
-        # print("theta shape", self.theta.shape)
-        # print("self.theta", self.theta)
-        # print("context", context)
-        # expected_rewards = self.theta @ context  # Linear model to predict rewards
+
         expected_rewards = np.array(
             [self.theta[i] @ context[:, i] for i in range(self.n_bandits)]
         )
         chosen_action_index = np.argmax(expected_rewards)
-        # print("chosen_action_index", chosen_action_index)
-        # print("expected_rewards", expected_rewards)
+
         return chosen_action_index, self._update(
             chosen_action_index, context_chosen_action=context[:, chosen_action_index]
         )
 
     def __repr__(self) -> str:
-        return f"{super().__repr__()}()"
+        return f"{super().__repr__()}(learning_rate={self.learning_rate})"
 
     def __str__(self):
         return f"""{super().__repr__()}(
                     n_bandits={self.n_bandits}\n
                     Q_values={self.Q_values}\n
                     variance={self.variance}\n
-                    context_dim={self.context_dim}\n
-                    theta={self.theta}\n"""
+                    context_dim={self.context_dim}\n,
+                    theta={self.theta}\n,
+                    learning_rate={self.learning_rate})"""
