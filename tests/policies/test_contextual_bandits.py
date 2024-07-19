@@ -62,6 +62,19 @@ class TestContextualBanditPolicy(TestPolicy):
             self.assertTrue(self.policy.times_selected[action] > 0)
             self.assertTrue(self.policy.total_reward == total_reward)
 
+    def test_select_action_wrong_context_shapes(self):
+        self.policy.Q_values = [0.1, 0.5, 0.9]
+        context = np.array([[0], [0], [0]])
+
+        with self.assertRaises(ValueError) as cm:
+            self.policy.select_action(context=context)
+        self.assertEqual(str(cm.exception), "Context dimension does not match the expected context_dim.")
+
+        context = np.array([[0, 0], [0, 0]])
+        with self.assertRaises(ValueError) as cm:
+            self.policy.select_action(context=context)
+        self.assertEqual(str(cm.exception), "Context dimension does not match the expected n_bandits.")
+
     def test_update(self):
         self.policy._Q_values = np.array([0.5, 0.6, 0.7])
         chosen_action = 0
