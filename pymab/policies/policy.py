@@ -41,7 +41,7 @@ class Policy(ABC):
     def __init__(
         self,
         n_bandits: int,
-        optimistic_initialization: float = 0,
+        optimistic_initialization: float = 0.0,
         variance: float = 1.0,
         reward_distribution: str = "gaussian",
         context_func: Callable = no_context_func,

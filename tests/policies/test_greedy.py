@@ -1,11 +1,6 @@
 import unittest
-import numpy as np
+
 from pymab.policies.greedy import GreedyPolicy
-from pymab.reward_distribution import (
-    GaussianRewardDistribution,
-    BernoulliRewardDistribution,
-    UniformRewardDistribution,
-)
 from tests.policies.test_policy import TestPolicy
 
 

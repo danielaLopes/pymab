@@ -45,7 +45,7 @@ class TestPolicy(unittest.TestCase):
             n_bandits=self.n_bandits,
             optimistic_initialization=0.0,
             variance=1.0,
-            reward_distribution="gaussian",
+            reward_distribution=self.reward_distribution,
         )
         assert_array_equal(
             self.policy.actions_estimated_reward, np.zeros(self.n_bandits)
