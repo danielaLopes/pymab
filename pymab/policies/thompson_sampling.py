@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import numpy as np
-from typing import Tuple, Type
+from typing import Union, Tuple, Type
 
 from matplotlib import pyplot as plt
 from scipy.stats import beta, norm
@@ -32,8 +32,8 @@ class BernoulliThompsonSamplingPolicy(Policy):
         actions_estimated_reward (np.array): Estimated rewards for each action.
         variance (float): Variance of the reward distribution.
         reward_distribution (RewardDistribution): Type of reward distribution used. Should always be Bernoulli.
-        times_success (np.array): Alpha values for Beta distribution (success counts).
-        times_failure (np.array): Beta values for Beta distribution (failure counts).
+        successes (np.array): Alpha values for Beta distribution (success counts).
+        failures (np.array): Beta values for Beta distribution (failure counts).
     """
 
     n_bandits: int
@@ -45,8 +45,8 @@ class BernoulliThompsonSamplingPolicy(Policy):
     actions_estimated_reward: np.array
     variance: float
     reward_distribution: Type[RewardDistribution]
-    times_success: np.array
-    times_failure: np.array
+    successes: np.array
+    failures: np.array
 
     def __init__(
         self,
@@ -58,13 +58,16 @@ class BernoulliThompsonSamplingPolicy(Policy):
         super().__init__(
             n_bandits, optimistic_initialization, variance, reward_distribution
         )
-        self.times_success = np.zeros(self.n_bandits)
-        self.times_failure = np.zeros(self.n_bandits)
+        self.successes = np.zeros(self.n_bandits)
+        self.failures = np.zeros(self.n_bandits)
 
     def _update(self, chosen_action_index: int, *args, **kwargs) -> float:
         """
-        Updates the parameters times_success and times_failure used in the Beta distribution, according to the reward obtained.
-        The Bernoulli distribution is conjugate to the Beta distribution, meaning that if the prior distribution of the probability of success is a Beta distribution, then the posterior distribution after observing data is also a Beta distribution. This makes the Bayesian updating process straightforward.
+        Updates the parameters successes and failures used in the Beta distribution, according to the reward
+        obtained.
+        The Bernoulli distribution is conjugate to the Beta distribution, meaning that if the prior distribution of the
+        probability of success is a Beta distribution, then the posterior distribution after observing data is also a
+        Beta distribution. This makes the Bayesian updating process straightforward.
 
         Args:
             chosen_action_index (int): Index of the chosen action.
@@ -75,15 +78,15 @@ class BernoulliThompsonSamplingPolicy(Policy):
         reward = super()._update(chosen_action_index)
 
         if reward > 0:
-            self.times_success[chosen_action_index] += 1
+            self.successes[chosen_action_index] += 1
         else:
-            self.times_failure[chosen_action_index] += 1
+            self.failures[chosen_action_index] += 1
 
         return reward
 
     def select_action(self, *args, **kwargs) -> Tuple[int, float]:
         self.thomson_sampled = [
-            np.random.beta(self.times_success[i] + 1, self.times_failure[i] + 1)
+            np.random.beta(self.successes[i] + 1, self.failures[i] + 1)
             for i in range(self.n_bandits)
         ]
         chosen_action_index = np.argmax(self.thomson_sampled)
@@ -98,8 +101,8 @@ class BernoulliThompsonSamplingPolicy(Policy):
                     n_bandits={self.n_bandits}\n
                     Q_values={self.Q_values}\n
                     variance={self.variance}\n
-                    times_success={self.times_success}\n
-                    times_failure={self.times_failure}\n"""
+                    successes={self.successes}\n
+                    failures={self.failures}\n"""
 
     def plot_distribution(self) -> None:
         """
@@ -119,7 +122,7 @@ class BernoulliThompsonSamplingPolicy(Policy):
         )
 
         for i in range(self.n_bandits):
-            a, b = self.times_success[i] + 1, self.times_failure[i] + 1
+            a, b = self.successes[i] + 1, self.failures[i] + 1
             y = beta.pdf(x_range, a, b)
             axes[i].plot(x_range, y, label=f"Arm {i} Posterior")
             axes[i].axvline(
@@ -131,7 +134,7 @@ class BernoulliThompsonSamplingPolicy(Policy):
             axes[i].text(
                 0.5,
                 -0.1,
-                f"Successes: {self.times_success[i]}, Failures: {self.times_failure[i]}",
+                f"Successes: {self.successes[i]}, Failures: {self.failures[i]}",
                 transform=axes[i].transAxes,
                 ha="center",
                 va="top",
@@ -279,7 +282,7 @@ class ThompsonSamplingPolicy:
         optimistic_initialization: float = 0,
         variance: float = 1.0,
         reward_distribution: str = "gaussian",
-    ) -> Policy:
+    ) -> Union[BernoulliThompsonSamplingPolicy, GaussianThompsonSamplingPolicy]:
         if reward_distribution == "bernoulli":
             return BernoulliThompsonSamplingPolicy(
                 n_bandits=n_bandits,

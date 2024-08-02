@@ -68,18 +68,26 @@ class TestContextualBanditPolicy(TestPolicy):
 
         with self.assertRaises(ValueError) as cm:
             self.policy.select_action(context=context)
-        self.assertEqual(str(cm.exception), "Context dimension does not match the expected context_dim.")
+        self.assertEqual(
+            str(cm.exception),
+            "Context dimension does not match the expected context_dim.",
+        )
 
         context = np.array([[0, 0], [0, 0]])
         with self.assertRaises(ValueError) as cm:
             self.policy.select_action(context=context)
-        self.assertEqual(str(cm.exception), "Context dimension does not match the expected n_bandits.")
+        self.assertEqual(
+            str(cm.exception),
+            "Context dimension does not match the expected n_bandits.",
+        )
 
     def test_update(self):
         self.policy._Q_values = np.array([0.5, 0.6, 0.7])
         chosen_action = 0
         initial_reward = self.policy.actions_estimated_reward[chosen_action]
-        self.policy._update(chosen_action, context_chosen_action=self.context_func()[:, chosen_action])
+        self.policy._update(
+            chosen_action, context_chosen_action=self.context_func()[:, chosen_action]
+        )
         self.assertEqual(self.policy.times_selected[chosen_action], 1)
         self.assertNotEqual(
             self.policy.actions_estimated_reward[chosen_action], initial_reward
@@ -94,7 +102,9 @@ class TestContextualBanditPolicy(TestPolicy):
         with patch.object(
             self.policy, "_get_actual_reward", return_value=mock_reward
         ) as mock_method:
-            reward = self.policy._update(mock_action, context_chosen_action=self.context_func()[:, mock_action])
+            reward = self.policy._update(
+                mock_action, context_chosen_action=self.context_func()[:, mock_action]
+            )
             total_reward += reward
 
             assert_array_equal(self.policy.times_selected, np.array([1, 0, 0]))
@@ -120,7 +130,9 @@ class TestContextualBanditPolicy(TestPolicy):
         with patch.object(
             self.policy, "_get_actual_reward", return_value=mock_reward
         ) as mock_method:
-            reward = self.policy._update(mock_action, context_chosen_action=self.context_func()[:, mock_action])
+            reward = self.policy._update(
+                mock_action, context_chosen_action=self.context_func()[:, mock_action]
+            )
             total_reward += reward
 
             assert_array_equal(self.policy.times_selected, np.array([1, 1, 0]))
@@ -146,7 +158,9 @@ class TestContextualBanditPolicy(TestPolicy):
         with patch.object(
             self.policy, "_get_actual_reward", return_value=mock_reward
         ) as mock_method:
-            reward = self.policy._update(mock_action, context_chosen_action=self.context_func()[:, mock_action])
+            reward = self.policy._update(
+                mock_action, context_chosen_action=self.context_func()[:, mock_action]
+            )
             total_reward += reward
 
             assert_array_equal(self.policy.times_selected, np.array([1, 1, 1]))
@@ -172,7 +186,9 @@ class TestContextualBanditPolicy(TestPolicy):
         with patch.object(
             self.policy, "_get_actual_reward", return_value=mock_reward
         ) as mock_method:
-            reward = self.policy._update(mock_action, context_chosen_action=self.context_func()[:, mock_action])
+            reward = self.policy._update(
+                mock_action, context_chosen_action=self.context_func()[:, mock_action]
+            )
             total_reward += reward
 
             assert_array_equal(self.policy.times_selected, np.array([1, 1, 2]))

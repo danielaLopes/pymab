@@ -1,13 +1,16 @@
 from __future__ import annotations
 
 import logging
+import math
+import typing
 
 import numpy as np
-import math
-from typing import Tuple, Type
 
 from pymab.policies.policy import Policy
 from pymab.reward_distribution import RewardDistribution
+
+if typing.TYPE_CHECKING:
+    from typing import *
 
 logger = logging.getLogger(__name__)
 
@@ -22,7 +25,7 @@ class UCBPolicy(Policy):
     actions_estimated_reward: np.array
     variance: float
     reward_distribution: Type[RewardDistribution]
-    c: int
+    c: float
 
     def __init__(
         self,
@@ -30,26 +33,31 @@ class UCBPolicy(Policy):
         optimistic_initialization: int = 0,
         variance: float = 1.0,
         reward_distribution: str = "gaussian",
-        c: int = 1,
+        c: float = 1.0,
     ) -> None:
         super().__init__(
             n_bandits, optimistic_initialization, variance, reward_distribution
         )
         self.c = c
 
-    def select_action(self) -> Tuple[int, float]:
+    def _get_ucb_value(self, action_index: int) -> float:
+        if self.times_selected[action_index] == 0:
+            return float("inf")
+        mean_reward = self.actions_estimated_reward[action_index]
+        confidence_interval = math.sqrt(
+            (self.c * math.log(self.current_step + 1))
+            / self.times_selected[action_index]
+        )
+        return mean_reward + confidence_interval
+
+    def select_action(self, *args, **kwargs) -> Tuple[int, float]:
         if self.current_step < self.n_bandits:
             chosen_action_index = self.current_step
         else:
-            ucb_values = np.zeros(self.n_bandits)
-            for action_index in range(0, self.n_bandits):
-                if self.times_selected[action_index] > 0:
-                    ucb_values[action_index] = math.sqrt(
-                        self.c
-                        * math.log(self.current_step + 1)
-                        / self.times_selected[action_index]
-                    )  # math.log is the natural logarithm
-            chosen_action_index = np.argmax(self.actions_estimated_reward + ucb_values)
+            ucb_values = np.array(
+                [self._get_ucb_value(i) for i in range(self.n_bandits)]
+            )
+            chosen_action_index = np.argmax(ucb_values)
 
         return chosen_action_index, self._update(chosen_action_index)
 

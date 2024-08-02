@@ -47,8 +47,8 @@ class TestBernoulliThompsonSamplingPolicy(TestPolicy):
         )
 
         self.assertTrue(isinstance(self.policy, self.policy_class))
-        assert_array_equal(self.policy.times_success, np.zeros(self.n_bandits))
-        assert_array_equal(self.policy.times_failure, np.zeros(self.n_bandits))
+        assert_array_equal(self.policy.successes, np.zeros(self.n_bandits))
+        assert_array_equal(self.policy.failures, np.zeros(self.n_bandits))
 
     def test_update(self):
         self.policy._Q_values = np.array([0.5, 0.6, 0.7])
@@ -57,18 +57,18 @@ class TestBernoulliThompsonSamplingPolicy(TestPolicy):
         failure_value = 0
 
         action = 0
-        success_before = self.policy.times_success[action]
+        success_before = self.policy.successes[action]
         with patch.object(Policy, "_update", return_value=success_value) as mock_method:
             reward = self.policy._update(action)
-            self.assertEqual(success_before + 1, self.policy.times_success[action])
+            self.assertEqual(success_before + 1, self.policy.successes[action])
             self.assertEqual(reward, 1)
 
             mock_method.assert_called_once_with(action)
 
-        failure_before = self.policy.times_failure[action]
+        failure_before = self.policy.failures[action]
         with patch.object(Policy, "_update", return_value=failure_value) as mock_method:
             reward = self.policy._update(action)
-            self.assertEqual(failure_before + 1, self.policy.times_failure[action])
+            self.assertEqual(failure_before + 1, self.policy.failures[action])
             self.assertEqual(reward, 0)
 
             mock_method.assert_called_once_with(action)

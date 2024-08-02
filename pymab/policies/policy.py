@@ -1,12 +1,11 @@
 from __future__ import annotations
 
-import logging
 from abc import ABC, abstractmethod
-
-import numpy as np
-from typing import Callable, List, Tuple, Type
+import logging
+import typing
 
 from matplotlib import pyplot as plt
+import numpy as np
 from scipy.stats import beta, norm
 
 from pymab.reward_distribution import (
@@ -15,6 +14,9 @@ from pymab.reward_distribution import (
     UniformRewardDistribution,
     BernoulliRewardDistribution,
 )
+
+if typing.TYPE_CHECKING:
+    from typing import *
 
 logger = logging.getLogger(__name__)
 

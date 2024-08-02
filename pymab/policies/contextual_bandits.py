@@ -3,9 +3,12 @@ from __future__ import annotations
 import logging
 
 import numpy as np
-from typing import Callable, Tuple
+import typing
 
 from pymab.policies.policy import Policy
+
+if typing.TYPE_CHECKING:
+    from typing import *
 
 logger = logging.getLogger(__name__)
 

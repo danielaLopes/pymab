@@ -3,10 +3,13 @@ from __future__ import annotations
 import logging
 
 import numpy as np
-from typing import Tuple, Type
+import typing
 
 from pymab.policies.policy import Policy
 from pymab.reward_distribution import RewardDistribution
+
+if typing.TYPE_CHECKING:
+    from typing import *
 
 logger = logging.getLogger(__name__)
 

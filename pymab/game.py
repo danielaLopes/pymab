@@ -1,10 +1,12 @@
-import logging
-from typing import List, Type
+from __future__ import annotations
+
 from functools import lru_cache
+import logging
+import typing
 
 import numpy as np
-import matplotlib.pyplot as plt
 import matplotlib as mpl
+import matplotlib.pyplot as plt
 
 from numpy.random import beta
 from scipy.stats import norm
@@ -13,6 +15,9 @@ from joblib import Parallel, delayed
 
 from pymab.policies.policy import Policy
 from pymab.reward_distribution import RewardDistribution
+
+if typing.TYPE_CHECKING:
+    from typing import *
 
 logger = logging.getLogger(__name__)
 
@@ -42,7 +47,7 @@ class Game:
         Q_values: List[float] = None,
         Q_values_mean: float = 0.0,
         Q_values_variance: float = 1.0,
-        is_stationary: bool = False,
+        is_stationary: bool = True,
     ) -> None:
         if Q_values is None:
             Q_values = []
@@ -82,9 +87,11 @@ class Game:
         self.colors = cmap(np.linspace(0, 1, len(self.policies)))
 
     def new_episode(self, episode_idx: int) -> None:
-        if self.is_stationary == False or episode_idx == 0:
-            if self.set_Q_values_flag == True:
-                self.generate_Q_values()
+        if episode_idx == 0 and self.set_Q_values_flag == True:
+            self.generate_Q_values()
+
+        if not self.is_stationary:
+            self.generate_Q_values()
 
         for policy in self.policies:
             policy.Q_values = self.Q_values

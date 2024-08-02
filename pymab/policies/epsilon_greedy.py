@@ -4,10 +4,13 @@ import logging
 
 import numpy as np
 import random
-from typing import Tuple, Type
+import typing
 
 from pymab.policies.greedy import GreedyPolicy
 from pymab.reward_distribution import RewardDistribution
+
+if typing.TYPE_CHECKING:
+    from typing import *
 
 logger = logging.getLogger(__name__)
 

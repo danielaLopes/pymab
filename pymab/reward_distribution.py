@@ -1,8 +1,12 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
+import typing
 
 import numpy as np
+
+if typing.TYPE_CHECKING:
+    from typing import *
 
 
 class RewardDistribution(ABC):
