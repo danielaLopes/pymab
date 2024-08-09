@@ -30,6 +30,7 @@ class BernoulliBayesianUCBPolicy(UCBPolicy):
 
     def __init__(
         self,
+        *,
         n_bandits: int,
         optimistic_initialization: int = 0,
         variance: float = 1.0,
@@ -38,7 +39,11 @@ class BernoulliBayesianUCBPolicy(UCBPolicy):
         n_mcmc_samples: int = 1000,
     ) -> None:
         super().__init__(
-            n_bandits, optimistic_initialization, variance, reward_distribution, c
+            n_bandits=n_bandits,
+            optimistic_initialization=optimistic_initialization,
+            variance=variance,
+            reward_distribution=reward_distribution,
+            c=c
         )
         self.n_mcmc_samples = n_mcmc_samples
         self.successes = np.zeros(n_bandits)

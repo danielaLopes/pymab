@@ -29,6 +29,7 @@ class EpsilonGreedyPolicy(GreedyPolicy):
 
     def __init__(
         self,
+        *,
         n_bandits: int,
         optimistic_initialization: float = 0,
         variance: float = 1.0,
@@ -36,7 +37,10 @@ class EpsilonGreedyPolicy(GreedyPolicy):
         epsilon: float = 0.1,
     ) -> None:
         super().__init__(
-            n_bandits, optimistic_initialization, variance, reward_distribution
+            n_bandits=n_bandits,
+            optimistic_initialization=optimistic_initialization,
+            variance=variance,
+            reward_distribution=reward_distribution
         )
         self.epsilon = epsilon
 

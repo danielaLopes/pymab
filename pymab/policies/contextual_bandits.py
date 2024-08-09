@@ -29,6 +29,7 @@ class ContextualBanditPolicy(Policy):
 
     def __init__(
         self,
+        *
         n_bandits: int,
         context_dim: int,
         context_func: Callable,
@@ -38,11 +39,11 @@ class ContextualBanditPolicy(Policy):
         learning_rate: float = 0.1,
     ) -> None:
         super().__init__(
-            n_bandits,
-            optimistic_initialization,
-            variance,
-            reward_distribution,
-            context_func,
+            n_bandits=n_bandits,
+            optimistic_initialization=optimistic_initialization,
+            variance=variance,
+            reward_distribution=reward_distribution,
+            context_func=context_func,
         )
         self.context_dim = context_dim
         self.theta = np.zeros(

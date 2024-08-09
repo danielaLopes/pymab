@@ -72,3 +72,10 @@ for policy in game.policies:
     policy.plot_distribution()
 ```
 If I don't pass Q_values, these will only be set in the game loop, and this will fail. Find a better way to initialize the first values.
+
+* Test all examples and apply fixes
+* Add example for non stationary with particular appropriate algorithms
+* Fix stationary, make tests, and ensures this can also change the variance, and probably we should have a variance per arm.
+* Change the plots to plotly or something
+* Handle project dependencies in setup.py and all of that
+* Make tests for non stationary and mixin 

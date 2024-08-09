@@ -26,28 +26,56 @@ class UCBPolicy(Policy):
     variance: float
     reward_distribution: Type[RewardDistribution]
     c: float
+    is_stationary: bool
+    sliding_window_size: int
+    discount_factor: float
 
     def __init__(
         self,
+        *,
         n_bandits: int,
         optimistic_initialization: int = 0,
         variance: float = 1.0,
         reward_distribution: str = "gaussian",
         c: float = 1.0,
+        is_stationary: bool = True,
+        sliding_window_size: int = None,
+        discount_factor: float = None
     ) -> None:
         super().__init__(
-            n_bandits, optimistic_initialization, variance, reward_distribution
+            n_bandits=n_bandits,
+            optimistic_initialization=optimistic_initialization,
+            variance=variance,
+            reward_distribution=reward_distribution,
+            is_stationary=is_stationary,
+            sliding_window_size=sliding_window_size,
+            discount_factor=discount_factor
         )
         self.c = c
 
     def _get_ucb_value(self, action_index: int) -> float:
         if self.times_selected[action_index] == 0:
             return float("inf")
+
         mean_reward = self.actions_estimated_reward[action_index]
-        confidence_interval = math.sqrt(
-            (self.c * math.log(self.current_step + 1))
-            / self.times_selected[action_index]
-        )
+        if self.is_stationary:
+            confidence_interval = math.sqrt(
+                (self.c * math.log(self.current_step + 1))
+                / self.times_selected[action_index]
+            )
+        else:
+            if self.sliding_window_size:
+                confidence_interval = math.sqrt(
+                    (self.c * math.log(min(self.current_step, self.sliding_window_size) + 1))
+                    / min(self.times_selected[action_index], self.sliding_window_size)
+                )
+            elif self.discount_factor:
+                effective_n = 1 / (1 - self.discount_factor)
+                confidence_interval = math.sqrt(
+                    (self.c * math.log(effective_n))
+                    / min(self.times_selected[action_index], effective_n)
+                )
+
         return mean_reward + confidence_interval
 
     def select_action(self, *args, **kwargs) -> Tuple[int, float]:

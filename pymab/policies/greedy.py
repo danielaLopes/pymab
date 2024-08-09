@@ -27,13 +27,17 @@ class GreedyPolicy(Policy):
 
     def __init__(
         self,
+        *,
         n_bandits: int,
         optimistic_initialization: float = 0,
         variance: float = 1.0,
         reward_distribution: str = "gaussian",
     ) -> None:
         super().__init__(
-            n_bandits, optimistic_initialization, variance, reward_distribution
+            n_bandits=n_bandits,
+            optimistic_initialization=optimistic_initialization,
+            variance=variance,
+            reward_distribution=reward_distribution
         )
 
     def select_action(self, *args, **kwargs) -> Tuple[int, float]:
