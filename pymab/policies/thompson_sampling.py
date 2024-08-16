@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import numpy as np
-from typing import Union, Tuple, Type
+import typing
 
 from matplotlib import pyplot as plt
 from scipy.stats import beta, norm
@@ -14,6 +14,9 @@ import logging
 from pymab.reward_distribution import RewardDistribution
 
 logger = logging.getLogger(__name__)
+
+if typing.TYPE_CHECKING:
+    from typing import *
 
 
 class BernoulliThompsonSamplingPolicy(Policy):
@@ -45,6 +48,7 @@ class BernoulliThompsonSamplingPolicy(Policy):
     actions_estimated_reward: np.array
     variance: float
     reward_distribution: Type[RewardDistribution]
+    rewards_history: List[List[float]]
     successes: np.array
     failures: np.array
 

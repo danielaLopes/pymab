@@ -304,3 +304,4 @@ class Game:
     def _update_non_stationary_Q_values(self, episode_idx: int) -> None:
         if self.change_frequency and episode_idx % self.change_frequency == 0:
             self.Q_values += np.random.normal(0, self.change_magnitude, self.n_bandits)
+            print("Q_values updated", self.Q_values)

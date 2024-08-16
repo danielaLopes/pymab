@@ -25,6 +25,7 @@ class EpsilonGreedyPolicy(GreedyPolicy):
     actions_estimated_reward: np.array
     variance: float
     reward_distribution: Type[RewardDistribution]
+    rewards_history: List[List[float]]
     epsilon: float
 
     def __init__(

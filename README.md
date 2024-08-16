@@ -77,5 +77,5 @@ If I don't pass Q_values, these will only be set in the game loop, and this will
 * Add example for non stationary with particular appropriate algorithms
 * Fix stationary, make tests, and ensures this can also change the variance, and probably we should have a variance per arm.
 * Change the plots to plotly or something
-* Handle project dependencies in setup.py and all of that
+* Handle project dependencies in setup.py and all of that, to make pip installable
 * Make tests for non stationary and mixin 

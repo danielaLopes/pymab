@@ -39,6 +39,7 @@ class Policy(ABC):
     variance: float
     reward_distribution: Type[RewardDistribution]
     context_func: Callable
+    rewards_history: List[List[float]]
 
     def __init__(
         self,
@@ -48,9 +49,6 @@ class Policy(ABC):
         variance: float = 1.0,
         reward_distribution: str = "gaussian",
         context_func: Callable = no_context_func,
-        is_stationary: bool = True,
-        sliding_window_size: int = None,
-        discount_factor: float = None
     ) -> None:
         self.n_bandits = n_bandits
         self.optimistic_initialization = optimistic_initialization
@@ -64,9 +62,6 @@ class Policy(ABC):
             self.n_bandits, self.optimistic_initialization, dtype=float
         )
         self.context_func = context_func
-        self.is_stationary = is_stationary
-        self.sliding_window_size = sliding_window_size
-        self.discount_factor = discount_factor
         self.rewards_history = [[] for _ in range(n_bandits)]
 
     @staticmethod
@@ -90,21 +85,16 @@ class Policy(ABC):
         reward = self._get_actual_reward(chosen_action_index)
         self.total_reward += reward
         self.times_selected[chosen_action_index] += 1
-        # Calculate average reward per action without storing all rewards
-        self.actions_estimated_reward[chosen_action_index] += (
-              reward - self.actions_estimated_reward[
-          chosen_action_index]
-        ) / self.times_selected[chosen_action_index]
 
         self.rewards_history[chosen_action_index].append(reward)
 
-        if not self.is_stationary:
-            if self.sliding_window_size:
-                self._update_sliding_window(chosen_action_index)
-            elif self.discount_factor:
-                self._update_discounted(chosen_action_index)
+        self._update_estimate(chosen_action_index, reward)
 
         return reward
+
+    @abstractmethod
+    def _update_estimate(self, action_index: int, reward: float) -> None:
+        pass
 
     def _update_sliding_window(self, chosen_action_index: int) -> None:
         if len(self.rewards_history[chosen_action_index]) > self.sliding_window_size:
@@ -112,14 +102,6 @@ class Policy(ABC):
                                                         -self.sliding_window_size:]
 
         self.actions_estimated_reward[chosen_action_index] = np.mean(self.rewards_history[chosen_action_index])
-
-    def _update_discounted(self, chosen_action_index: int) -> None:
-        if len(self.rewards_history[chosen_action_index]) > 1:
-            prev_estimate = self.actions_estimated_reward[chosen_action_index]
-            latest_reward = self.rewards_history[chosen_action_index][-1]
-            self.actions_estimated_reward[chosen_action_index] = (
-                    self.discount_factor * prev_estimate + (1 - self.discount_factor) * latest_reward
-            )
 
     @property
     def Q_values(self) -> List[float]:
