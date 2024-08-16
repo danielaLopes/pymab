@@ -18,7 +18,8 @@ class SlidingWindowMixin(NonStationaryMixin):
     Maintains a fixed-size window of the most recent observations for each arm. This approach allows the algorithm to
     adapt to changes in the environment by forgetting older, potentially outdated information.
     Can adapt to abrupt changes in the environment. Provides a clear cut-off for old information. May discard useful
-    information in slowly changing environments.
+    information in slowly changing environments. Sliding window is expected to be more beneficial in environments
+    with periodic and dramatic changes.
     """
     def __init__(self, *, window_size: int = 100):
         """
@@ -33,9 +34,12 @@ class SlidingWindowMixin(NonStationaryMixin):
 
 class DiscountedMixin(NonStationaryMixin):
     """
-    Gives more weight to recent observation, and less weight to older ones.
+    Gives more weight to recent observation, and less weight to older ones. With a discount factor close to 1, the
+    algorithm has a longer memory, and changes slowly in response to new reward distributions. With a discount factor
+    close to 0, the algorithm adapts quickly, but potentially overfits to noise in the environment.
     This approach is particularly useful in non-stationary environments where the reward distributions of arms may
-    change over time. May be less efficient in stationary environments compared to standard Policy.
+    change over time. Discount factor is expected to be more beneficial in environments with gradual and continuous
+    changes. May be less efficient in stationary environments compared to standard Policy.
     """
     def __init__(self, *, discount_factor: float = 0.9):
         """

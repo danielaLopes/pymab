@@ -146,7 +146,7 @@ class SlidingWindowUCBPolicy(SlidingWindowMixin, UCBPolicy):
         return confidence_interval
 
     def __repr__(self) -> str:
-        return f"{super().__repr__()}(sliding_window_size={self.window_size})"
+        return f"{super().__repr__()}(window={self.window_size})"
 
     def __str__(self):
         description = super().__str__()

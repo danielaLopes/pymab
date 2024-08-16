@@ -79,3 +79,5 @@ If I don't pass Q_values, these will only be set in the game loop, and this will
 * Change the plots to plotly or something
 * Handle project dependencies in setup.py and all of that, to make pip installable
 * Make tests for non stationary and mixin 
+* Make non stationary for other algorithms like greedy.
+* Make plot for which arm is the optimal at each step for non stationarity analysis
