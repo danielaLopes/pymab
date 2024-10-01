@@ -57,7 +57,7 @@ sphinx-build -b html source/ build/
 
 
 ## TODOs
-* Add implementation for softmax_selection, contextual_bandits, and bayesian_ucb
+* Add implementation for softmax_selection, and bayesian_ucb
 * Check why the thompson sampling is doesn't have amazing results with gaussian distribution (might just be how it works and not an error),
   * Check if it works better with other armed bandits
 * Test if algorithms are working with bernoulli distribution
@@ -81,3 +81,14 @@ If I don't pass Q_values, these will only be set in the game loop, and this will
 * Make tests for non stationary and mixin 
 * Make non stationary for other algorithms like greedy.
 * Make plot for which arm is the optimal at each step for non stationarity analysis
+
+* Add more complex algorithms for non-stationary, like:
+  * https://towardsdatascience.com/reinforcement-learning-basics-stationary-and-non-stationary-multi-armed-bandit-problem-cfe06d33b815
+  * https://gdmarmerola.github.io/non-stationary-bandits/
+    * exponentially weighted means
+    * weighted block means
+    * fitting a time series model to find an indicator of when a distribution changes and tune the exploration rate accordingly
+  * Add a new environment change mixin that changes at random steps, or changes the variance, or changes the mean, etc.
+
+* Optimal arm plot is not working
+* I suspect that the non-stationary is not working properly, and the variance is not changing

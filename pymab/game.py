@@ -4,6 +4,7 @@ from abc import abstractmethod, ABC
 from enum import Enum
 from functools import lru_cache
 import logging
+from pathlib import Path
 
 from plotly.subplots import make_subplots
 from tqdm import tqdm
@@ -17,7 +18,7 @@ from pymab.plot_config import get_line_style, get_default_layout, get_marker_sty
 from pymab.policies.policy import Policy
 from pymab.reward_distribution import RewardDistribution
 from pymab.static import DEFAULT_ENVIRONMENT_CHANGE_FREQUENCY, DEFAULT_ENVIRONMENT_CHANGE_RATE, \
-    DEFAULT_ENVIRONMENT_CHANGE_MAGNITUDE
+    DEFAULT_ENVIRONMENT_CHANGE_MAGNITUDE, DEFAULT_RESULTS_FOLDER
 
 if typing.TYPE_CHECKING:
     from typing import *
@@ -29,6 +30,7 @@ class EnvironmentChangeType(Enum):
     STATIONARY = "stationary"
     GRADUAL = "gradual"
     ABRUPT = "abrupt"
+    ABRUPT_ARM_SWAPPING = "abrupt_arm_swapping"
 
 class EnvironmentChangeMixin(ABC):
     @abstractmethod
@@ -36,10 +38,18 @@ class EnvironmentChangeMixin(ABC):
         pass
 
 class StationaryMixin(EnvironmentChangeMixin):
+    """
+    Stationary environment's rewards distributions never change, so the Q-values are returned as sampled for each step.
+    """
     def apply_change(self, Q_values: np.ndarray, step: int) -> np.ndarray:
         return Q_values
 
 class GradualChangeMixin(EnvironmentChangeMixin):
+    """
+    Non-stationary environment where the rewards distributions change gradually over time. The change is applied by
+    adding a different random value drawn from a normal distribution with 0 mean and {self.change_rate} standard
+    deviation to each of the Q-values at each step.
+    """
     def __init__(self, change_rate: float):
         self.change_rate = change_rate
 
@@ -47,6 +57,11 @@ class GradualChangeMixin(EnvironmentChangeMixin):
         return Q_values + np.random.normal(0, self.change_rate, size=Q_values.shape)
 
 class AbruptChangeMixin(EnvironmentChangeMixin):
+    """
+    Non-stationary environment where the rewards distributions change abruptly and periodically. The change is applied
+    by adding a different random value drawn from a normal distribution with 0 mean and {self.change_magnitude} standard
+    deviation to each of the Q-values every {self.change_frequency} steps.
+    """
     def __init__(self, change_frequency: int, change_magnitude: float):
         self.change_frequency = change_frequency
         self.change_magnitude = change_magnitude
@@ -55,6 +70,19 @@ class AbruptChangeMixin(EnvironmentChangeMixin):
         if step % self.change_frequency == 0:
             return Q_values + np.random.normal(0, self.change_magnitude, size=Q_values.shape)
         return Q_values
+
+class AbruptArmSwappingMixin(EnvironmentChangeMixin):
+    """
+    Non-stationary environment where the rewards distributions between arms get swapped abruptly and at random steps.
+    """
+    def __init__(self, shift_probability: float):
+        self.shift_probability = shift_probability
+
+    def apply_change(self, Q_values: np.ndarray, step: int) -> np.ndarray:
+        if np.random.random() < self.shift_probability:
+            return np.random.permutation(Q_values)
+        return Q_values
+
 
 class Game:
     n_episodes: int
@@ -71,6 +99,7 @@ class Game:
     optimal_actions: np.ndarray
     regret_by_policy: np.ndarray
     is_stationary: bool
+    results_folder: Path
 
     def __init__(
         self,
@@ -83,7 +112,8 @@ class Game:
         Q_values_mean: float = 0.0,
         Q_values_variance: float = 1.0,
         environment_change: Union[EnvironmentChangeType, Type[EnvironmentChangeMixin]] = EnvironmentChangeType.STATIONARY,
-        change_params: dict = None
+        change_params: dict = None,
+        results_folder: Path = DEFAULT_RESULTS_FOLDER,
     ) -> None:
         if Q_values is None:
             Q_values = []
@@ -121,6 +151,8 @@ class Game:
         self.environment_change = self._create_environment_change(environment_change, change_params)
 
         self.colors = get_color_sequence()
+
+        self.results_folder = results_folder
 
     @property
     @lru_cache(maxsize=None)
@@ -176,6 +208,7 @@ class Game:
         return np.cumsum(np.mean(self.regret_by_policy, axis=0), axis=0)
 
     def game_loop(self) -> None:
+        logger.info(f"Starting game loop for {self.n_episodes} episodes, {self.n_steps} in each episode, and analysing {len(self.policies)} policies ...")
         for episode in range(self.n_episodes):
             self.new_episode(episode)
             self.optimal_actions[episode] = np.argmax(self.Q_values)
@@ -215,7 +248,7 @@ class Game:
             policy.Q_values = self.Q_values
             policy.reset()
 
-    def plot_average_reward_by_step(self) -> None:
+    def plot_average_reward_by_step(self, save: bool = True, plot_name: str = "") -> None:
         fig = go.Figure()
 
         for policy_index, policy in enumerate(self.policies):
@@ -236,8 +269,10 @@ class Game:
         )
 
         fig.show()
+        if save:
+            fig.write_html(self.results_folder / f"average_reward_by_step_{plot_name}.html")
 
-    def plot_average_reward_by_episode(self) -> None:
+    def plot_average_reward_by_episode(self, save: bool = True, plot_name: str = "") -> None:
         fig = go.Figure()
 
         for policy_index, policy in enumerate(self.policies):
@@ -258,8 +293,10 @@ class Game:
         )
 
         fig.show()
+        if save:
+            fig.write_html(self.results_folder / f"average_reward_by_episode_{plot_name}.html")
 
-    def plot_average_reward_by_step_smoothed(self, smooth_factor: int = 50) -> None:
+    def plot_average_reward_by_step_smoothed(self, smooth_factor: int = 50, save: bool = True, plot_name: str = "") -> None:
         fig = go.Figure()
 
         for policy_index, policy in enumerate(self.policies):
@@ -283,8 +320,10 @@ class Game:
         )
 
         fig.show()
+        if save:
+            fig.write_html(self.results_folder / f"average_reward_by_step_smoothed_{plot_name}.html")
 
-    def plot_cumulative_regret_by_step(self) -> None:
+    def plot_cumulative_regret_by_step(self, save: bool = True, plot_name: str = "") -> None:
         fig = go.Figure()
 
         for policy_index, policy in enumerate(self.policies):
@@ -305,8 +344,10 @@ class Game:
         )
 
         fig.show()
+        if save:
+            fig.write_html(self.results_folder / f"cumulative_regret_by_step_{plot_name}.html")
 
-    def plot_optimal_arm_evolution(self):
+    def plot_optimal_arm_evolution(self, save: bool = True, plot_name: str = ""):
         optimal_arms = np.argmax(self.Q_values_history, axis=1)
 
         scatter = go.Scatter(
@@ -350,8 +391,10 @@ class Game:
         fig.update_yaxes(title_text="Arm Number", row=2, col=1)
 
         fig.show()
+        if save:
+            fig.write_html(self.results_folder / f"optimal_arm_evolution_{plot_name}.html")
 
-    def plot_Q_values(self) -> None:
+    def plot_Q_values(self, save: bool = True, plot_name: str = "") -> None:
         fig = go.Figure()
 
         fig.add_trace(go.Scatter(
@@ -370,8 +413,10 @@ class Game:
         )
 
         fig.show()
+        if save:
+            fig.write_html(self.results_folder / f"Q_values_{plot_name}.html")
 
-    def plot_total_reward_by_step(self) -> None:
+    def plot_total_reward_by_step(self, save: bool = True, plot_name: str = "") -> None:
         fig = go.Figure()
 
         for policy_index, policy in enumerate(self.policies):
@@ -392,8 +437,10 @@ class Game:
         )
 
         fig.show()
+        if save:
+            fig.write_html(self.results_folder / f"total_reward_by_step_{plot_name}.html")
 
-    def plot_rate_optimal_actions_by_step(self) -> None:
+    def plot_rate_optimal_actions_by_step(self, save: bool = True, plot_name: str = "") -> None:
         fig = go.Figure()
 
         optimal_actions_expanded = np.repeat(
@@ -423,6 +470,8 @@ class Game:
         )
 
         fig.show()
+        if save:
+            fig.write_html(self.results_folder / f"rate_optimal_actions_by_step_{plot_name}.html")
 
     @property
     @lru_cache(maxsize=None)

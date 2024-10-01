@@ -1,3 +1,9 @@
+from pathlib import Path
+
 DEFAULT_ENVIRONMENT_CHANGE_RATE = 0.01
 DEFAULT_ENVIRONMENT_CHANGE_FREQUENCY = 100
 DEFAULT_ENVIRONMENT_CHANGE_MAGNITUDE = 0.5
+
+BASE_DIR = Path(__file__).resolve().parent.parent
+DEFAULT_RESULTS_FOLDER = BASE_DIR/ "results"
+DEFAULT_RESULTS_FOLDER.mkdir(parents=True, exist_ok=True)
