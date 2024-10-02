@@ -1,0 +1,29 @@
+[
+build-system
+]
+requires = ["setuptools>=45", "wheel", "setuptools_scm[toml]>=6.0"]
+build-backend = "setuptools.build_meta"
+
+[
+tool.setuptools_scm
+]
+
+[
+tool.black
+]
+line-length = 88
+target-version = ['py36', 'py37', 'py38', 'py39']
+include = '\.pyi?$'
+extend-exclude = '''
+/(
+  # directories
+  \.eggs
+  | \.git
+  | \.hg
+  | \.mypy_cache
+  | \.tox
+  | \.venv
+  | build
+  | dist
+)/
+'''

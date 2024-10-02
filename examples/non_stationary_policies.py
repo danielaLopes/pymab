@@ -71,7 +71,7 @@ def main():
             ucb_discounted_policy_0_9
         ]
 
-    non_stationary_gradual_game_small_cahnge = Game(
+    non_stationary_gradual_game_small_change = Game(
         n_episodes=n_episodes,
         n_steps=n_steps,
         policies=policies,
@@ -79,7 +79,7 @@ def main():
         environment_change=EnvironmentChangeType.GRADUAL,
         change_params={'change_rate': 0.01}
     )
-    run_game(non_stationary_gradual_game_small_cahnge, 'non_stationary_gradual_game_0_01')
+    run_game(non_stationary_gradual_game_small_change, 'non_stationary_gradual_game_0_01')
 
     non_stationary_gradual_game_big_change = Game(
         n_episodes=n_episodes,
@@ -91,7 +91,7 @@ def main():
     )
     run_game(non_stationary_gradual_game_big_change, 'non_stationary_gradual_game_0_5')
 
-    non_stationary_abrupt_game = Game(
+    non_stationary_abrupt_game_small_change = Game(
         n_episodes=n_episodes,
         n_steps=n_steps,
         policies=policies,
@@ -99,7 +99,17 @@ def main():
         environment_change=EnvironmentChangeType.ABRUPT,
         change_params={'change_frequency': 100, 'change_magnitude': 0.5},
     )
-    run_game(non_stationary_abrupt_game, game_name='non_stationary_abrupt_game_100_0_5')
+    run_game(non_stationary_abrupt_game_small_change, game_name='non_stationary_abrupt_game_100_0_5')
+
+    non_stationary_abrupt_game_big_change = Game(
+        n_episodes=n_episodes,
+        n_steps=n_steps,
+        policies=policies,
+        n_bandits=n_bandits,
+        environment_change=EnvironmentChangeType.ABRUPT,
+        change_params={'change_frequency': 50, 'change_magnitude': 1},
+    )
+    run_game(non_stationary_abrupt_game_big_change, game_name='non_stationary_abrupt_game_50_1')
 
     non_stationary_random_arm_swapping_game = Game(
         n_episodes=n_episodes,

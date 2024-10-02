@@ -361,12 +361,6 @@ class Game:
                 title="Arm Selections by Policy Over Time",
                 xaxis_title="Steps",
                 yaxis_title="Policy",
-                yaxis=dict(
-                    tickmode='array',
-                    tickvals=list(range(len(self.policies))),
-                    ticktext=[repr(policy) for policy in self.policies]
-                ),
-                height=100 * len(self.policies) + 200
             )
         )
 

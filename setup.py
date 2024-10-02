@@ -1,12 +1,19 @@
 from setuptools import setup, find_packages
 
+with open("README.md", "r", encoding="utf-8") as fh:
+    long_description = fh.read()
+
 setup(
     name="pymab",
-    version="0.1",
-    packages=find_packages(),
+    version="0.1.0",
+    packages=find_packages(exclude=["tests", "documentation"]),
     install_requires=[
-        # Add your dependencies here
-        # e.g., 'numpy', 'pandas'
+        "matplotlib",
+        "numpy",
+        "pandas",
+        "plotly",
+        "pymc3",
+        "scipy",
     ],
     include_package_data=True,
     package_data={
@@ -15,7 +22,7 @@ setup(
     author="Daniela Lopes",
     author_email="danielalopes_97@hotmail.com",
     description="A Python library for reinforcement learning algorithms.",
-    long_description=open("README.md").read(),
+    long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/danielaLopes/pymab",
     classifiers=[
@@ -24,4 +31,9 @@ setup(
         "Operating System :: OS Independent",
     ],
     python_requires=">=3.6",
+    entry_points={
+        "console_scripts": [
+            "pymab=pymab.cli:main",
+        ],
+    },
 )

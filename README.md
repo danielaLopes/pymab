@@ -80,7 +80,6 @@ If I don't pass Q_values, these will only be set in the game loop, and this will
 * Handle project dependencies in setup.py and all of that, to make pip installable
 * Make tests for non stationary and mixin 
 * Make non stationary for other algorithms like greedy.
-* Make plot for which arm is the optimal at each step for non stationarity analysis
 
 * Add more complex algorithms for non-stationary, like:
   * https://towardsdatascience.com/reinforcement-learning-basics-stationary-and-non-stationary-multi-armed-bandit-problem-cfe06d33b815
@@ -89,6 +88,3 @@ If I don't pass Q_values, these will only be set in the game loop, and this will
     * weighted block means
     * fitting a time series model to find an indicator of when a distribution changes and tune the exploration rate accordingly
   * Add a new environment change mixin that changes at random steps, or changes the variance, or changes the mean, etc.
-
-* Optimal arm plot is not working
-* I suspect that the non-stationary is not working properly, and the variance is not changing
