@@ -8,9 +8,10 @@ def run_game(game: Game, game_name: str):
 
     game.plot_average_reward_by_step(plot_name=game_name)
     game.plot_average_reward_by_step_smoothed(plot_name=game_name)
-    game.plot_rate_optimal_actions_by_step(plot_name=game_name)
+    game.plot_bandit_selection_evolution(plot_name=game_name)
     game.plot_cumulative_regret_by_step(plot_name=game_name)
-    game.plot_optimal_arm_evolution(plot_name=game_name)
+    game.plot_Q_values_evolution_by_bandit_first_episode(plot_name=game_name)
+    game.plot_rate_optimal_actions_by_step(plot_name=game_name)
 
 
 def main():
@@ -19,6 +20,8 @@ def main():
     n_bandits = 10
     n_episodes = 1000
     n_steps = 2000
+    # n_episodes = 100
+    # n_steps = 200
 
     ucb_stationary_policy = StationaryUCBPolicy(
         n_bandits=10,
@@ -98,15 +101,15 @@ def main():
     )
     run_game(non_stationary_abrupt_game, game_name='non_stationary_abrupt_game_100_0_5')
 
-    non_stationary_abrupt_arm_swapping_game = Game(
+    non_stationary_random_arm_swapping_game = Game(
         n_episodes=n_episodes,
         n_steps=n_steps,
         policies=policies,
         n_bandits=n_bandits,
-        environment_change=EnvironmentChangeType.ABRUPT_ARM_SWAPPING,
+        environment_change=EnvironmentChangeType.RANDOM_ARM_SWAPPING,
         change_params={'shift_probability': 0.2},
     )
-    run_game(non_stationary_abrupt_arm_swapping_game, game_name='non_stationary_abrupt_arm_swapping_game_0_2')
+    run_game(non_stationary_random_arm_swapping_game, game_name='non_stationary_random_arm_swapping_game_0_2')
 
     stationary_game = Game(
         n_episodes=n_episodes,

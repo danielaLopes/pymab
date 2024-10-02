@@ -18,7 +18,7 @@ from pymab.plot_config import get_line_style, get_default_layout, get_marker_sty
 from pymab.policies.policy import Policy
 from pymab.reward_distribution import RewardDistribution
 from pymab.static import DEFAULT_ENVIRONMENT_CHANGE_FREQUENCY, DEFAULT_ENVIRONMENT_CHANGE_RATE, \
-    DEFAULT_ENVIRONMENT_CHANGE_MAGNITUDE, DEFAULT_RESULTS_FOLDER
+    DEFAULT_ENVIRONMENT_CHANGE_MAGNITUDE, DEFAULT_ENVIRONMENT_SHIFT_PROBABILITY, DEFAULT_RESULTS_FOLDER
 
 if typing.TYPE_CHECKING:
     from typing import *
@@ -30,7 +30,7 @@ class EnvironmentChangeType(Enum):
     STATIONARY = "stationary"
     GRADUAL = "gradual"
     ABRUPT = "abrupt"
-    ABRUPT_ARM_SWAPPING = "abrupt_arm_swapping"
+    RANDOM_ARM_SWAPPING = "random_arm_swapping"
 
 class EnvironmentChangeMixin(ABC):
     @abstractmethod
@@ -71,7 +71,7 @@ class AbruptChangeMixin(EnvironmentChangeMixin):
             return Q_values + np.random.normal(0, self.change_magnitude, size=Q_values.shape)
         return Q_values
 
-class AbruptArmSwappingMixin(EnvironmentChangeMixin):
+class RandomArmSwappingMixin(EnvironmentChangeMixin):
     """
     Non-stationary environment where the rewards distributions between arms get swapped abruptly and at random steps.
     """
@@ -172,6 +172,7 @@ class Game:
         if change_type == EnvironmentChangeType.STATIONARY:
             logger.info('Using `stationary` mode.')
             return StationaryMixin()
+
         elif change_type == EnvironmentChangeType.GRADUAL:
             logger.info('Using `gradual` mode for environment change.')
             if 'change_rate' not in params:
@@ -179,6 +180,7 @@ class Game:
                 {DEFAULT_ENVIRONMENT_CHANGE_FREQUENCY}.""")
             change_rate = params.get('change_rate', DEFAULT_ENVIRONMENT_CHANGE_RATE)
             return GradualChangeMixin(change_rate)
+
         elif change_type == EnvironmentChangeType.ABRUPT:
             logger.info('Using `abrupt` mode for environment change.')
             if 'change_frequency' not in params:
@@ -191,6 +193,15 @@ class Game:
             change_frequency = params.get('change_frequency', DEFAULT_ENVIRONMENT_CHANGE_FREQUENCY)
             change_magnitude = params.get('change_magnitude', DEFAULT_ENVIRONMENT_CHANGE_MAGNITUDE)
             return AbruptChangeMixin(change_frequency, change_magnitude)
+
+        elif change_type == EnvironmentChangeType.RANDOM_ARM_SWAPPING:
+            logger.info('Using `random arm swapping` mode for environment change.')
+            if 'shift_probability' not in params:
+                logger.warning(f"""Specifying `shift_probability` is recommended when using `random arm swapping` mode. Defaulting to 
+                {DEFAULT_ENVIRONMENT_SHIFT_PROBABILITY}.""")
+            shift_probability = params.get('shift_probability', DEFAULT_ENVIRONMENT_SHIFT_PROBABILITY)
+            return RandomArmSwappingMixin(shift_probability)
+
         else:
             raise ValueError(f"Unknown environment change type: {change_type}")
 
@@ -323,6 +334,46 @@ class Game:
         if save:
             fig.write_html(self.results_folder / f"average_reward_by_step_smoothed_{plot_name}.html")
 
+    def plot_bandit_selection_evolution(self, save: bool = True, plot_name: str = "") -> None:
+        fig = go.Figure()
+
+        colorscale = get_color_sequence()[:self.n_bandits]
+
+        for policy_index, policy in enumerate(self.policies):
+            arm_selections = self.actions_selected_by_policy[:, :, policy_index].flatten()
+
+            for arm in range(self.n_bandits):
+                arm_mask = arm_selections == arm
+                fig.add_trace(go.Scatter(
+                    x=np.arange(self.n_episodes * self.n_steps)[arm_mask],
+                    y=np.full(np.sum(arm_mask), policy_index),
+                    mode='markers',
+                    marker=dict(
+                        size=5,
+                        color=colorscale[arm],
+                    ),
+                    name=f'{repr(policy)} - Arm {arm}',
+                    showlegend=policy_index == 0
+                ))
+
+        fig.update_layout(
+            **get_default_layout(
+                title="Arm Selections by Policy Over Time",
+                xaxis_title="Steps",
+                yaxis_title="Policy",
+                yaxis=dict(
+                    tickmode='array',
+                    tickvals=list(range(len(self.policies))),
+                    ticktext=[repr(policy) for policy in self.policies]
+                ),
+                height=100 * len(self.policies) + 200
+            )
+        )
+
+        fig.show()
+        if save:
+            fig.write_html(self.results_folder / f"bandit_selection_evolution_{plot_name}.html")
+
     def plot_cumulative_regret_by_step(self, save: bool = True, plot_name: str = "") -> None:
         fig = go.Figure()
 
@@ -347,53 +398,6 @@ class Game:
         if save:
             fig.write_html(self.results_folder / f"cumulative_regret_by_step_{plot_name}.html")
 
-    def plot_optimal_arm_evolution(self, save: bool = True, plot_name: str = ""):
-        optimal_arms = np.argmax(self.Q_values_history, axis=1)
-
-        scatter = go.Scatter(
-            x=list(range(self.n_episodes * self.n_steps)),
-            y=optimal_arms,
-            mode='markers',
-            marker=dict(
-                size=5,
-                color=optimal_arms,
-                colorscale='Viridis',
-                showscale=True,
-                colorbar=dict(title='Arm Number')
-            ),
-            name='Optimal Arm'
-        )
-
-        fig = make_subplots(rows=2, cols=1, shared_xaxes=True,
-                            vertical_spacing=0.02,
-                            row_heights=[0.7, 0.3])
-
-        fig.add_trace(scatter, row=1, col=1)
-
-        heatmap = go.Heatmap(
-            z=self.Q_values_history.T,
-            x=list(range(self.n_episodes * self.n_steps)),
-            y=list(range(self.n_bandits)),
-            colorscale='Viridis',
-            name='Q-values'
-        )
-        fig.add_trace(heatmap, row=2, col=1)
-
-        fig.update_layout(
-            title='Evolution of Optimal Arm and Q-values Over Time',
-            xaxis_title='Time Steps',
-            yaxis_title='Arm Number',
-            height=800,
-            width=1200,
-            yaxis=dict(range=[-0.5, self.n_bandits - 0.5])
-        )
-
-        fig.update_yaxes(title_text="Arm Number", row=2, col=1)
-
-        fig.show()
-        if save:
-            fig.write_html(self.results_folder / f"optimal_arm_evolution_{plot_name}.html")
-
     def plot_Q_values(self, save: bool = True, plot_name: str = "") -> None:
         fig = go.Figure()
 
@@ -415,6 +419,32 @@ class Game:
         fig.show()
         if save:
             fig.write_html(self.results_folder / f"Q_values_{plot_name}.html")
+
+    def plot_Q_values_evolution_by_bandit_first_episode(self, save: bool = True, plot_name: str = "") -> None:
+        fig = go.Figure()
+
+        for bandit_index in range(self.n_bandits):
+            bandit_Q_values = self.Q_values_history[:self.n_steps, bandit_index]
+
+            fig.add_trace(go.Scatter(
+                x=list(range(self.n_steps)),
+                y=bandit_Q_values,
+                mode='lines',
+                name=f'Bandit {bandit_index}',
+                line=dict(color=self.colors[bandit_index])
+            ))
+
+        fig.update_layout(
+            **get_default_layout(
+                title=f"Q-values evolution for Bandits during the first episode ({self.n_steps} steps)",
+                xaxis_title="Steps",
+                yaxis_title="Q-value"
+            )
+        )
+
+        fig.show()
+        if save:
+            fig.write_html(self.results_folder / f"Q_values_evolution_by_bandwidth_first_episode_{plot_name}.html")
 
     def plot_total_reward_by_step(self, save: bool = True, plot_name: str = "") -> None:
         fig = go.Figure()
