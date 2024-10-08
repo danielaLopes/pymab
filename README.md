@@ -88,3 +88,4 @@ If I don't pass Q_values, these will only be set in the game loop, and this will
     * weighted block means
     * fitting a time series model to find an indicator of when a distribution changes and tune the exploration rate accordingly
   * Add a new environment change mixin that changes at random steps, or changes the variance, or changes the mean, etc.
+  * Finish tests
