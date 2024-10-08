@@ -1,46 +1,39 @@
-name: Build, Test and Deploy Docs
+image: python:3.9.6
 
-on:
-  push:
-    branches:
-      - main
-      - dev
+stages:
+  - build
+  - test
 
-jobs:
-  build:
-    runs-on: ubuntu-latest
+variables:
+  PIP_CACHE_DIR: "$CI_PROJECT_DIR/.pip-cache"
 
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v2
+cache:
+  paths:
+    - .pip-cache/
 
-    - name: Set up Python
-      uses: actions/setup-python@v2
-      with:
-        python-version: '3.9.6'
+before_script:
+  - python -V
+  - pip install -U pip
+  - pip install -r requirements.txt
 
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install -r requirements.txt
+build:
+  stage: build
+  script:
+    - echo "Build stage completed"
 
-    - name: Run tests
-      run: |
-        ./run_tests.sh
+test:
+  stage: test
+  script:
+    - ./run_tests.sh
 
-    - name: Install documentation dependencies
-      run: |
-        pip install -U sphinx
-        pip install -U sphinx_rtd_theme
-
-    - name: Build documentation
-      run: |
-        cd documentation
-        sphinx-build -b html source/ public/
-
-    - name: Deploy to GitHub Pages
-      if: github.ref == 'refs/heads/main'
-      uses: peaceiris/actions-gh-pages@v3
-      with:
-        github_token: ${{ secrets.GITHUB_TOKEN }}
-        publish_dir: ./docs/_build/html
+pages:
+  stage: deploy
+  script:
+    - pip install -U sphinx sphinx_rtd_theme
+    - cd documentation
+    - sphinx-build -b html source/ public/
+  artifacts:
+    paths:
+      - public
+  rules:
+    - if: ${{ CI_COMMIT_BRANCH == main }}
