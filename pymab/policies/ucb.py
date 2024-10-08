@@ -7,7 +7,7 @@ import typing
 
 import numpy as np
 
-from pymab.policies.mixins.stationarity_mixins import StationaryMixin, SlidingWindowMixin, DiscountedMixin
+from pymab.policies.mixins.stationarity_mixins import StationaryPolicyMixin, SlidingWindowMixin, DiscountedMixin
 from pymab.policies.policy import Policy
 from pymab.reward_distribution import RewardDistribution
 
@@ -17,9 +17,9 @@ if typing.TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 
-class UCBPolicy(Policy, ABC):
+class UCBPolicy(StationaryPolicyMixin, Policy, ABC):
     n_bandits: int
-    optimistic_initialization: int
+    optimistic_initialization: float
     _Q_values: np.array
     current_step: int
     total_reward: float
@@ -34,7 +34,7 @@ class UCBPolicy(Policy, ABC):
         self,
         *,
         n_bandits: int,
-        optimistic_initialization: int = 0,
+        optimistic_initialization: float = 0.0,
         variance: float = 1.0,
         reward_distribution: str = "gaussian",
         c: float = 1.0,
@@ -85,9 +85,9 @@ class UCBPolicy(Policy, ABC):
                     c={self.c})"""
 
 
-class StationaryUCBPolicy(StationaryMixin, UCBPolicy):
+class StationaryUCBPolicy(UCBPolicy):
     n_bandits: int
-    optimistic_initialization: int
+    optimistic_initialization: float
     _Q_values: np.array
     current_step: int
     total_reward: float
@@ -107,7 +107,7 @@ class StationaryUCBPolicy(StationaryMixin, UCBPolicy):
 
 class SlidingWindowUCBPolicy(SlidingWindowMixin, UCBPolicy):
     n_bandits: int
-    optimistic_initialization: int
+    optimistic_initialization: float
     _Q_values: np.array
     current_step: int
     total_reward: float
@@ -122,7 +122,7 @@ class SlidingWindowUCBPolicy(SlidingWindowMixin, UCBPolicy):
     def __init__(
             self,
             n_bandits: int,
-            optimistic_initialization: float = 0,
+            optimistic_initialization: float = 0.0,
             variance: float = 1.0,
             reward_distribution: str = "gaussian",
             c: float = 1.0,
@@ -156,7 +156,7 @@ class SlidingWindowUCBPolicy(SlidingWindowMixin, UCBPolicy):
 
 class DiscountedUCBPolicy(DiscountedMixin, UCBPolicy):
     n_bandits: int
-    optimistic_initialization: int
+    optimistic_initialization: float
     _Q_values: np.array
     current_step: int
     total_reward: float

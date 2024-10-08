@@ -7,7 +7,7 @@ from pymab.policies.thompson_sampling import (
     BernoulliThompsonSamplingPolicy,
     GaussianThompsonSamplingPolicy,
 )
-from pymab.game import Game  # Import your Game class
+from pymab.game import Game, EnvironmentChangeType  # Import your Game class
 
 
 class TestGame(unittest.TestCase):
@@ -36,7 +36,7 @@ class TestGame(unittest.TestCase):
             n_bandits=self.n_bandits,
             Q_values=self.Q_values,
             Q_values_variance=self.Q_values_variance,
-            is_stationary=False,
+            environment_change=EnvironmentChangeType.STATIONARY,
         )
 
     def test_initialization(self):
@@ -48,7 +48,7 @@ class TestGame(unittest.TestCase):
     def test_initialization_multiple_reward_distributions(self):
         self.policies.append(
             BernoulliThompsonSamplingPolicy(
-                self.n_bandits, reward_distribution="bernoulli"
+                n_bandits=self.n_bandits, reward_distribution="bernoulli"
             )
         )
         with self.assertRaises(ValueError):
@@ -59,12 +59,12 @@ class TestGame(unittest.TestCase):
                 n_bandits=self.n_bandits,
                 Q_values=self.Q_values,
                 Q_values_variance=self.Q_values_variance,
-                is_stationary=False,
+                environment_change=EnvironmentChangeType.STATIONARY,
             )
 
     def test_generate_Q_values(self):
         for i in range(self.n_steps):
-            self.game.generate_Q_values()
+            self.game._generate_initial_Q_values()
             self.assertEqual(len(self.game.Q_values), self.n_bandits)
             for Q_value in self.game.Q_values:
                 self.assertTrue(

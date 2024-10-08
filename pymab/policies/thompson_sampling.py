@@ -6,6 +6,7 @@ import typing
 from matplotlib import pyplot as plt
 from scipy.stats import beta, norm
 
+from pymab.policies.mixins.stationarity_mixins import StationaryPolicyMixin
 from pymab.policies.policy import Policy
 
 
@@ -19,7 +20,7 @@ if typing.TYPE_CHECKING:
     from typing import *
 
 
-class BernoulliThompsonSamplingPolicy(Policy):
+class BernoulliThompsonSamplingPolicy(StationaryPolicyMixin, Policy):
     """
     This policy is used for multi-armed bandit problems with Bernoulli-distributed rewards.
     It uses the Beta distribution to model the probability of success for each action and
@@ -60,7 +61,8 @@ class BernoulliThompsonSamplingPolicy(Policy):
         variance: float = 1.0,
         reward_distribution: str = "gaussian",
     ) -> None:
-        super().__init__(
+        Policy.__init__(
+            self,
             n_bandits=n_bandits,
             optimistic_initialization=optimistic_initialization,
             variance=variance,
@@ -152,7 +154,7 @@ class BernoulliThompsonSamplingPolicy(Policy):
         plt.show()
 
 
-class GaussianThompsonSamplingPolicy(Policy):
+class GaussianThompsonSamplingPolicy(StationaryPolicyMixin, Policy):
     """
     This policy is used for multi-armed bandit problems with Gaussian-distributed rewards.
     It models the mean reward for each action using a Gaussian distribution and updates
@@ -187,12 +189,12 @@ class GaussianThompsonSamplingPolicy(Policy):
     def __init__(
         self,
         n_bandits: int,
-        optimistic_initialization: float = 0,
+        optimistic_initialization: float = 0.0,
         variance: float = 1.0,
         reward_distribution: str = "gaussian",
     ) -> None:
-        super().__init__(
-            n_bandits, optimistic_initialization, variance, reward_distribution
+        Policy.__init__(
+            self, n_bandits=n_bandits, optimistic_initialization=optimistic_initialization, variance=variance, reward_distribution=reward_distribution
         )
         self.means = np.zeros(n_bandits)
         self.precisions = np.ones(n_bandits) / variance

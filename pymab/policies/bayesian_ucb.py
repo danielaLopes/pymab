@@ -17,7 +17,7 @@ logger = logging.getLogger(__name__)
 
 class BernoulliBayesianUCBPolicy(UCBPolicy):
     n_bandits: int
-    optimistic_initialization: int
+    optimistic_initialization: float
     _Q_values: np.array
     current_step: int
     total_reward: float
@@ -32,7 +32,7 @@ class BernoulliBayesianUCBPolicy(UCBPolicy):
         self,
         *,
         n_bandits: int,
-        optimistic_initialization: int = 0,
+        optimistic_initialization: float = 0.0,
         variance: float = 1.0,
         reward_distribution: str = "gaussian",
         c: float = 1.0,
@@ -110,7 +110,7 @@ class BernoulliBayesianUCBPolicy(UCBPolicy):
 
 class GaussianBayesianUCBPolicy(UCBPolicy):
     n_bandits: int
-    optimistic_initialization: int
+    optimistic_initialization: float
     _Q_values: np.array
     current_step: int
     total_reward: float
@@ -124,7 +124,7 @@ class GaussianBayesianUCBPolicy(UCBPolicy):
     def __init__(
         self,
         n_bandits: int,
-        optimistic_initialization: int = 0,
+        optimistic_initialization: float = 0.0,
         variance: float = 1.0,
         reward_distribution: str = "gaussian",
         c: float = 1.0,
@@ -203,7 +203,7 @@ class BayesianUCBPolicy:
     def __new__(
         cls,
         n_bandits: int,
-        optimistic_initialization: int = 0,
+        optimistic_initialization: float = 0.0,
         variance: float = 1.0,
         reward_distribution: str = "gaussian",
         c: float = 1.0,

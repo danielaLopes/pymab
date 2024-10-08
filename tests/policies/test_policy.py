@@ -1,9 +1,11 @@
 import unittest
 from typing import Tuple
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch
 
 import numpy as np
 from numpy.testing import assert_array_equal, assert_allclose
+
+from pymab.policies.mixins.stationarity_mixins import StationaryPolicyMixin
 from pymab.reward_distribution import (
     GaussianRewardDistribution,
     BernoulliRewardDistribution,
@@ -12,7 +14,7 @@ from pymab.reward_distribution import (
 from pymab.policies.policy import Policy
 
 
-class DummyPolicy(Policy):
+class DummyPolicy(StationaryPolicyMixin, Policy):
     def select_action(self) -> Tuple[int, float]:
         action = np.argmax(self.actions_estimated_reward)
         reward = self._update(action)
@@ -28,7 +30,7 @@ class TestPolicy(unittest.TestCase):
         self.variance = 1.0
         self.reward_distribution = "gaussian"
         self.policy = self.policy_class(
-            self.n_bandits,
+            n_bandits=self.n_bandits,
             optimistic_initialization=self.optimistic_initialization,
             variance=self.variance,
             reward_distribution=self.reward_distribution,

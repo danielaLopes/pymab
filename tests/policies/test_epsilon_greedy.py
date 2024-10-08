@@ -17,7 +17,7 @@ class TestEpsilonGreedyPolicy(TestPolicy):
         self.reward_distribution = "gaussian"
         self.epsilon = 0.1
         self.policy = self.policy_class(
-            self.n_bandits,
+            n_bandits=self.n_bandits,
             optimistic_initialization=self.optimistic_initialization,
             variance=self.variance,
             reward_distribution=self.reward_distribution,

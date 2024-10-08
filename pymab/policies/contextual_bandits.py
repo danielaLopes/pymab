@@ -5,6 +5,7 @@ import logging
 import numpy as np
 import typing
 
+from pymab.policies.mixins.stationarity_mixins import StationaryPolicyMixin
 from pymab.policies.policy import Policy
 
 if typing.TYPE_CHECKING:
@@ -13,7 +14,7 @@ if typing.TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 
-class ContextualBanditPolicy(Policy):
+class ContextualBanditPolicy(StationaryPolicyMixin, Policy):
     """Contextual Bandits introduces the notion that the reward obtained at each step depends on the current context,
     such as the time of the day, or whether it's raining or not. When deciding which action to take, the agent leverages
     its context to make a more informed decision. This potentially reduces the need for exploration, unlike other
@@ -29,7 +30,7 @@ class ContextualBanditPolicy(Policy):
 
     def __init__(
         self,
-        *
+        *,
         n_bandits: int,
         context_dim: int,
         context_func: Callable,

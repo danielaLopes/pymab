@@ -5,6 +5,7 @@ import logging
 import numpy as np
 import typing
 
+from pymab.policies.mixins.stationarity_mixins import StationaryPolicyMixin
 from pymab.policies.policy import Policy
 from pymab.reward_distribution import RewardDistribution
 
@@ -14,7 +15,7 @@ if typing.TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 
-class GreedyPolicy(Policy):
+class GreedyPolicy(StationaryPolicyMixin, Policy):
     n_bandits: int
     optimistic_initialization: float
     _Q_values: np.array

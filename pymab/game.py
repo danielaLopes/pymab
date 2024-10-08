@@ -37,14 +37,14 @@ class EnvironmentChangeMixin(ABC):
     def apply_change(self, Q_values: np.ndarray, step: int) -> np.ndarray:
         pass
 
-class StationaryMixin(EnvironmentChangeMixin):
+class StationaryEnvironmentMixin(EnvironmentChangeMixin):
     """
     Stationary environment's rewards distributions never change, so the Q-values are returned as sampled for each step.
     """
     def apply_change(self, Q_values: np.ndarray, step: int) -> np.ndarray:
         return Q_values
 
-class GradualChangeMixin(EnvironmentChangeMixin):
+class GradualChangeEnvironmentMixin(EnvironmentChangeMixin):
     """
     Non-stationary environment where the rewards distributions change gradually over time. The change is applied by
     adding a different random value drawn from a normal distribution with 0 mean and {self.change_rate} standard
@@ -56,7 +56,7 @@ class GradualChangeMixin(EnvironmentChangeMixin):
     def apply_change(self, Q_values: np.ndarray, step: int) -> np.ndarray:
         return Q_values + np.random.normal(0, self.change_rate, size=Q_values.shape)
 
-class AbruptChangeMixin(EnvironmentChangeMixin):
+class AbruptChangeEnvironmentMixin(EnvironmentChangeMixin):
     """
     Non-stationary environment where the rewards distributions change abruptly and periodically. The change is applied
     by adding a different random value drawn from a normal distribution with 0 mean and {self.change_magnitude} standard
@@ -71,7 +71,7 @@ class AbruptChangeMixin(EnvironmentChangeMixin):
             return Q_values + np.random.normal(0, self.change_magnitude, size=Q_values.shape)
         return Q_values
 
-class RandomArmSwappingMixin(EnvironmentChangeMixin):
+class RandomArmSwappingEnvironmentMixin(EnvironmentChangeMixin):
     """
     Non-stationary environment where the rewards distributions between arms get swapped abruptly and at random steps.
     """
@@ -171,7 +171,7 @@ class Game:
 
         if change_type == EnvironmentChangeType.STATIONARY:
             logger.info('Using `stationary` mode.')
-            return StationaryMixin()
+            return StationaryEnvironmentMixin()
 
         elif change_type == EnvironmentChangeType.GRADUAL:
             logger.info('Using `gradual` mode for environment change.')
@@ -179,7 +179,7 @@ class Game:
                 logger.warning(f"""Specifying `change_rate` is recommended when using `gradual` mode. Defaulting to 
                 {DEFAULT_ENVIRONMENT_CHANGE_FREQUENCY}.""")
             change_rate = params.get('change_rate', DEFAULT_ENVIRONMENT_CHANGE_RATE)
-            return GradualChangeMixin(change_rate)
+            return GradualChangeEnvironmentMixin(change_rate)
 
         elif change_type == EnvironmentChangeType.ABRUPT:
             logger.info('Using `abrupt` mode for environment change.')
@@ -192,7 +192,7 @@ class Game:
                     {DEFAULT_ENVIRONMENT_CHANGE_MAGNITUDE}.""")
             change_frequency = params.get('change_frequency', DEFAULT_ENVIRONMENT_CHANGE_FREQUENCY)
             change_magnitude = params.get('change_magnitude', DEFAULT_ENVIRONMENT_CHANGE_MAGNITUDE)
-            return AbruptChangeMixin(change_frequency, change_magnitude)
+            return AbruptChangeEnvironmentMixin(change_frequency, change_magnitude)
 
         elif change_type == EnvironmentChangeType.RANDOM_ARM_SWAPPING:
             logger.info('Using `random arm swapping` mode for environment change.')
@@ -200,7 +200,7 @@ class Game:
                 logger.warning(f"""Specifying `shift_probability` is recommended when using `random arm swapping` mode. Defaulting to 
                 {DEFAULT_ENVIRONMENT_SHIFT_PROBABILITY}.""")
             shift_probability = params.get('shift_probability', DEFAULT_ENVIRONMENT_SHIFT_PROBABILITY)
-            return RandomArmSwappingMixin(shift_probability)
+            return RandomArmSwappingEnvironmentMixin(shift_probability)
 
         else:
             raise ValueError(f"Unknown environment change type: {change_type}")

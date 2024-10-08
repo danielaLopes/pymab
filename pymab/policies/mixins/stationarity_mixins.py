@@ -1,19 +1,19 @@
 import numpy as np
 
-class StationaryMixin:
+class StationaryPolicyMixin:
     def _update_estimate(self, action_index: int, reward: float) -> None:
         self.actions_estimated_reward[action_index] += (
             reward - self.actions_estimated_reward[action_index]
         ) / self.times_selected[action_index]
 
-class NonStationaryMixin:
+class NonStationaryPolicyMixin:
     def _update_estimate(self, action_index: int, reward: float) -> None:
         self._recalculate_estimate(action_index)
 
     def _recalculate_estimate(self, action_index: int) -> None:
         raise NotImplementedError("Subclasses must implement this method")
 
-class SlidingWindowMixin(NonStationaryMixin):
+class SlidingWindowMixin(NonStationaryPolicyMixin):
     """
     Maintains a fixed-size window of the most recent observations for each arm. This approach allows the algorithm to
     adapt to changes in the environment by forgetting older, potentially outdated information.
@@ -32,7 +32,7 @@ class SlidingWindowMixin(NonStationaryMixin):
             self.rewards_history[action_index] = self.rewards_history[action_index][-self.window_size:]
         self.actions_estimated_reward[action_index] = np.mean(self.rewards_history[action_index])
 
-class DiscountedMixin(NonStationaryMixin):
+class DiscountedMixin(NonStationaryPolicyMixin):
     """
     Gives more weight to recent observation, and less weight to older ones. With a discount factor close to 1, the
     algorithm has a longer memory, and changes slowly in response to new reward distributions. With a discount factor

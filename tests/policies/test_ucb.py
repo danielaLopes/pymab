@@ -1,24 +1,22 @@
 import math
-import random
 import unittest
 from unittest.mock import patch
 
 import numpy as np
-from pymab.policies.epsilon_greedy import EpsilonGreedyPolicy
-from pymab.policies.ucb import UCBPolicy
+from pymab.policies.ucb import StationaryUCBPolicy
 from tests.policies.test_policy import TestPolicy
 
 
 class TestUCBPolicy(TestPolicy):
     def setUp(self):
-        self.policy_class = UCBPolicy
+        self.policy_class = StationaryUCBPolicy
         self.n_bandits = 3
         self.optimistic_initialization = 1.0
         self.variance = 1.0
         self.reward_distribution = "gaussian"
         self.c = 1
         self.policy = self.policy_class(
-            self.n_bandits,
+            n_bandits=self.n_bandits,
             optimistic_initialization=self.optimistic_initialization,
             variance=self.variance,
             reward_distribution=self.reward_distribution,
