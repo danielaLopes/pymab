@@ -6,7 +6,7 @@ import typing
 import numpy as np
 import pymc3 as pm
 
-from pymab.policies.ucb import UCBPolicy
+from pymab.policies.ucb import UCBPolicy, StationaryUCBPolicy
 from pymab.reward_distribution import RewardDistribution
 
 if typing.TYPE_CHECKING:
@@ -15,7 +15,7 @@ if typing.TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 
-class BernoulliBayesianUCBPolicy(UCBPolicy):
+class BernoulliBayesianUCBPolicy(StationaryUCBPolicy):
     n_bandits: int
     optimistic_initialization: float
     _Q_values: np.array
@@ -34,7 +34,7 @@ class BernoulliBayesianUCBPolicy(UCBPolicy):
         n_bandits: int,
         optimistic_initialization: float = 0.0,
         variance: float = 1.0,
-        reward_distribution: str = "gaussian",
+        reward_distribution: str = "bernoulli",
         c: float = 1.0,
         n_mcmc_samples: int = 1000,
     ) -> None:
@@ -55,7 +55,8 @@ class BernoulliBayesianUCBPolicy(UCBPolicy):
             alpha = self.successes[action_index] + 1
             beta = self.failures[action_index] + 1
             theta = pm.Beta("theta", alpha=alpha, beta=beta)
-            trace = pm.sample(self.n_mcmc_samples, chains=1, progressbar=False)
+            step = pm.NUTS(target_accept=0.95)
+            trace = pm.sample(self.n_mcmc_samples, tune=1000, chains=1, step=step, progressbar=False, return_inferencedata=False, discard_tuned_samples=True)
 
         # Get the upper quantile from the posterior distribution
         quantile_value = np.percentile(
@@ -80,17 +81,6 @@ class BernoulliBayesianUCBPolicy(UCBPolicy):
 
         return reward
 
-    # def select_action(self) -> Tuple[int, float]:
-    #     if self.current_step < self.n_bandits:
-    #         chosen_action_index = self.current_step
-    #     else:
-    #         ucb_values = np.zeros(self.n_bandits)
-    #         for action_index in range(self.n_bandits):
-    #             ucb_values[action_index] = self._get_ucb_value(action_index)
-    #         chosen_action_index = np.argmax(ucb_values)
-    #
-    #     return chosen_action_index, self._update(chosen_action_index)
-
     def __repr__(self) -> str:
         return f"{super().__repr__()}(opt_init={self.optimistic_initialization}, c={self.c})"
 
@@ -108,7 +98,7 @@ class BernoulliBayesianUCBPolicy(UCBPolicy):
                     failures={self.failures})"""
 
 
-class GaussianBayesianUCBPolicy(UCBPolicy):
+class GaussianBayesianUCBPolicy(StationaryUCBPolicy):
     n_bandits: int
     optimistic_initialization: float
     _Q_values: np.array

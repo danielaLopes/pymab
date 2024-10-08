@@ -137,6 +137,10 @@ class Game:
             )
         self.reward_distribution = reward_distributions.pop()
 
+        # TODO: Make unit test for this:
+        if any(x < 0 or x > 1 for x in self.Q_values) and "bernoulli" in reward_distributions:
+            raise ValueError("Q-values for Bernoulli distribution should be between 0 and 1")
+
         self.rewards_by_policy = np.zeros(
             (self.n_episodes, self.n_steps, len(self.policies)), dtype=float
         )
