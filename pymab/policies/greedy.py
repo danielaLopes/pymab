@@ -39,7 +39,7 @@ class GreedyPolicy(StationaryPolicyMixin, Policy):
             n_bandits=n_bandits,
             optimistic_initialization=optimistic_initialization,
             variance=variance,
-            reward_distribution=reward_distribution
+            reward_distribution=reward_distribution,
         )
 
     def select_action(self, *args, **kwargs) -> Tuple[int, float]:

@@ -4,9 +4,7 @@ import os
 import json
 
 
-def setup_logging(
-    file_path="logging.json", level=logging.INFO, env_key="LOG_CFG"
-):
+def setup_logging(file_path="logging.json", level=logging.INFO, env_key="LOG_CFG"):
     """Setup logging configuration"""
     path = file_path
     value = os.getenv(env_key, None)

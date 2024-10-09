@@ -98,10 +98,13 @@ class Policy(ABC):
 
     def _update_sliding_window(self, chosen_action_index: int) -> None:
         if len(self.rewards_history[chosen_action_index]) > self.sliding_window_size:
-            self.rewards_history[chosen_action_index] = self.rewards_history[chosen_action_index][
-                                                        -self.sliding_window_size:]
+            self.rewards_history[chosen_action_index] = self.rewards_history[
+                chosen_action_index
+            ][-self.sliding_window_size :]
 
-        self.actions_estimated_reward[chosen_action_index] = np.mean(self.rewards_history[chosen_action_index])
+        self.actions_estimated_reward[chosen_action_index] = np.mean(
+            self.rewards_history[chosen_action_index]
+        )
 
     @property
     def Q_values(self) -> List[float]:

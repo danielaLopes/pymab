@@ -7,7 +7,11 @@ import typing
 
 import numpy as np
 
-from pymab.policies.mixins.stationarity_mixins import StationaryPolicyMixin, SlidingWindowMixin, DiscountedMixin
+from pymab.policies.mixins.stationarity_mixins import (
+    StationaryPolicyMixin,
+    SlidingWindowMixin,
+    DiscountedMixin,
+)
 from pymab.policies.policy import Policy
 from pymab.reward_distribution import RewardDistribution
 
@@ -99,9 +103,9 @@ class StationaryUCBPolicy(UCBPolicy):
 
     def _calculate_confidence_interval(self, action_index: int) -> float:
         confidence_interval = math.sqrt(
-                (self.c * math.log(self.current_step + 1))
-                / self.times_selected[action_index]
-            )
+            (self.c * math.log(self.current_step + 1))
+            / self.times_selected[action_index]
+        )
         return confidence_interval
 
 
@@ -120,13 +124,13 @@ class SlidingWindowUCBPolicy(SlidingWindowMixin, UCBPolicy):
     rewards_history: List[List[float]]
 
     def __init__(
-            self,
-            n_bandits: int,
-            optimistic_initialization: float = 0.0,
-            variance: float = 1.0,
-            reward_distribution: str = "gaussian",
-            c: float = 1.0,
-            window_size: int = 100
+        self,
+        n_bandits: int,
+        optimistic_initialization: float = 0.0,
+        variance: float = 1.0,
+        reward_distribution: str = "gaussian",
+        c: float = 1.0,
+        window_size: int = 100,
     ):
         UCBPolicy.__init__(
             self,
@@ -134,7 +138,7 @@ class SlidingWindowUCBPolicy(SlidingWindowMixin, UCBPolicy):
             optimistic_initialization=optimistic_initialization,
             variance=variance,
             reward_distribution=reward_distribution,
-            c=c
+            c=c,
         )
         SlidingWindowMixin.__init__(self, window_size=window_size)
 
@@ -154,6 +158,7 @@ class SlidingWindowUCBPolicy(SlidingWindowMixin, UCBPolicy):
             {description}\n
             window_size={self.window_size})"""
 
+
 class DiscountedUCBPolicy(DiscountedMixin, UCBPolicy):
     n_bandits: int
     optimistic_initialization: float
@@ -169,13 +174,13 @@ class DiscountedUCBPolicy(DiscountedMixin, UCBPolicy):
     effective_n: float
 
     def __init__(
-            self,
-            n_bandits: int,
-            optimistic_initialization: float = 0,
-            variance: float = 1.0,
-            reward_distribution: str = "gaussian",
-            c: float = 1.0,
-            discount_factor: float = 0.9
+        self,
+        n_bandits: int,
+        optimistic_initialization: float = 0,
+        variance: float = 1.0,
+        reward_distribution: str = "gaussian",
+        c: float = 1.0,
+        discount_factor: float = 0.9,
     ):
         UCBPolicy.__init__(
             self,
@@ -183,7 +188,7 @@ class DiscountedUCBPolicy(DiscountedMixin, UCBPolicy):
             optimistic_initialization=optimistic_initialization,
             variance=variance,
             reward_distribution=reward_distribution,
-            c=c
+            c=c,
         )
         DiscountedMixin.__init__(self, discount_factor=discount_factor)
         self.effective_n = 1 / (1 - self.discount_factor)

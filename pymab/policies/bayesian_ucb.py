@@ -43,7 +43,7 @@ class BernoulliBayesianUCBPolicy(StationaryUCBPolicy):
             optimistic_initialization=optimistic_initialization,
             variance=variance,
             reward_distribution=reward_distribution,
-            c=c
+            c=c,
         )
         self.n_mcmc_samples = n_mcmc_samples
         self.successes = np.zeros(n_bandits)
@@ -56,7 +56,15 @@ class BernoulliBayesianUCBPolicy(StationaryUCBPolicy):
             beta = self.failures[action_index] + 1
             theta = pm.Beta("theta", alpha=alpha, beta=beta)
             step = pm.NUTS(target_accept=0.95)
-            trace = pm.sample(self.n_mcmc_samples, tune=1000, chains=1, step=step, progressbar=False, return_inferencedata=False, discard_tuned_samples=True)
+            trace = pm.sample(
+                self.n_mcmc_samples,
+                tune=1000,
+                chains=1,
+                step=step,
+                progressbar=False,
+                return_inferencedata=False,
+                discard_tuned_samples=True,
+            )
 
         # Get the upper quantile from the posterior distribution
         quantile_value = np.percentile(

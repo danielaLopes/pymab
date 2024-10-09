@@ -1,5 +1,9 @@
 from pymab import setup_logging
-from pymab.policies.ucb import DiscountedUCBPolicy, SlidingWindowUCBPolicy, StationaryUCBPolicy
+from pymab.policies.ucb import (
+    DiscountedUCBPolicy,
+    SlidingWindowUCBPolicy,
+    StationaryUCBPolicy,
+)
 from pymab.game import EnvironmentChangeType, Game
 
 
@@ -62,14 +66,14 @@ def main():
     )
 
     policies = [
-            ucb_stationary_policy,
-            ucb_sliding_window_policy_50,
-            ucb_sliding_window_policy_100,
-            ucb_sliding_window_policy_200,
-            ucb_discounted_policy_0_1,
-            ucb_discounted_policy_0_5,
-            ucb_discounted_policy_0_9
-        ]
+        ucb_stationary_policy,
+        ucb_sliding_window_policy_50,
+        ucb_sliding_window_policy_100,
+        ucb_sliding_window_policy_200,
+        ucb_discounted_policy_0_1,
+        ucb_discounted_policy_0_5,
+        ucb_discounted_policy_0_9,
+    ]
 
     non_stationary_gradual_game_small_change = Game(
         n_episodes=n_episodes,
@@ -77,9 +81,11 @@ def main():
         policies=policies,
         n_bandits=n_bandits,
         environment_change=EnvironmentChangeType.GRADUAL,
-        change_params={'change_rate': 0.01}
+        change_params={"change_rate": 0.01},
     )
-    run_game(non_stationary_gradual_game_small_change, 'non_stationary_gradual_game_0_01')
+    run_game(
+        non_stationary_gradual_game_small_change, "non_stationary_gradual_game_0_01"
+    )
 
     non_stationary_gradual_game_big_change = Game(
         n_episodes=n_episodes,
@@ -87,9 +93,9 @@ def main():
         policies=policies,
         n_bandits=n_bandits,
         environment_change=EnvironmentChangeType.GRADUAL,
-        change_params={'change_rate': 0.5}
+        change_params={"change_rate": 0.5},
     )
-    run_game(non_stationary_gradual_game_big_change, 'non_stationary_gradual_game_0_5')
+    run_game(non_stationary_gradual_game_big_change, "non_stationary_gradual_game_0_5")
 
     non_stationary_abrupt_game_small_change = Game(
         n_episodes=n_episodes,
@@ -97,9 +103,12 @@ def main():
         policies=policies,
         n_bandits=n_bandits,
         environment_change=EnvironmentChangeType.ABRUPT,
-        change_params={'change_frequency': 100, 'change_magnitude': 0.5},
+        change_params={"change_frequency": 100, "change_magnitude": 0.5},
     )
-    run_game(non_stationary_abrupt_game_small_change, game_name='non_stationary_abrupt_game_100_0_5')
+    run_game(
+        non_stationary_abrupt_game_small_change,
+        game_name="non_stationary_abrupt_game_100_0_5",
+    )
 
     non_stationary_abrupt_game_big_change = Game(
         n_episodes=n_episodes,
@@ -107,9 +116,12 @@ def main():
         policies=policies,
         n_bandits=n_bandits,
         environment_change=EnvironmentChangeType.ABRUPT,
-        change_params={'change_frequency': 50, 'change_magnitude': 1},
+        change_params={"change_frequency": 50, "change_magnitude": 1},
     )
-    run_game(non_stationary_abrupt_game_big_change, game_name='non_stationary_abrupt_game_50_1')
+    run_game(
+        non_stationary_abrupt_game_big_change,
+        game_name="non_stationary_abrupt_game_50_1",
+    )
 
     non_stationary_random_arm_swapping_game = Game(
         n_episodes=n_episodes,
@@ -117,9 +129,12 @@ def main():
         policies=policies,
         n_bandits=n_bandits,
         environment_change=EnvironmentChangeType.RANDOM_ARM_SWAPPING,
-        change_params={'shift_probability': 0.2},
+        change_params={"shift_probability": 0.2},
     )
-    run_game(non_stationary_random_arm_swapping_game, game_name='non_stationary_random_arm_swapping_game_0_2')
+    run_game(
+        non_stationary_random_arm_swapping_game,
+        game_name="non_stationary_random_arm_swapping_game_0_2",
+    )
 
     stationary_game = Game(
         n_episodes=n_episodes,
@@ -127,7 +142,7 @@ def main():
         policies=policies,
         n_bandits=n_bandits,
     )
-    run_game(stationary_game, game_name='stationary_game')
+    run_game(stationary_game, game_name="stationary_game")
 
 
 if __name__ == "__main__":

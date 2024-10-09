@@ -1,10 +1,12 @@
 import numpy as np
 
+
 class StationaryPolicyMixin:
     def _update_estimate(self, action_index: int, reward: float) -> None:
         self.actions_estimated_reward[action_index] += (
             reward - self.actions_estimated_reward[action_index]
         ) / self.times_selected[action_index]
+
 
 class NonStationaryPolicyMixin:
     def _update_estimate(self, action_index: int, reward: float) -> None:
@@ -12,6 +14,7 @@ class NonStationaryPolicyMixin:
 
     def _recalculate_estimate(self, action_index: int) -> None:
         raise NotImplementedError("Subclasses must implement this method")
+
 
 class SlidingWindowMixin(NonStationaryPolicyMixin):
     """
@@ -21,6 +24,7 @@ class SlidingWindowMixin(NonStationaryPolicyMixin):
     information in slowly changing environments. Sliding window is expected to be more beneficial in environments
     with periodic and dramatic changes.
     """
+
     def __init__(self, *, window_size: int = 100):
         """
         :param window_size: The number of most recent observations to consider for each arm.
@@ -29,8 +33,13 @@ class SlidingWindowMixin(NonStationaryPolicyMixin):
 
     def _recalculate_estimate(self, action_index: int) -> None:
         if len(self.rewards_history[action_index]) > self.window_size:
-            self.rewards_history[action_index] = self.rewards_history[action_index][-self.window_size:]
-        self.actions_estimated_reward[action_index] = np.mean(self.rewards_history[action_index])
+            self.rewards_history[action_index] = self.rewards_history[action_index][
+                -self.window_size :
+            ]
+        self.actions_estimated_reward[action_index] = np.mean(
+            self.rewards_history[action_index]
+        )
+
 
 class DiscountedMixin(NonStationaryPolicyMixin):
     """
@@ -41,6 +50,7 @@ class DiscountedMixin(NonStationaryPolicyMixin):
     change over time. Discount factor is expected to be more beneficial in environments with gradual and continuous
     changes. May be less efficient in stationary environments compared to standard Policy.
     """
+
     def __init__(self, *, discount_factor: float = 0.9):
         """
         :param discount_factor: A value between 0 and 1 that determines how much weight is given to past observations.
@@ -53,5 +63,6 @@ class DiscountedMixin(NonStationaryPolicyMixin):
             prev_estimate = self.actions_estimated_reward[action_index]
             latest_reward = self.rewards_history[action_index][-1]
             self.actions_estimated_reward[action_index] = (
-                self.discount_factor * prev_estimate + (1 - self.discount_factor) * latest_reward
+                self.discount_factor * prev_estimate
+                + (1 - self.discount_factor) * latest_reward
             )

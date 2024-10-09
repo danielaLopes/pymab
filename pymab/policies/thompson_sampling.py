@@ -66,7 +66,7 @@ class BernoulliThompsonSamplingPolicy(StationaryPolicyMixin, Policy):
             n_bandits=n_bandits,
             optimistic_initialization=optimistic_initialization,
             variance=variance,
-            reward_distribution=reward_distribution
+            reward_distribution=reward_distribution,
         )
         self.successes = np.zeros(self.n_bandits)
         self.failures = np.zeros(self.n_bandits)
@@ -194,7 +194,11 @@ class GaussianThompsonSamplingPolicy(StationaryPolicyMixin, Policy):
         reward_distribution: str = "gaussian",
     ) -> None:
         Policy.__init__(
-            self, n_bandits=n_bandits, optimistic_initialization=optimistic_initialization, variance=variance, reward_distribution=reward_distribution
+            self,
+            n_bandits=n_bandits,
+            optimistic_initialization=optimistic_initialization,
+            variance=variance,
+            reward_distribution=reward_distribution,
         )
         self.means = np.zeros(n_bandits)
         self.precisions = np.ones(n_bandits) / variance

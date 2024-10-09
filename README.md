@@ -89,3 +89,28 @@ If I don't pass Q_values, these will only be set in the game loop, and this will
     * fitting a time series model to find an indicator of when a distribution changes and tune the exploration rate accordingly
   * Add a new environment change mixin that changes at random steps, or changes the variance, or changes the mean, etc.
   * Finish tests
+  * bayesian_ucb_bernoulli is taking way too much time. Check what is happening:
+    * /Users/dlopes/pymab/.venv/lib/python3.9/site-packages/scipy/stats/_continuous_distns.py:624: RuntimeWarning: overflow encountered in _beta_ppf
+      return _boost._beta_ppf(q, a, b)
+    /Users/dlopes/pymab/.venv/lib/python3.9/site-packages/scipy/stats/_continuous_distns.py:624: RuntimeWarning: overflow encountered in _beta_ppf
+      return _boost._beta_ppf(q, a, b)
+    /Users/dlopes/pymab/.venv/lib/python3.9/site-packages/scipy/stats/_continuous_distns.py:624: RuntimeWarning: overflow encountered in _beta_ppf
+      return _boost._beta_ppf(q, a, b)
+    WARNING:pymc3:The acceptance probability does not match the target. It is 0.8837097769922425, but should be close to 0.95. Try to increase the number of tuning steps.
+    /Users/dlopes/pymab/.venv/lib/python3.9/site-packages/scipy/stats/_continuous_distns.py:624: RuntimeWarning: overflow encountered in _beta_ppf
+      return _boost._beta_ppf(q, a, b)
+    /Users/dlopes/pymab/.venv/lib/python3.9/site-packages/scipy/stats/_continuous_distns.py:624: RuntimeWarning: overflow encountered in _beta_ppf
+      return _boost._beta_ppf(q, a, b)
+    WARNING:pymc3:The acceptance probability does not match the target. It is 0.8763403989079345, but should be close to 0.95. Try to increase the number of tuning steps.
+    WARNING:pymc3:The acceptance probability does not match the target. It is 0.9028652610993134, but should be close to 0.95. Try to increase the number of tuning steps.
+    /Users/dlopes/pymab/.venv/lib/python3.9/site-packages/scipy/stats/_continuous_distns.py:624: RuntimeWarning: overflow encountered in _beta_ppf
+      return _boost._beta_ppf(q, a, b)
+    WARNING:pymc3:The acceptance probability does not match the target. It is 0.9033704597582405, but should be close to 0.95. Try to increase the number of tuning steps.
+    /Users/dlopes/pymab/.venv/lib/python3.9/site-packages/scipy/stats/_continuous_distns.py:624: RuntimeWarning: overflow encountered in _beta_ppf
+      return _boost._beta_ppf(q, a, b)
+    WARNING:pymc3:The acceptance probability does not match the target. It is 0.9039404876164147, but should be close to 0.95. Try to increase the number of tuning steps.
+    WARNING:pymc3:The acceptance probability does not match the target. It is 0.9074318868847735, but should be close to 0.95. Try to increase the number of tuning steps.
+    WARNING:pymc3:The acceptance probability does not match the target. It is 0.8959792937282327, but should be close to 0.95. Try to increase the number of tuning steps.
+    WARNING:pymc3:The acceptance probability does not match the target. It is 0.8443595376193778, but should be close to 0.95. Try to increase the number of tuning steps.
+    WARNING:pymc3:The acceptance probability does not match the target. It is 0.9050796115033122, but should be close to 0.95. Try to increase the number of tuning steps.
+    WARNING:pymc3:The acceptance probability does not match the target. It is 0.903060093122155, but should be close to 0.95. Try to increase the number of tuning steps.

@@ -41,7 +41,7 @@ class EpsilonGreedyPolicy(GreedyPolicy):
             n_bandits=n_bandits,
             optimistic_initialization=optimistic_initialization,
             variance=variance,
-            reward_distribution=reward_distribution
+            reward_distribution=reward_distribution,
         )
         self.epsilon = epsilon
 

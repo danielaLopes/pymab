@@ -14,11 +14,21 @@ from joblib import Parallel, delayed
 import numpy as np
 import plotly.graph_objs as go
 
-from pymab.plot_config import get_line_style, get_default_layout, get_marker_style, get_color_sequence
+from pymab.plot_config import (
+    get_line_style,
+    get_default_layout,
+    get_marker_style,
+    get_color_sequence,
+)
 from pymab.policies.policy import Policy
 from pymab.reward_distribution import RewardDistribution
-from pymab.static import DEFAULT_ENVIRONMENT_CHANGE_FREQUENCY, DEFAULT_ENVIRONMENT_CHANGE_RATE, \
-    DEFAULT_ENVIRONMENT_CHANGE_MAGNITUDE, DEFAULT_ENVIRONMENT_SHIFT_PROBABILITY, DEFAULT_RESULTS_FOLDER
+from pymab.static import (
+    DEFAULT_ENVIRONMENT_CHANGE_FREQUENCY,
+    DEFAULT_ENVIRONMENT_CHANGE_RATE,
+    DEFAULT_ENVIRONMENT_CHANGE_MAGNITUDE,
+    DEFAULT_ENVIRONMENT_SHIFT_PROBABILITY,
+    DEFAULT_RESULTS_FOLDER,
+)
 
 if typing.TYPE_CHECKING:
     from typing import *
@@ -32,17 +42,21 @@ class EnvironmentChangeType(Enum):
     ABRUPT = "abrupt"
     RANDOM_ARM_SWAPPING = "random_arm_swapping"
 
+
 class EnvironmentChangeMixin(ABC):
     @abstractmethod
     def apply_change(self, Q_values: np.ndarray, step: int) -> np.ndarray:
         pass
 
+
 class StationaryEnvironmentMixin(EnvironmentChangeMixin):
     """
     Stationary environment's rewards distributions never change, so the Q-values are returned as sampled for each step.
     """
+
     def apply_change(self, Q_values: np.ndarray, step: int) -> np.ndarray:
         return Q_values
+
 
 class GradualChangeEnvironmentMixin(EnvironmentChangeMixin):
     """
@@ -50,11 +64,13 @@ class GradualChangeEnvironmentMixin(EnvironmentChangeMixin):
     adding a different random value drawn from a normal distribution with 0 mean and {self.change_rate} standard
     deviation to each of the Q-values at each step.
     """
+
     def __init__(self, change_rate: float):
         self.change_rate = change_rate
 
     def apply_change(self, Q_values: np.ndarray, step: int) -> np.ndarray:
         return Q_values + np.random.normal(0, self.change_rate, size=Q_values.shape)
+
 
 class AbruptChangeEnvironmentMixin(EnvironmentChangeMixin):
     """
@@ -62,19 +78,24 @@ class AbruptChangeEnvironmentMixin(EnvironmentChangeMixin):
     by adding a different random value drawn from a normal distribution with 0 mean and {self.change_magnitude} standard
     deviation to each of the Q-values every {self.change_frequency} steps.
     """
+
     def __init__(self, change_frequency: int, change_magnitude: float):
         self.change_frequency = change_frequency
         self.change_magnitude = change_magnitude
 
     def apply_change(self, Q_values: np.ndarray, step: int) -> np.ndarray:
         if step % self.change_frequency == 0:
-            return Q_values + np.random.normal(0, self.change_magnitude, size=Q_values.shape)
+            return Q_values + np.random.normal(
+                0, self.change_magnitude, size=Q_values.shape
+            )
         return Q_values
+
 
 class RandomArmSwappingEnvironmentMixin(EnvironmentChangeMixin):
     """
     Non-stationary environment where the rewards distributions between arms get swapped abruptly and at random steps.
     """
+
     def __init__(self, shift_probability: float):
         self.shift_probability = shift_probability
 
@@ -111,7 +132,9 @@ class Game:
         Q_values: List[float] = None,
         Q_values_mean: float = 0.0,
         Q_values_variance: float = 1.0,
-        environment_change: Union[EnvironmentChangeType, Type[EnvironmentChangeMixin]] = EnvironmentChangeType.STATIONARY,
+        environment_change: Union[
+            EnvironmentChangeType, Type[EnvironmentChangeMixin]
+        ] = EnvironmentChangeType.STATIONARY,
         change_params: dict = None,
         results_folder: Path = DEFAULT_RESULTS_FOLDER,
     ) -> None:
@@ -126,7 +149,9 @@ class Game:
         self.set_Q_values_flag = len(self.Q_values) == 0
         self.Q_values_mean = Q_values_mean
         self.Q_values_variance = Q_values_variance
-        self.Q_values_history = np.zeros((self.n_episodes * self.n_steps, self.n_bandits))
+        self.Q_values_history = np.zeros(
+            (self.n_episodes * self.n_steps, self.n_bandits)
+        )
 
         reward_distributions = set()
         for policy in self.policies:
@@ -138,8 +163,13 @@ class Game:
         self.reward_distribution = reward_distributions.pop()
 
         # TODO: Make unit test for this:
-        if any(x < 0 or x > 1 for x in self.Q_values) and "bernoulli" in reward_distributions:
-            raise ValueError("Q-values for Bernoulli distribution should be between 0 and 1")
+        if (
+            any(x < 0 or x > 1 for x in self.Q_values)
+            and "bernoulli" in reward_distributions
+        ):
+            raise ValueError(
+                "Q-values for Bernoulli distribution should be between 0 and 1"
+            )
 
         self.rewards_by_policy = np.zeros(
             (self.n_episodes, self.n_steps, len(self.policies)), dtype=float
@@ -152,7 +182,9 @@ class Game:
             (self.n_episodes, self.n_steps, len(self.policies))
         )
 
-        self.environment_change = self._create_environment_change(environment_change, change_params)
+        self.environment_change = self._create_environment_change(
+            environment_change, change_params
+        )
 
         self.colors = get_color_sequence()
 
@@ -168,42 +200,60 @@ class Game:
     def average_rewards_by_episode(self) -> np.ndarray:
         return np.mean(self.rewards_by_policy, axis=1)
 
-    def _create_environment_change(self, change_type: Union[EnvironmentChangeType, Type[EnvironmentChangeMixin]],
-                                   params: dict = None) -> EnvironmentChangeMixin:
-        if isinstance(change_type, type) and issubclass(change_type, EnvironmentChangeMixin):
+    def _create_environment_change(
+        self,
+        change_type: Union[EnvironmentChangeType, Type[EnvironmentChangeMixin]],
+        params: dict = None,
+    ) -> EnvironmentChangeMixin:
+        if isinstance(change_type, type) and issubclass(
+            change_type, EnvironmentChangeMixin
+        ):
             return change_type(**params)
 
         if change_type == EnvironmentChangeType.STATIONARY:
-            logger.info('Using `stationary` mode.')
+            logger.info("Using `stationary` mode.")
             return StationaryEnvironmentMixin()
 
         elif change_type == EnvironmentChangeType.GRADUAL:
-            logger.info('Using `gradual` mode for environment change.')
-            if 'change_rate' not in params:
-                logger.warning(f"""Specifying `change_rate` is recommended when using `gradual` mode. Defaulting to 
-                {DEFAULT_ENVIRONMENT_CHANGE_FREQUENCY}.""")
-            change_rate = params.get('change_rate', DEFAULT_ENVIRONMENT_CHANGE_RATE)
+            logger.info("Using `gradual` mode for environment change.")
+            if "change_rate" not in params:
+                logger.warning(
+                    f"""Specifying `change_rate` is recommended when using `gradual` mode. Defaulting to 
+                {DEFAULT_ENVIRONMENT_CHANGE_FREQUENCY}."""
+                )
+            change_rate = params.get("change_rate", DEFAULT_ENVIRONMENT_CHANGE_RATE)
             return GradualChangeEnvironmentMixin(change_rate)
 
         elif change_type == EnvironmentChangeType.ABRUPT:
-            logger.info('Using `abrupt` mode for environment change.')
-            if 'change_frequency' not in params:
-                logger.warning(f"""Specifying `change_frequency` is recommended when using `abrupt` mode. Defaulting to 
-                {DEFAULT_ENVIRONMENT_CHANGE_FREQUENCY}.""")
-            if 'change_magnitude' not in params:
+            logger.info("Using `abrupt` mode for environment change.")
+            if "change_frequency" not in params:
+                logger.warning(
+                    f"""Specifying `change_frequency` is recommended when using `abrupt` mode. Defaulting to 
+                {DEFAULT_ENVIRONMENT_CHANGE_FREQUENCY}."""
+                )
+            if "change_magnitude" not in params:
                 logger.warning(
                     f"""Specifying `change_magnitude` is recommended when using `abrupt` mode. Defaulting to 
-                    {DEFAULT_ENVIRONMENT_CHANGE_MAGNITUDE}.""")
-            change_frequency = params.get('change_frequency', DEFAULT_ENVIRONMENT_CHANGE_FREQUENCY)
-            change_magnitude = params.get('change_magnitude', DEFAULT_ENVIRONMENT_CHANGE_MAGNITUDE)
+                    {DEFAULT_ENVIRONMENT_CHANGE_MAGNITUDE}."""
+                )
+            change_frequency = params.get(
+                "change_frequency", DEFAULT_ENVIRONMENT_CHANGE_FREQUENCY
+            )
+            change_magnitude = params.get(
+                "change_magnitude", DEFAULT_ENVIRONMENT_CHANGE_MAGNITUDE
+            )
             return AbruptChangeEnvironmentMixin(change_frequency, change_magnitude)
 
         elif change_type == EnvironmentChangeType.RANDOM_ARM_SWAPPING:
-            logger.info('Using `random arm swapping` mode for environment change.')
-            if 'shift_probability' not in params:
-                logger.warning(f"""Specifying `shift_probability` is recommended when using `random arm swapping` mode. Defaulting to 
-                {DEFAULT_ENVIRONMENT_SHIFT_PROBABILITY}.""")
-            shift_probability = params.get('shift_probability', DEFAULT_ENVIRONMENT_SHIFT_PROBABILITY)
+            logger.info("Using `random arm swapping` mode for environment change.")
+            if "shift_probability" not in params:
+                logger.warning(
+                    f"""Specifying `shift_probability` is recommended when using `random arm swapping` mode. Defaulting to 
+                {DEFAULT_ENVIRONMENT_SHIFT_PROBABILITY}."""
+                )
+            shift_probability = params.get(
+                "shift_probability", DEFAULT_ENVIRONMENT_SHIFT_PROBABILITY
+            )
             return RandomArmSwappingEnvironmentMixin(shift_probability)
 
         else:
@@ -223,7 +273,9 @@ class Game:
         return np.cumsum(np.mean(self.regret_by_policy, axis=0), axis=0)
 
     def game_loop(self) -> None:
-        logger.info(f"Starting game loop for {self.n_episodes} episodes, {self.n_steps} in each episode, and analysing {len(self.policies)} policies ...")
+        logger.info(
+            f"Starting game loop for {self.n_episodes} episodes, {self.n_steps} in each episode, and analysing {len(self.policies)} policies ..."
+        )
         for episode in range(self.n_episodes):
             self.new_episode(episode)
             self.optimal_actions[episode] = np.argmax(self.Q_values)
@@ -263,198 +315,21 @@ class Game:
             policy.Q_values = self.Q_values
             policy.reset()
 
-    def plot_average_reward_by_step(self, save: bool = True, plot_name: str = "") -> None:
+    def plot_average_reward_by_step(
+        self, save: bool = True, plot_name: str = ""
+    ) -> None:
         fig = go.Figure()
 
         for policy_index, policy in enumerate(self.policies):
-            fig.add_trace(go.Scatter(
-                x=list(range(self.n_steps)),
-                y=self.total_rewards_by_step[:, policy_index],
-                mode='lines',
-                name=repr(policy),
-                line=get_line_style(self.colors[policy_index % len(self.colors)])
-            ))
-
-        fig.update_layout(
-            **get_default_layout(
-                title=f"Cumulative reward obtained during the {self.n_steps} steps for {self.n_episodes} episodes",
-                xaxis_title="Steps",
-                yaxis_title="Cumulative reward"
+            fig.add_trace(
+                go.Scatter(
+                    x=list(range(self.n_steps)),
+                    y=self.total_rewards_by_step[:, policy_index],
+                    mode="lines",
+                    name=repr(policy),
+                    line=get_line_style(self.colors[policy_index % len(self.colors)]),
+                )
             )
-        )
-
-        fig.show()
-        if save:
-            fig.write_html(self.results_folder / f"average_reward_by_step_{plot_name}.html")
-
-    def plot_average_reward_by_episode(self, save: bool = True, plot_name: str = "") -> None:
-        fig = go.Figure()
-
-        for policy_index, policy in enumerate(self.policies):
-            fig.add_trace(go.Scatter(
-                x=list(range(self.n_episodes)),
-                y=self.average_rewards_by_episode[:, policy_index],
-                mode='lines',
-                name=repr(policy),
-                line=dict(color=self.colors[policy_index % len(self.colors)])
-            ))
-
-        fig.update_layout(
-            **get_default_layout(
-                title=f"Average reward obtained during the {self.n_steps} steps for {self.n_episodes} episodes",
-                xaxis_title="Episodes",
-                yaxis_title="Average reward",
-            )
-        )
-
-        fig.show()
-        if save:
-            fig.write_html(self.results_folder / f"average_reward_by_episode_{plot_name}.html")
-
-    def plot_average_reward_by_step_smoothed(self, smooth_factor: int = 50, save: bool = True, plot_name: str = "") -> None:
-        fig = go.Figure()
-
-        for policy_index, policy in enumerate(self.policies):
-            smoothed_data = self._moving_average(
-                self.average_rewards_by_step[:, policy_index], smooth_factor
-            )
-            fig.add_trace(go.Scatter(
-                x=list(range(len(smoothed_data))),
-                y=smoothed_data,
-                mode='lines',
-                name=repr(policy),
-                line=dict(color=self.colors[policy_index % len(self.colors)])
-            ))
-
-        fig.update_layout(
-            **get_default_layout(
-                title=f"Smoothed average reward (factor: {smooth_factor}) during the {self.n_steps} steps for {self.n_episodes} episodes",
-                xaxis_title="Steps",
-                yaxis_title="Average reward",
-            )
-        )
-
-        fig.show()
-        if save:
-            fig.write_html(self.results_folder / f"average_reward_by_step_smoothed_{plot_name}.html")
-
-    def plot_bandit_selection_evolution(self, save: bool = True, plot_name: str = "") -> None:
-        fig = go.Figure()
-
-        colorscale = get_color_sequence()[:self.n_bandits]
-
-        for policy_index, policy in enumerate(self.policies):
-            arm_selections = self.actions_selected_by_policy[:, :, policy_index].flatten()
-
-            for arm in range(self.n_bandits):
-                arm_mask = arm_selections == arm
-                fig.add_trace(go.Scatter(
-                    x=np.arange(self.n_episodes * self.n_steps)[arm_mask],
-                    y=np.full(np.sum(arm_mask), policy_index),
-                    mode='markers',
-                    marker=dict(
-                        size=5,
-                        color=colorscale[arm],
-                    ),
-                    name=f'{repr(policy)} - Arm {arm}',
-                    showlegend=policy_index == 0
-                ))
-
-        fig.update_layout(
-            **get_default_layout(
-                title="Arm Selections by Policy Over Time",
-                xaxis_title="Steps",
-                yaxis_title="Policy",
-            )
-        )
-
-        fig.show()
-        if save:
-            fig.write_html(self.results_folder / f"bandit_selection_evolution_{plot_name}.html")
-
-    def plot_cumulative_regret_by_step(self, save: bool = True, plot_name: str = "") -> None:
-        fig = go.Figure()
-
-        for policy_index, policy in enumerate(self.policies):
-            fig.add_trace(go.Scatter(
-                x=list(range(self.n_steps)),
-                y=self.cumulative_regret_by_step[:, policy_index],
-                mode='lines',
-                name=repr(policy),
-                line=dict(color=self.colors[policy_index % len(self.colors)])
-            ))
-
-        fig.update_layout(
-            **get_default_layout(
-                title=f"Cumulative regret during the {self.n_steps} steps for {self.n_episodes} episodes",
-                xaxis_title="Steps",
-                yaxis_title="Cumulative Regret",
-            )
-        )
-
-        fig.show()
-        if save:
-            fig.write_html(self.results_folder / f"cumulative_regret_by_step_{plot_name}.html")
-
-    def plot_Q_values(self, save: bool = True, plot_name: str = "") -> None:
-        fig = go.Figure()
-
-        fig.add_trace(go.Scatter(
-            x=list(range(len(self.Q_values))),
-            y=self.Q_values,
-            mode='markers',
-            marker=get_marker_style(self.colors[0])
-        ))
-
-        fig.update_layout(
-            **get_default_layout(
-                title="Q values for each action",
-                xaxis_title="Actions",
-                yaxis_title="Q value"
-            )
-        )
-
-        fig.show()
-        if save:
-            fig.write_html(self.results_folder / f"Q_values_{plot_name}.html")
-
-    def plot_Q_values_evolution_by_bandit_first_episode(self, save: bool = True, plot_name: str = "") -> None:
-        fig = go.Figure()
-
-        for bandit_index in range(self.n_bandits):
-            bandit_Q_values = self.Q_values_history[:self.n_steps, bandit_index]
-
-            fig.add_trace(go.Scatter(
-                x=list(range(self.n_steps)),
-                y=bandit_Q_values,
-                mode='lines',
-                name=f'Bandit {bandit_index}',
-                line=dict(color=self.colors[bandit_index])
-            ))
-
-        fig.update_layout(
-            **get_default_layout(
-                title=f"Q-values evolution for Bandits during the first episode ({self.n_steps} steps)",
-                xaxis_title="Steps",
-                yaxis_title="Q-value"
-            )
-        )
-
-        fig.show()
-        if save:
-            fig.write_html(self.results_folder / f"Q_values_evolution_by_bandwidth_first_episode_{plot_name}.html")
-
-    def plot_total_reward_by_step(self, save: bool = True, plot_name: str = "") -> None:
-        fig = go.Figure()
-
-        for policy_index, policy in enumerate(self.policies):
-            fig.add_trace(go.Scatter(
-                x=list(range(self.n_steps)),
-                y=self.total_rewards_by_step[:, policy_index],
-                mode='lines',
-                name=repr(policy),
-                line=dict(color=self.colors[policy_index % len(self.colors)])
-            ))
 
         fig.update_layout(
             **get_default_layout(
@@ -466,9 +341,234 @@ class Game:
 
         fig.show()
         if save:
-            fig.write_html(self.results_folder / f"total_reward_by_step_{plot_name}.html")
+            fig.write_html(
+                self.results_folder / f"average_reward_by_step_{plot_name}.html"
+            )
 
-    def plot_rate_optimal_actions_by_step(self, save: bool = True, plot_name: str = "") -> None:
+    def plot_average_reward_by_episode(
+        self, save: bool = True, plot_name: str = ""
+    ) -> None:
+        fig = go.Figure()
+
+        for policy_index, policy in enumerate(self.policies):
+            fig.add_trace(
+                go.Scatter(
+                    x=list(range(self.n_episodes)),
+                    y=self.average_rewards_by_episode[:, policy_index],
+                    mode="lines",
+                    name=repr(policy),
+                    line=dict(color=self.colors[policy_index % len(self.colors)]),
+                )
+            )
+
+        fig.update_layout(
+            **get_default_layout(
+                title=f"Average reward obtained during the {self.n_steps} steps for {self.n_episodes} episodes",
+                xaxis_title="Episodes",
+                yaxis_title="Average reward",
+            )
+        )
+
+        fig.show()
+        if save:
+            fig.write_html(
+                self.results_folder / f"average_reward_by_episode_{plot_name}.html"
+            )
+
+    def plot_average_reward_by_step_smoothed(
+        self, smooth_factor: int = 50, save: bool = True, plot_name: str = ""
+    ) -> None:
+        fig = go.Figure()
+
+        for policy_index, policy in enumerate(self.policies):
+            smoothed_data = self._moving_average(
+                self.average_rewards_by_step[:, policy_index], smooth_factor
+            )
+            fig.add_trace(
+                go.Scatter(
+                    x=list(range(len(smoothed_data))),
+                    y=smoothed_data,
+                    mode="lines",
+                    name=repr(policy),
+                    line=dict(color=self.colors[policy_index % len(self.colors)]),
+                )
+            )
+
+        fig.update_layout(
+            **get_default_layout(
+                title=f"Smoothed average reward (factor: {smooth_factor}) during the {self.n_steps} steps for {self.n_episodes} episodes",
+                xaxis_title="Steps",
+                yaxis_title="Average reward",
+            )
+        )
+
+        fig.show()
+        if save:
+            fig.write_html(
+                self.results_folder
+                / f"average_reward_by_step_smoothed_{plot_name}.html"
+            )
+
+    def plot_bandit_selection_evolution(
+        self, save: bool = True, plot_name: str = ""
+    ) -> None:
+        fig = go.Figure()
+
+        colorscale = get_color_sequence()[: self.n_bandits]
+
+        for policy_index, policy in enumerate(self.policies):
+            arm_selections = self.actions_selected_by_policy[
+                :, :, policy_index
+            ].flatten()
+
+            for arm in range(self.n_bandits):
+                arm_mask = arm_selections == arm
+                fig.add_trace(
+                    go.Scatter(
+                        x=np.arange(self.n_episodes * self.n_steps)[arm_mask],
+                        y=np.full(np.sum(arm_mask), policy_index),
+                        mode="markers",
+                        marker=dict(
+                            size=5,
+                            color=colorscale[arm],
+                        ),
+                        name=f"{repr(policy)} - Arm {arm}",
+                        showlegend=policy_index == 0,
+                    )
+                )
+
+        fig.update_layout(
+            **get_default_layout(
+                title="Arm Selections by Policy Over Time",
+                xaxis_title="Steps",
+                yaxis_title="Policy",
+            )
+        )
+
+        fig.show()
+        if save:
+            fig.write_html(
+                self.results_folder / f"bandit_selection_evolution_{plot_name}.html"
+            )
+
+    def plot_cumulative_regret_by_step(
+        self, save: bool = True, plot_name: str = ""
+    ) -> None:
+        fig = go.Figure()
+
+        for policy_index, policy in enumerate(self.policies):
+            fig.add_trace(
+                go.Scatter(
+                    x=list(range(self.n_steps)),
+                    y=self.cumulative_regret_by_step[:, policy_index],
+                    mode="lines",
+                    name=repr(policy),
+                    line=dict(color=self.colors[policy_index % len(self.colors)]),
+                )
+            )
+
+        fig.update_layout(
+            **get_default_layout(
+                title=f"Cumulative regret during the {self.n_steps} steps for {self.n_episodes} episodes",
+                xaxis_title="Steps",
+                yaxis_title="Cumulative Regret",
+            )
+        )
+
+        fig.show()
+        if save:
+            fig.write_html(
+                self.results_folder / f"cumulative_regret_by_step_{plot_name}.html"
+            )
+
+    def plot_Q_values(self, save: bool = True, plot_name: str = "") -> None:
+        fig = go.Figure()
+
+        fig.add_trace(
+            go.Scatter(
+                x=list(range(len(self.Q_values))),
+                y=self.Q_values,
+                mode="markers",
+                marker=get_marker_style(self.colors[0]),
+            )
+        )
+
+        fig.update_layout(
+            **get_default_layout(
+                title="Q values for each action",
+                xaxis_title="Actions",
+                yaxis_title="Q value",
+            )
+        )
+
+        fig.show()
+        if save:
+            fig.write_html(self.results_folder / f"Q_values_{plot_name}.html")
+
+    def plot_Q_values_evolution_by_bandit_first_episode(
+        self, save: bool = True, plot_name: str = ""
+    ) -> None:
+        fig = go.Figure()
+
+        for bandit_index in range(self.n_bandits):
+            bandit_Q_values = self.Q_values_history[: self.n_steps, bandit_index]
+
+            fig.add_trace(
+                go.Scatter(
+                    x=list(range(self.n_steps)),
+                    y=bandit_Q_values,
+                    mode="lines",
+                    name=f"Bandit {bandit_index}",
+                    line=dict(color=self.colors[bandit_index]),
+                )
+            )
+
+        fig.update_layout(
+            **get_default_layout(
+                title=f"Q-values evolution for Bandits during the first episode ({self.n_steps} steps)",
+                xaxis_title="Steps",
+                yaxis_title="Q-value",
+            )
+        )
+
+        fig.show()
+        if save:
+            fig.write_html(
+                self.results_folder
+                / f"Q_values_evolution_by_bandwidth_first_episode_{plot_name}.html"
+            )
+
+    def plot_total_reward_by_step(self, save: bool = True, plot_name: str = "") -> None:
+        fig = go.Figure()
+
+        for policy_index, policy in enumerate(self.policies):
+            fig.add_trace(
+                go.Scatter(
+                    x=list(range(self.n_steps)),
+                    y=self.total_rewards_by_step[:, policy_index],
+                    mode="lines",
+                    name=repr(policy),
+                    line=dict(color=self.colors[policy_index % len(self.colors)]),
+                )
+            )
+
+        fig.update_layout(
+            **get_default_layout(
+                title=f"Cumulative reward obtained during the {self.n_steps} steps for {self.n_episodes} episodes",
+                xaxis_title="Steps",
+                yaxis_title="Cumulative reward",
+            )
+        )
+
+        fig.show()
+        if save:
+            fig.write_html(
+                self.results_folder / f"total_reward_by_step_{plot_name}.html"
+            )
+
+    def plot_rate_optimal_actions_by_step(
+        self, save: bool = True, plot_name: str = ""
+    ) -> None:
         fig = go.Figure()
 
         optimal_actions_expanded = np.repeat(
@@ -481,13 +581,15 @@ class Game:
         percentage_optimal_by_step = np.mean(optimal_action_selections, axis=0) * 100
 
         for policy_index, policy in enumerate(self.policies):
-            fig.add_trace(go.Scatter(
-                x=list(range(self.n_steps)),
-                y=percentage_optimal_by_step[:, policy_index],
-                mode='lines',
-                name=repr(policy),
-                line=dict(color=self.colors[policy_index % len(self.colors)])
-            ))
+            fig.add_trace(
+                go.Scatter(
+                    x=list(range(self.n_steps)),
+                    y=percentage_optimal_by_step[:, policy_index],
+                    mode="lines",
+                    name=repr(policy),
+                    line=dict(color=self.colors[policy_index % len(self.colors)]),
+                )
+            )
 
         fig.update_layout(
             **get_default_layout(
@@ -499,7 +601,9 @@ class Game:
 
         fig.show()
         if save:
-            fig.write_html(self.results_folder / f"rate_optimal_actions_by_step_{plot_name}.html")
+            fig.write_html(
+                self.results_folder / f"rate_optimal_actions_by_step_{plot_name}.html"
+            )
 
     @property
     @lru_cache(maxsize=None)
