@@ -46,7 +46,7 @@ jobs:
       uses: peaceiris/actions-gh-pages@v3
       with:
         github_token: ${{ secrets.GITHUB_TOKEN }}
-        publish_dir: ./documentation/public
+        publish_dir: ./docs/public
 
   deploy_dev:
     needs: build_and_test
