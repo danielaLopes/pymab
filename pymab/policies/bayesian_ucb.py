@@ -1,12 +1,13 @@
 from __future__ import annotations
 
 import logging
+import math
 import typing
 
 import numpy as np
-import pymc3 as pm
+from scipy import stats
 
-from pymab.policies.ucb import UCBPolicy, StationaryUCBPolicy
+from pymab.policies.ucb import StationaryUCBPolicy
 from pymab.reward_distribution import RewardDistribution
 
 if typing.TYPE_CHECKING:
@@ -50,27 +51,16 @@ class BernoulliBayesianUCBPolicy(StationaryUCBPolicy):
         self.failures = np.zeros(n_bandits)
 
     def _get_ucb_value(self, action_index: int) -> float:
-        # Perform MCMC sampling to estimate the posterior distribution
-        with pm.Model() as model:
-            alpha = self.successes[action_index] + 1
-            beta = self.failures[action_index] + 1
-            theta = pm.Beta("theta", alpha=alpha, beta=beta)
-            step = pm.NUTS(target_accept=0.95)
-            trace = pm.sample(
-                self.n_mcmc_samples,
-                tune=1000,
-                chains=1,
-                step=step,
-                progressbar=False,
-                return_inferencedata=False,
-                discard_tuned_samples=True,
-            )
+        alpha = self.successes[action_index] + 1
+        beta = self.failures[action_index] + 1
 
-        # Get the upper quantile from the posterior distribution
-        quantile_value = np.percentile(
-            trace["theta"], 100 * (1 - 1 / (self.current_step + 1))
-        )
-        return quantile_value
+        mean = alpha / (alpha + beta)
+
+        variance = (alpha * beta) / ((alpha + beta) ** 2 * (alpha + beta + 1))
+
+        ucb = mean + self.c * math.sqrt(variance / (self.current_step + 1))
+
+        return ucb
 
     def _update(self, chosen_action_index: int, *args, **kwargs) -> float:
         """
@@ -136,23 +126,25 @@ class GaussianBayesianUCBPolicy(StationaryUCBPolicy):
         self.sum_squared_rewards = np.zeros(n_bandits)
 
     def _get_ucb_value(self, action_index: int) -> float:
-        # Perform MCMC sampling to estimate the posterior distribution
-        with pm.Model() as model:
-            mean = self.sum_rewards[action_index] / (
-                self.times_selected[action_index] + 1
-            )
-            variance = (
-                self.sum_squared_rewards[action_index]
-                / (self.times_selected[action_index] + 1)
-                - mean**2
-            )
-            theta = pm.Normal("theta", mu=mean, sigma=np.sqrt(variance))
-            trace = pm.sample(self.n_mcmc_samples, chains=1, progressbar=False)
+        if self.times_selected[action_index] == 0:
+            return float('inf')
 
-        quantile_value = np.percentile(
-            trace["theta"], 100 * (1 - 1 / (self.current_step + 1))
+        mean = self.sum_rewards[action_index] / self.times_selected[action_index]
+
+        variance = (
+                self.sum_squared_rewards[action_index] / self.times_selected[action_index]
+                - mean ** 2
         )
-        return quantile_value
+
+        variance = max(variance, 1e-10)
+
+        standard_error = math.sqrt(variance / self.times_selected[action_index])
+
+        confidence_level = 1 - 1 / (self.current_step + 1)
+        z_score = stats.norm.ppf(confidence_level)
+        ucb = mean + z_score * standard_error
+
+        return ucb
 
     def _update(self, chosen_action_index: int, *args, **kwargs) -> float:
         """
@@ -170,15 +162,6 @@ class GaussianBayesianUCBPolicy(StationaryUCBPolicy):
         self.sum_squared_rewards[chosen_action_index] += reward**2
 
         return reward
-
-    # def select_action(self) -> Tuple[int, float]:
-    #     if self.current_step < self.n_bandits:
-    #         chosen_action_index = self.current_step
-    #     else:
-    #         ucb_values = np.array([self._get_ucb_value(i) for i in range(self.n_bandits)])
-    #         chosen_action_index = np.argmax(ucb_values)
-    #
-    #     return chosen_action_index, self._update(chosen_action_index)
 
     def __repr__(self) -> str:
         return f"{super().__repr__()}(opt_init={self.optimistic_initialization}, c={self.c})"

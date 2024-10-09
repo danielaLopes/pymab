@@ -3,6 +3,5 @@ matplotlib
 numpy
 pandas
 plotly
-pymc3
 scipy
 tqdm
