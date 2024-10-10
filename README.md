@@ -1,43 +1,91 @@
-# PyMultiBandits
+# PyMAB
 <img src="assets/icon.png" alt="Icon description" style="width:200px; height:auto;">
 
-Python library for Multi-Armed Bandit algorithms.
-
+Python Multi-Armed Bandit Library
+Tame the randomness, pull the right levers!
+PyMab: Your trusty sidekick in the wild world of exploration and exploitation.
 
 
 ## Features
 * Design to compare different algorithms in the same environment.
 * Built-in plotting functions to visualize the results.
 * Support for several Multi-Armed Bandit algorithms.
-* Support for different types of reward distributions (Gaussian, Bernoulli, Stationary, Stochastic, etc).
+* Support for different types of reward distributions (Gaussian, Bernoulli).
+* Support for different types of environments (Stationary, Non-Stationary).
 
 
-### Multi-Armed Bandit algorithms and reward distributions
-#### Basic Exploration-Exploitation Algorithms
+### Environments
+### Stationary
+* The reward distribution remains the same during the whole execution.
+
+### Non-Stationary
+* The reward distribution changes during the execution. This library contains a mixin to create non-stationary environments that change the reward distribution in multiple ways, and easily extensible.
+
+* **Gradual Change:** The reward distribution will change slightly each step.
+
+* **Abrupt Change:** The reward distribution will change more, periodically.
+
+* **Random Arm Swapping:** The reward distribution will change by swapping the rewards between arms and at random steps.
+
+
+### Policies
+#### Multi-Armed Bandit algorithms and reward distributions
+##### Basic Exploration-Exploitation Algorithms
 * **Greedy:**
-  * Reward Distribution: Assumes stationary, deterministic, or stochastic rewards.
+  * Always selects the arm with the highest estimated reward.
+  * Very simple but can get stuck on suboptimal arms if initial estimates are inaccurate.
+  * No exploration, all exploitation.
+
 * **Epsilon-Greedy:**
-  * Reward Distribution: Assumes stationary, stochastic rewards. Supports Bernoulli and Gaussian distributions.
+  * Most of the time (1-ε), selects the best arm like Greedy.
+  * Sometimes (ε), randomly selects an arm to explore.
+  * Balances exploration and exploitation, but exploration doesn't decrease over time.
 
-#### Upper Confidence Bound (UCB) Algorithms
-* **UCB:**
-  * Reward Distribution: Assumes stationary, stochastic rewards. Typically supports Gaussian distributions, but can be adapted for Bernoulli distributions.
-* **Bayesian UCB:**
-  * Reward Distribution: Can handle non-stationary rewards by updating beliefs about the distribution over time. This library contains implementations for both Bernoulli and Gaussian distributions.
 
-#### Bayesian Methods
-* **Thompson Sampling:**
-  * Reward Distribution: Assumes stationary, stochastic rewards but can be adapted for non-stationary settings by updating posterior distributions. This library contains implementations for both Bernoulli and Gaussian distributions.
+##### Upper Confidence Bound (UCB) Algorithms
+* **UCB:** 
+  * Selects the arm with the highest upper confidence bound.
+  * Automatically balances exploration and exploitation.
+  * Explores less-pulled arms more, but focuses on promising arms over time.
+  * Has adaptations for non-stationary environments.
+    * **SlidingWindowUCB:** 
+      * Like UCB, but only considers recent observations.
+      * Adapts better to abrupt changes in reward distributions.
+    * **DiscountedUCB:** 
+      * Like UCB, but gives more weight to recent observations.
+      * Adapts better to gradual changes in reward distributions.
+  
+* **Bayesian UCB:** 
+  * Can incorporate prior knowledge about reward distributions.
+  * Has adaptations for Bernoulli and Gaussian reward distributions.
+  
 
-#### Softmax and Gradient-Based Methods
-* **Softmax Selection:**
-  * Reward Distribution: Assumes stationary, stochastic rewards.
-* **Gradient:**
-  * Reward Distribution: Assumes stationary, stochastic rewards.
+##### Bayesian Methods
+* **Thompson Sampling:** 
+  * Samples from estimated reward distributions and picks the highest sample.
+  * Naturally balances exploration and exploitation.
+  * Often performs very well in practice, especially with enough samples.
+  * Has adaptations for Bernoulli and Gaussian reward distributions.
 
-#### Contextual Bandits
+##### Softmax and Gradient-Based Methods
+* **Softmax Selection:** 
+  * To be implemented
+  * Selects arms probabilistically based on their estimated values.
+  * Higher estimated values have higher probability of being selected.
+  * Temperature parameter controls exploration-exploitation trade-off.
+
+* **Gradient:** 
+  * To be implemented
+  * Updates a preference for each arm based on the reward received.
+  * Doesn't maintain estimates of actual reward values.
+  * Can work well in relative reward scenarios.
+
+##### Contextual Bandits
 * **Contextual Bandits:**
-  * Reward Distribution: Can handle both stationary and non-stationary rewards. Assumes that rewards are stochastic and can vary with the context.
+  * Takes into account additional information (context) when making decisions.
+  * Can learn to select different arms in different contexts.
+  * More powerful but also more complex than standard bandits.
+
 
 
 ## Examples
@@ -52,7 +100,7 @@ In ./examples/ you can find detailed examples of how to use the library:
 
 ## Build documentation locally
 ```bash
-sphinx-build -b html source/ build/
+sphinx-build -b html docs/source/ docs/build/
 ```
 
 
@@ -89,28 +137,4 @@ If I don't pass Q_values, these will only be set in the game loop, and this will
     * fitting a time series model to find an indicator of when a distribution changes and tune the exploration rate accordingly
   * Add a new environment change mixin that changes at random steps, or changes the variance, or changes the mean, etc.
   * Finish tests
-  * bayesian_ucb_bernoulli is taking way too much time. Check what is happening:
-    * /Users/dlopes/pymab/.venv/lib/python3.9/site-packages/scipy/stats/_continuous_distns.py:624: RuntimeWarning: overflow encountered in _beta_ppf
-      return _boost._beta_ppf(q, a, b)
-    /Users/dlopes/pymab/.venv/lib/python3.9/site-packages/scipy/stats/_continuous_distns.py:624: RuntimeWarning: overflow encountered in _beta_ppf
-      return _boost._beta_ppf(q, a, b)
-    /Users/dlopes/pymab/.venv/lib/python3.9/site-packages/scipy/stats/_continuous_distns.py:624: RuntimeWarning: overflow encountered in _beta_ppf
-      return _boost._beta_ppf(q, a, b)
-    WARNING:pymc3:The acceptance probability does not match the target. It is 0.8837097769922425, but should be close to 0.95. Try to increase the number of tuning steps.
-    /Users/dlopes/pymab/.venv/lib/python3.9/site-packages/scipy/stats/_continuous_distns.py:624: RuntimeWarning: overflow encountered in _beta_ppf
-      return _boost._beta_ppf(q, a, b)
-    /Users/dlopes/pymab/.venv/lib/python3.9/site-packages/scipy/stats/_continuous_distns.py:624: RuntimeWarning: overflow encountered in _beta_ppf
-      return _boost._beta_ppf(q, a, b)
-    WARNING:pymc3:The acceptance probability does not match the target. It is 0.8763403989079345, but should be close to 0.95. Try to increase the number of tuning steps.
-    WARNING:pymc3:The acceptance probability does not match the target. It is 0.9028652610993134, but should be close to 0.95. Try to increase the number of tuning steps.
-    /Users/dlopes/pymab/.venv/lib/python3.9/site-packages/scipy/stats/_continuous_distns.py:624: RuntimeWarning: overflow encountered in _beta_ppf
-      return _boost._beta_ppf(q, a, b)
-    WARNING:pymc3:The acceptance probability does not match the target. It is 0.9033704597582405, but should be close to 0.95. Try to increase the number of tuning steps.
-    /Users/dlopes/pymab/.venv/lib/python3.9/site-packages/scipy/stats/_continuous_distns.py:624: RuntimeWarning: overflow encountered in _beta_ppf
-      return _boost._beta_ppf(q, a, b)
-    WARNING:pymc3:The acceptance probability does not match the target. It is 0.9039404876164147, but should be close to 0.95. Try to increase the number of tuning steps.
-    WARNING:pymc3:The acceptance probability does not match the target. It is 0.9074318868847735, but should be close to 0.95. Try to increase the number of tuning steps.
-    WARNING:pymc3:The acceptance probability does not match the target. It is 0.8959792937282327, but should be close to 0.95. Try to increase the number of tuning steps.
-    WARNING:pymc3:The acceptance probability does not match the target. It is 0.8443595376193778, but should be close to 0.95. Try to increase the number of tuning steps.
-    WARNING:pymc3:The acceptance probability does not match the target. It is 0.9050796115033122, but should be close to 0.95. Try to increase the number of tuning steps.
-    WARNING:pymc3:The acceptance probability does not match the target. It is 0.903060093122155, but should be close to 0.95. Try to increase the number of tuning steps.
+  
