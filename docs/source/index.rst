@@ -10,10 +10,40 @@ Python Multi-Armed Bandit Library
 Tame the randomness, pull the right levers!
 PyMab: Your trusty sidekick in the wild world of exploration and exploitation.
 
+PyMAB offers an exploratory framework to compare the performance of multiple Multi Armed Bandit algorithms in a variety of scenarios. The library is designed to be flexible and easy to use, allowing users to quickly set up and run experiments with different configurations.
 
-Add your content using ``reStructuredText`` syntax. See the
-`reStructuredText <https://www.sphinx-doc.org/en/master/usage/restructuredtext/index.html>`_
-documentation for details.
+--------------------------------------------
+Simple Example
+--------------------------------------------
+.. code-block:: python
+
+    from pymab.policies.greedy import GreedyPolicy
+    from pymab.policies.thompson_sampling import ThompsonSamplingPolicy
+    from pymab.game import Game
+
+    n_bandits = 5
+
+    # Define the policies
+    greedy_policy = GreedyPolicy(
+                        optimistic_initialization=1,
+                        n_bandits=n_bandits
+                    )
+    ts_policy = ThompsonSamplingPolicy(n_bandits=n_bandits)
+
+    # Define the game
+    game = Game(
+         n_episodes=2000,
+         n_steps=1000,
+         policies=[greedy_policy, ts_policy],
+         n_bandits=n_bandits
+    )
+
+    # Run the game
+    game.game_loop()
+
+    # Plot the results
+    game.plot_average_reward_by_step()
+
 
 
 .. toctree::

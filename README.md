@@ -5,6 +5,49 @@ Python Multi-Armed Bandit Library
 Tame the randomness, pull the right levers!
 PyMab: Your trusty sidekick in the wild world of exploration and exploitation.
 
+PyMAB offers an exploratory framework to compare the performance of multiple Multi Armed Bandit algorithms in a variety of scenarios. The library is designed to be flexible and easy to use, allowing users to quickly set up and run experiments with different configurations.
+
+
+## Simple Example
+```python
+from pymab.policies.greedy import GreedyPolicy
+  from pymab.policies.thompson_sampling import ThompsonSamplingPolicy
+  from pymab.game import Game
+
+  n_bandits = 5
+  
+  # Define the policies
+  greedy_policy = GreedyPolicy(
+                      optimistic_initialization=1,
+                      n_bandits=n_bandits
+                  )
+  ts_policy = ThompsonSamplingPolicy(n_bandits=n_bandits)
+
+  # Define the game
+  game = Game(
+       n_episodes=2000,
+       n_steps=1000,
+       policies=[greedy_policy, ts_policy],
+       n_bandits=n_bandits
+  )
+
+  # Run the game
+  game.game_loop()
+
+  # Plot the results
+  game.plot_average_reward_by_step()
+```
+
+### Other examples
+In ./examples/ you can find detailed examples of how to use the library:
+* [Basic Usage](examples/basic_usage.ipynb): A simple example of how to use the library with the Greedy Policy.
+* [Bayesian UCB Bernoulli](examples/bayesian_ucb_bernoulli.ipynb): An example comparing the multiple configurations of the UCB and the Bayesian UCB policies with a Bernoulli reward distribution.
+* [Comparing Policies Gaussian](examples/comparing_policies_gaussian.ipynb): An example comparing the multiple configurations of the Greedy, the Epsilon Greedy, the Bayesian UCB, and the Thompson Sampling policies with a Gaussian reward distribution.
+* [Contextual Bandits Proxies](examples/contextual_bandits_proxies.ipynb): An example comparing the multiple configurations of the Greedy abd the Contextual Bandits for **proxy server selection** based on latency, bandwidth, downtime rate, success rate, proximity and load.
+* [Non-Stationary Policies](examples/non_stationary_policies.ipynb): An example comparing the multiple configurations of the UCB, the Sliding Window UCB, and the Discounted UCB policies in a stationary environment, non-stationary with gradual changes, non-stationary with abrupt changes, and non-stationary with random arm swapping.
+* [Thompson Sampling Bernoulli](examples/thompson_sampling_bernoulli.ipynb): An example comparing the multiple configurations of the Greedy, and the Thompson Sampling policies with a Bernoulli reward distribution, showing the evolution of the reward distribution estimations.
+* [Thompson Sampling Gaussian](examples/thompson_sampling_gaussian.ipynb): An example comparing the multiple configurations of the Greedy, and the Thompson Sampling policies with a Gaussian reward distribution, showing the evolution of the reward distribution estimations.
+
 
 ## Features
 * Design to compare different algorithms in the same environment.
@@ -87,54 +130,21 @@ PyMab: Your trusty sidekick in the wild world of exploration and exploitation.
   * More powerful but also more complex than standard bandits.
 
 
-
-## Examples
-In ./examples/ you can find detailed examples of how to use the library:
-* [Basic Usage](examples/basic_usage.ipynb): A simple example of how to use the library with the Greedy Policy.
-* [Bayesian UCB Bernoulli](examples/bayesian_ucb_bernoulli.ipynb): An example comparing the UCB Policy (with c=0, c=1, and c=2) with the Bayesian UCB Policy with a Bernoulli Reward Distribution.
-* [Comparing Policies Gaussian](examples/comparing_policies_gaussian.ipynb): 
-* [Contextual Bandits Proxies](examples/contextual_bandits_proxies.ipynb): 
-* [Thompson Sampling Bernoulli](examples/thompson_sampling_bernoulli.ipynb): 
-* [Thompson Sampling Gaussian](examples/thompson_sampling_gaussian.ipynb): 
-
-
-## Build documentation locally
-```bash
-sphinx-build -b html docs/source/ docs/build/
-```
+## Roadmap
+* [ ] Add implementation for otimised Greedy policies for non-stationary environments.
+* [ ] Add more complex policy adaptions for non-stationary environments.
+  * [ ] https://towardsdatascience.com/reinforcement-learning-basics-stationary-and-non-stationary-multi-armed-bandit-problem-cfe06d33b815
+  * [ ] https://gdmarmerola.github.io/non-stationary-bandits/
+    * [ ] Exponentially weighted means
+    * [ ] Weighted block means
+    * [ ] Fitting a time series model to find an indicator of when a distribution changes and tune the exploration rate accordingly
+* [ ] Add more complex non-stationary environments, like changing the variance, mean, random abrupt changes, machine learning, ...
+* [ ] Add unit tests for non-stationary environments and policies.
+* [ ] Make mixin for optimistic initialisation, since not all policies use it.
+* [ ] Add implementation for softmax_selection.
+* [ ] Add implementation for gradient.
 
 
-## TODOs
-* Add implementation for softmax_selection, and bayesian_ucb
-* Check why the thompson sampling is doesn't have amazing results with gaussian distribution (might just be how it works and not an error),
-  * Check if it works better with other armed bandits
-* Test if algorithms are working with bernoulli distribution
-* add tests
-* make class with optimized initialization, without it being in Policy since most policies don't use it.
-* Complete remaining algorithms
-* Create testing pipeline on git
-* Check better way to do this
-```python
-for policy in game.policies:
-    policy.Q_values = game.Q_values
-    policy.plot_distribution()
-```
-If I don't pass Q_values, these will only be set in the game loop, and this will fail. Find a better way to initialize the first values.
 
-* Test all examples and apply fixes
-* Add example for non stationary with particular appropriate algorithms
-* Fix stationary, make tests, and ensures this can also change the variance, and probably we should have a variance per arm.
-* Change the plots to plotly or something
-* Handle project dependencies in setup.py and all of that, to make pip installable
-* Make tests for non stationary and mixin 
-* Make non stationary for other algorithms like greedy.
-
-* Add more complex algorithms for non-stationary, like:
-  * https://towardsdatascience.com/reinforcement-learning-basics-stationary-and-non-stationary-multi-armed-bandit-problem-cfe06d33b815
-  * https://gdmarmerola.github.io/non-stationary-bandits/
-    * exponentially weighted means
-    * weighted block means
-    * fitting a time series model to find an indicator of when a distribution changes and tune the exploration rate accordingly
-  * Add a new environment change mixin that changes at random steps, or changes the variance, or changes the mean, etc.
-  * Finish tests
+**This is an ongoing project, and we are always looking for suggestions and contributions. If you have any ideas or want to help, please reach out to us!**
   
