@@ -1,5 +1,8 @@
 # PyMAB
-<img src="assets/icon.png" alt="Icon description" style="width:200px; height:auto;">
+
+<p align="center">
+  <img src="assets/icon.png" alt="Icon description" style="width:200px; height:auto;">
+</p>
 
 Python Multi-Armed Bandit Library
 Tame the randomness, pull the right levers!
