@@ -141,10 +141,11 @@ In ./examples/ you can find detailed examples of how to use the library:
 * [ ] Add more complex non-stationary environments, like changing the variance, mean, random abrupt changes, machine learning, ...
 * [ ] Add unit tests for non-stationary environments and policies.
 * [ ] Make mixin for optimistic initialisation, since not all policies use it.
-* [ ] Add implementation for softmax_selection.
-* [ ] Add implementation for gradient.
+* [ ] Add implementation for softmax_selection policy.
+* [ ] Add implementation for gradient policy. 
 
 
+* [Github Project Board](examples/basic_usage.ipynb):
 
 **This is an ongoing project, and we are always looking for suggestions and contributions. If you have any ideas or want to help, please reach out to us!**
   

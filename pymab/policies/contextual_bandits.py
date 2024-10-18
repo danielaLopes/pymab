@@ -19,15 +19,21 @@ class ContextualBanditPolicy(StationaryPolicyMixin, Policy):
     such as the time of the day, or whether it's raining or not. When deciding which action to take, the agent leverages
     its context to make a more informed decision. This potentially reduces the need for exploration, unlike other
     policies.
+
     Contextual Bandits implements a linear model to predict rewards based on the context, where the weights are updated.
 
-    Attributes:
-        context_dim (int): The dimension of the context.
-        context_func (Callable): The function to generate the context in each time step.
-        theta (np.array): Matrix of shape (n_bandits, context_dim) where each row stores the linear coefficients for
-                          each bandit.
+    :param context_dim (int): The dimension of the context.
+    :type: int
+    :param context_func:  The function to generate the context in each time step.
+    :type: Callable
+    :param theta: Matrix of shape (n_bandits, context_dim) where each row stores the linear coefficients for each bandit.
+    :type: np.array
+    :param learning_rate: Controls how quickly the linear coefficients (theta) are updated based on new observations
+    :type: int
     """
-
+    context_dim: int
+    theta: np.array
+    learning_rate: float
     def __init__(
         self,
         *,
@@ -49,7 +55,7 @@ class ContextualBanditPolicy(StationaryPolicyMixin, Policy):
         self.context_dim = context_dim
         self.theta = np.zeros(
             (n_bandits, context_dim)
-        )  # Linear coefficients for each arm
+        )
         self.learning_rate = learning_rate
 
     def _update(
@@ -60,9 +66,10 @@ class ContextualBanditPolicy(StationaryPolicyMixin, Policy):
         The coefficients are updated using the following formula:
         \theta_i = \theta_i + 0.1 \times (r - \theta_i \cdot c) \times c, where c is the context.
 
-        Args:
-            chosen_action_index (int): The index of the chosen action.
-            context (np.array): The context when the action was chosen.
+        :param chosen_action_index: The index of the chosen action.
+        :type: int
+        :param context: The context when the action was chosen.
+        :type np.array:
         """
         reward = super()._update(chosen_action_index)
         self.theta[chosen_action_index] += (
@@ -73,7 +80,12 @@ class ContextualBanditPolicy(StationaryPolicyMixin, Policy):
 
         return reward
 
-    def reset(self):
+    def reset(self) -> None:
+        """
+        Reset the policy to its initial state.
+
+        This method resets the base policy and reinitializes the theta matrix.
+        """
         super().reset()
         self.theta = np.zeros((self.n_bandits, self.context_dim))
 
@@ -83,11 +95,11 @@ class ContextualBanditPolicy(StationaryPolicyMixin, Policy):
         and the current context, which represents the weighted sum of the features in the current context, and used to
         estimate rewards.
 
-        Args:
-            context (np.array): The current context. It's shape should be (context_dim, n_bandits), inverse of theta.
-
-        Returns:
-            Tuple[int, float]: The selected action and the expected reward.
+        :param context: The current context. It's shape should be (context_dim, n_bandits), inverse of theta.
+        :type: np.array
+        :returns: The selected action and the expected reward.
+        :rtype: Tuple[int, float]
+        :raises ValueError: If the context dimensions do not match the expected dimensions
         """
         if context.shape[0] != self.context_dim:
             raise ValueError(

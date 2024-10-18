@@ -16,6 +16,25 @@ logger = logging.getLogger(__name__)
 
 
 class GreedyPolicy(StationaryPolicyMixin, Policy):
+    """
+    Implements a Greedy policy for multi-armed bandit problems.
+
+    The Greedy policy always selects the action with the highest estimated reward.
+    It inherits from StationaryPolicyMixin and Policy, combining stationary behavior
+    with basic policy functionality.
+
+    Attributes:
+        n_bandits (int): Number of bandit arms.
+        optimistic_initialization (float): Initial optimistic value for estimated rewards.
+        Q_values (np.array): True Q-values for each arm (set externally).
+        current_step (int): Current time step in the learning process.
+        total_reward (float): Cumulative reward obtained so far.
+        times_selected (np.array): Number of times each arm has been selected.
+        actions_estimated_reward (np.array): Estimated reward for each action.
+        variance (float): Variance of the reward distribution.
+        reward_distribution (Type[RewardDistribution]): Type of reward distribution used.
+        rewards_history (List[List[float]]): History of rewards for each arm.
+    """
     n_bandits: int
     optimistic_initialization: float
     _Q_values: np.array
@@ -43,6 +62,12 @@ class GreedyPolicy(StationaryPolicyMixin, Policy):
         )
 
     def select_action(self, *args, **kwargs) -> Tuple[int, float]:
+        """
+        Selects the action with the highest estimated reward.
+
+        :returns: A tuple containing the index of the chosen action and the reward obtained from taking that action.
+        :rtype: Tuple[int, float]
+        """
         chosen_action_index = np.argmax(self.actions_estimated_reward)
         return chosen_action_index, self._update(chosen_action_index)
 

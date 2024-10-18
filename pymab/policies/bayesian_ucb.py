@@ -17,6 +17,21 @@ logger = logging.getLogger(__name__)
 
 
 class BernoulliBayesianUCBPolicy(StationaryUCBPolicy):
+    """
+    Implements a Bayesian Upper Confidence Bound (UCB) policy for Bernoulli-distributed rewards.
+
+    This policy uses a Beta distribution as a conjugate prior for Bernoulli rewards.
+    It calculates the UCB value using the mean and variance of the posterior Beta distribution.
+
+    Attributes:
+        n_bandits (int): Number of bandit arms.
+        optimistic_initialization (float): Initial optimistic value for estimated rewards.
+        variance (float): Variance of the reward distribution.
+        c (float): Exploration parameter for UCB calculation.
+        n_mcmc_samples (int): Number of MCMC samples (not used in current implementation).
+        successes (np.array): Array to keep track of successes for each arm.
+        failures (np.array): Array to keep track of failures for each arm.
+    """
     n_bandits: int
     optimistic_initialization: float
     _Q_values: np.array
@@ -51,6 +66,17 @@ class BernoulliBayesianUCBPolicy(StationaryUCBPolicy):
         self.failures = np.zeros(n_bandits)
 
     def _get_ucb_value(self, action_index: int) -> float:
+        """
+        Calculates the UCB value for a given action.
+
+        This method computes the upper confidence bound using the properties of the Beta distribution.
+
+        Args:
+            action_index (int): Index of the action to calculate UCB for.
+
+        Returns:
+            float: The calculated UCB value.
+        """
         alpha = self.successes[action_index] + 1
         beta = self.failures[action_index] + 1
 
@@ -64,7 +90,9 @@ class BernoulliBayesianUCBPolicy(StationaryUCBPolicy):
 
     def _update(self, chosen_action_index: int, *args, **kwargs) -> float:
         """
+        Updates the policy after an action is taken.
 
+        This method updates the success and failure counts based on the observed reward.
 
         Args:
             chosen_action_index (int): Index of the chosen action.
@@ -97,6 +125,27 @@ class BernoulliBayesianUCBPolicy(StationaryUCBPolicy):
 
 
 class GaussianBayesianUCBPolicy(StationaryUCBPolicy):
+    """
+    Implements a Bayesian Upper Confidence Bound (UCB) policy for Gaussian-distributed rewards.
+
+    This policy uses a Normal-Inverse-Gamma distribution as a conjugate prior for Gaussian rewards.
+    It calculates the UCB value using the mean and variance of the posterior distribution.
+
+    :param n_bandits: Number of bandit arms.
+    :type: int
+    :param optimistic_initialization: Initial optimistic value for estimated rewards.
+    :type: float
+    :param variance: Variance of the reward distribution.
+    :type: float
+    :param c: Exploration parameter for UCB calculation.
+    :type: float
+    :param n_mcmc_samples: Number of MCMC samples (not used in current implementation).
+    :type: int
+    :param sum_rewards: Array to keep track of sum of rewards for each arm.
+    :type: np.array
+    :param sum_squared_rewards: Array to keep track of sum of squared rewards for each arm.
+    :type: np.array
+    """
     n_bandits: int
     optimistic_initialization: float
     _Q_values: np.array
@@ -126,6 +175,17 @@ class GaussianBayesianUCBPolicy(StationaryUCBPolicy):
         self.sum_squared_rewards = np.zeros(n_bandits)
 
     def _get_ucb_value(self, action_index: int) -> float:
+        """
+        Calculates the UCB value for a given action.
+
+        This method computes the upper confidence bound using the properties of the Normal distribution.
+
+        :param action_index: Index of the action to calculate UCB for.
+        :type: int
+
+        :returns: The calculated UCB value.
+        :rtype: float
+        """
         if self.times_selected[action_index] == 0:
             return float('inf')
 
@@ -148,13 +208,15 @@ class GaussianBayesianUCBPolicy(StationaryUCBPolicy):
 
     def _update(self, chosen_action_index: int, *args, **kwargs) -> float:
         """
+        Updates the policy after an action is taken.
 
+        This method updates the sum of rewards and sum of squared rewards based on the observed reward.
 
-        Args:
-            chosen_action_index (int): Index of the chosen action.
+        :param chosen_action_index: Index of the chosen action.
+        :type: int
 
-        Returns:
-            float: Observed reward.
+        :returns: Observed reward.
+        :rtype: float
         """
         reward = super()._update(chosen_action_index)
 
@@ -181,6 +243,12 @@ class GaussianBayesianUCBPolicy(StationaryUCBPolicy):
 
 
 class BayesianUCBPolicy:
+    """
+    Factory class for creating Bayesian UCB policies based on the reward distribution.
+
+    This class creates and returns either a BernoulliBayesianUCBPolicy or a GaussianBayesianUCBPolicy
+    based on the specified reward distribution.
+    """
     def __new__(
         cls,
         n_bandits: int,
