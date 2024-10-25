@@ -6,6 +6,11 @@
 PyMAB documentation
 ============================
 
+.. image:: _static/icon.png
+   :alt: PyMAB icon
+   :width: 200px
+   :align: left
+
 Python Multi-Armed Bandit Library
 Tame the randomness, pull the right levers!
 PyMab: Your trusty sidekick in the wild world of exploration and exploitation.
