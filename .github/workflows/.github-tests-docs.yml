@@ -38,7 +38,13 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install sphinx piccolo_theme
+        pip install sphinx piccolo_theme sphinx-rtd-theme sphinx-autodoc-typehints
+    - name: Setup doc structure
+      run: |
+        mkdir -p docs/source/_static
+        mkdir -p docs/source/_templates
+        touch docs/source/_static/.gitkeep
+        touch docs/source/_templates/.gitkeep
     - name: Build documentation
       run: |
         sphinx-build docs/source _build
