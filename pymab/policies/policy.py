@@ -29,43 +29,54 @@ def no_context_func():
 
 
 class Policy(ABC):
-    n_bandits: int
-    optimistic_initialization: float
-    _Q_values: np.array
-    current_step: int
-    total_reward: float
-    times_selected: np.array
-    actions_estimated_reward: np.array
-    variance: float
-    reward_distribution: Type[RewardDistribution]
-    context_func: Callable
-    rewards_history: List[List[float]]
+    """
+    Abstract base class for multi-armed bandit policies.
 
-    def __init__(
-        self,
-        *,
-        n_bandits: int,
-        optimistic_initialization: float = 0.0,
-        variance: float = 1.0,
-        reward_distribution: str = "gaussian",
-        context_func: Callable = no_context_func,
-    ) -> None:
-        self.n_bandits = n_bandits
-        self.optimistic_initialization = optimistic_initialization
-        self._Q_values = None
-        self.current_step = 0
-        self.total_reward = 0
-        self.variance = variance
-        self.reward_distribution = self.get_reward_distribution(reward_distribution)
-        self.times_selected = np.zeros(self.n_bandits)
-        self.actions_estimated_reward = np.full(
-            self.n_bandits, self.optimistic_initialization, dtype=float
-        )
-        self.context_func = context_func
-        self.rewards_history = [[] for _ in range(n_bandits)]
+    This class provides a framework for implementing various bandit algorithms.
+    It handles common functionality such as reward tracking, action selection,
+    and policy updates.
+
+    :ivar n_bandits: Number of bandits (actions) available
+    :type n_bandits: int
+    :ivar optimistic_initialization: Initial Q-value for all actions
+    :type optimistic_initialization: float
+    :ivar _Q_values: Array storing true Q-values for each action
+    :type _Q_values: np.array
+    :ivar current_step: Current time step in the learning process
+    :type current_step: int
+    :ivar total_reward: Cumulative reward obtained so far
+    :type total_reward: float
+    :ivar times_selected: Number of times each action has been selected
+    :type times_selected: np.array
+    :ivar actions_estimated_reward: Estimated reward for each action
+    :type actions_estimated_reward: np.array
+    :ivar variance: Variance of the reward distribution
+    :type variance: float
+    :ivar reward_distribution: Type of reward distribution
+    :type reward_distribution: Type[RewardDistribution]
+    :ivar context_func: Function to generate context (if applicable)
+    :type context_func: Callable
+    :ivar rewards_history: History of rewards for each action
+    :type rewards_history: List[List[float]]
+
+    .. note::
+        Subclasses should implement the abstract methods to define specific policies.
+    """
 
     @staticmethod
     def get_reward_distribution(name: str) -> Type[RewardDistribution]:
+        """
+        Get the reward distribution class based on the given name.
+
+        :param name: Name of the reward distribution
+        :type name: str
+        :return: Reward distribution class
+        :rtype: Type[RewardDistribution]
+        :raises ValueError: If an unknown reward distribution name is provided
+
+        .. note::
+            Supported distributions are 'gaussian', 'bernoulli', and 'uniform'.
+        """
         distributions = {
             "gaussian": GaussianRewardDistribution,
             "bernoulli": BernoulliRewardDistribution,
@@ -76,11 +87,27 @@ class Policy(ABC):
         return distributions[name]
 
     def _get_actual_reward(self, action_index: int) -> float:
+        """
+        Get the actual reward for a given action.
+
+        :param action_index: Index of the chosen action
+        :type action_index: int
+        :return: Reward value
+        :rtype: float
+        """
         return self.reward_distribution.get_reward(
             self.Q_values[action_index], self.variance
         )
 
     def _update(self, chosen_action_index: int, *args, **kwargs) -> float:
+        """
+        Update the policy based on the chosen action and received reward.
+
+        :param chosen_action_index: Index of the chosen action
+        :type chosen_action_index: int
+        :return: Reward received for the chosen action
+        :rtype: float
+        """
         self.current_step += 1
         reward = self._get_actual_reward(chosen_action_index)
         self.total_reward += reward
@@ -94,9 +121,23 @@ class Policy(ABC):
 
     @abstractmethod
     def _update_estimate(self, action_index: int, reward: float) -> None:
+        """
+        Update the estimated reward for a given action.
+
+        :param action_index: Index of the action to update
+        :type action_index: int
+        :param reward: Reward received for the action
+        :type reward: float
+        """
         pass
 
     def _update_sliding_window(self, chosen_action_index: int) -> None:
+        """
+        Update the sliding window of rewards for a given action.
+
+        :param chosen_action_index: Index of the chosen action
+        :type chosen_action_index: int
+        """
         if len(self.rewards_history[chosen_action_index]) > self.sliding_window_size:
             self.rewards_history[chosen_action_index] = self.rewards_history[
                 chosen_action_index
@@ -108,21 +149,46 @@ class Policy(ABC):
 
     @property
     def Q_values(self) -> List[float]:
+        """
+        Get the true Q-values for all actions.
+
+        :return: List of Q-values
+        :rtype: List[float]
+        :raises ValueError: If Q_values have not been set
+        """
         if self._Q_values is None:
             raise ValueError("Q_values not set yet!")
         return self._Q_values
 
     @Q_values.setter
     def Q_values(self, Q_values: List[float]) -> None:
+        """
+        Set the true Q-values for all actions.
+
+        :param Q_values: List of Q-values to set
+        :type Q_values: List[float]
+        :raises ValueError: If the length of Q_values doesn't match n_bandits
+        """
         if len(Q_values) != self.n_bandits:
             raise ValueError("Q_values length needs to match n_bandits!")
         self._Q_values = Q_values
 
     @abstractmethod
     def select_action(self, *args, **kwargs) -> Tuple[int, float]:
+        """
+        Select an action based on the policy.
+
+        :return: Tuple containing the chosen action index and the reward
+        :rtype: Tuple[int, float]
+        """
         pass
 
     def reset(self):
+        """
+        Reset the policy to its initial state.
+
+        This method resets all counters, rewards, and estimates to their initial values.
+        """
         self.current_step = 0
         self.total_reward = 0
         self.times_selected = np.zeros(self.n_bandits)
@@ -135,9 +201,13 @@ class Policy(ABC):
 
     def plot_distribution(self) -> None:
         """
-        Plots the distributions of the expected reward for the current step.
+        Plot the distributions of the expected reward for the current step.
 
-        This method handles both Bernoulli and Gaussian reward distributions.
+        This method visualizes the reward distributions for all actions, showing
+        both the estimated rewards and true rewards (if known).
+
+        .. note::
+            This method handles both Bernoulli and Gaussian reward distributions.
         """
         fig, axes = plt.subplots(
             1, self.n_bandits, figsize=(15, 6), constrained_layout=True

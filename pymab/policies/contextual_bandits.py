@@ -15,25 +15,56 @@ logger = logging.getLogger(__name__)
 
 
 class ContextualBanditPolicy(StationaryPolicyMixin, Policy):
-    """Contextual Bandits introduces the notion that the reward obtained at each step depends on the current context,
+    """
+    Implements a Contextual Bandit policy for multi-armed bandit problems.
+
+    This policy introduces the notion that the reward obtained at each step depends on the current context,
     such as the time of the day, or whether it's raining or not. When deciding which action to take, the agent leverages
     its context to make a more informed decision. This potentially reduces the need for exploration, unlike other
     policies.
 
     Contextual Bandits implements a linear model to predict rewards based on the context, where the weights are updated.
 
-    :param context_dim (int): The dimension of the context.
-    :type: int
-    :param context_func:  The function to generate the context in each time step.
-    :type: Callable
-    :param theta: Matrix of shape (n_bandits, context_dim) where each row stores the linear coefficients for each bandit.
-    :type: np.array
-    :param learning_rate: Controls how quickly the linear coefficients (theta) are updated based on new observations
-    :type: int
+    :ivar n_bandits: Number of bandits (actions) available
+    :type n_bandits: int
+    :ivar optimistic_initialization: Initial Q-value for all actions
+    :type optimistic_initialization: float
+    :ivar _Q_values: True Q-values for each arm (set externally)
+    :type _Q_values: np.ndarray
+    :ivar current_step: Current time step in the learning process
+    :type current_step: int
+    :ivar total_reward: Cumulative reward obtained so far
+    :type total_reward: float
+    :ivar times_selected: Number of times each action has been selected
+    :type times_selected: np.ndarray
+    :ivar actions_estimated_reward: Estimated reward for each action
+    :type actions_estimated_reward: np.ndarray
+    :ivar variance: Variance of the reward distribution
+    :type variance: float
+    :ivar reward_distribution: Type of reward distribution
+    :type reward_distribution: Type[RewardDistribution]
+    :ivar rewards_history: History of rewards for each action
+    :type rewards_history: List[List[float]]
+    :ivar context_dim: The dimension of the context
+    :type context_dim: int
+    :ivar theta: Matrix of shape (n_bandits, context_dim) where each row stores the linear coefficients for each bandit
+    :type theta: np.ndarray
+    :ivar learning_rate: Controls how quickly the linear coefficients (theta) are updated based on new observations
+    :type learning_rate: float
+
+    .. note::
+        Theory:
+        Contextual Bandits extend the traditional multi-armed bandit problem by incorporating
+        contextual information. This allows the policy to adapt its decisions based on the
+        current state or context, potentially leading to more efficient learning and better
+        performance in non-stationary environments.
+
+    .. note::
+        Optimizations:
+        - Uses numpy arrays for efficient storage and computation of theta values.
+        - Implements a linear model for quick updates and predictions.
     """
-    context_dim: int
-    theta: np.array
-    learning_rate: float
+
     def __init__(
         self,
         *,
@@ -64,12 +95,14 @@ class ContextualBanditPolicy(StationaryPolicyMixin, Policy):
         """
         Updates the linear coefficients for the chosen action.
         The coefficients are updated using the following formula:
-        \theta_i = \theta_i + 0.1 \times (r - \theta_i \cdot c) \times c, where c is the context.
+        θ_i = θ_i + α × (r - θ_i · c) × c, where c is the context and α is the learning rate.
 
-        :param chosen_action_index: The index of the chosen action.
-        :type: int
-        :param context: The context when the action was chosen.
-        :type np.array:
+        :param chosen_action_index: The index of the chosen action
+        :type chosen_action_index: int
+        :param context_chosen_action: The context when the action was chosen
+        :type context_chosen_action: np.array
+        :return: The reward obtained from the chosen action
+        :rtype: float
         """
         reward = super()._update(chosen_action_index)
         self.theta[chosen_action_index] += (

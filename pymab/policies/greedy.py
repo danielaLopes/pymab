@@ -23,28 +23,38 @@ class GreedyPolicy(StationaryPolicyMixin, Policy):
     It inherits from StationaryPolicyMixin and Policy, combining stationary behavior
     with basic policy functionality.
 
-    Attributes:
-        n_bandits (int): Number of bandit arms.
-        optimistic_initialization (float): Initial optimistic value for estimated rewards.
-        Q_values (np.array): True Q-values for each arm (set externally).
-        current_step (int): Current time step in the learning process.
-        total_reward (float): Cumulative reward obtained so far.
-        times_selected (np.array): Number of times each arm has been selected.
-        actions_estimated_reward (np.array): Estimated reward for each action.
-        variance (float): Variance of the reward distribution.
-        reward_distribution (Type[RewardDistribution]): Type of reward distribution used.
-        rewards_history (List[List[float]]): History of rewards for each arm.
+    :ivar n_bandits: Number of bandit arms
+    :type n_bandits: int
+    :ivar optimistic_initialization: Initial optimistic value for estimated rewards
+    :type optimistic_initialization: float
+    :ivar _Q_values: True Q-values for each arm (set externally)
+    :type _Q_values: np.ndarray
+    :ivar current_step: Current time step in the learning process
+    :type current_step: int
+    :ivar total_reward: Cumulative reward obtained so far
+    :type total_reward: float
+    :ivar times_selected: Number of times each arm has been selected
+    :type times_selected: np.ndarray
+    :ivar actions_estimated_reward: Estimated reward for each action
+    :type actions_estimated_reward: np.ndarray
+    :ivar variance: Variance of the reward distribution
+    :type variance: float
+    :ivar reward_distribution: Type of reward distribution used
+    :type reward_distribution: Type[RewardDistribution]
+    :ivar rewards_history: History of rewards for each arm
+    :type rewards_history: List[List[float]]
+
+    .. note::
+        The Greedy policy is a simple but effective approach for multi-armed bandit problems.
+        It always chooses the action that currently appears to be the best, based on the
+        estimated rewards. This can lead to quick convergence to a good solution, but may
+        also get stuck in local optima if the initial estimates are inaccurate.
+
+    .. note::
+        Optimistic initialization can be used to encourage initial exploration by setting
+        the initial estimated rewards higher than expected. This helps to ensure that all
+        actions are tried at least once before settling on a preferred action.
     """
-    n_bandits: int
-    optimistic_initialization: float
-    _Q_values: np.array
-    current_step: int
-    total_reward: float
-    times_selected: np.array
-    actions_estimated_reward: np.array
-    variance: float
-    reward_distribution: Type[RewardDistribution]
-    rewards_history: List[List[float]]
 
     def __init__(
         self,
@@ -65,8 +75,16 @@ class GreedyPolicy(StationaryPolicyMixin, Policy):
         """
         Selects the action with the highest estimated reward.
 
-        :returns: A tuple containing the index of the chosen action and the reward obtained from taking that action.
+        This method implements the core of the Greedy algorithm by choosing the action
+        with the highest estimated reward based on current knowledge.
+
+        :return: A tuple containing the index of the chosen action and the reward obtained from taking that action
         :rtype: Tuple[int, float]
+
+        .. note::
+            The Greedy policy does not explicitly explore, which means it may miss out on
+            potentially better actions if the initial estimates are inaccurate. This is known
+            as the exploration-exploitation trade-off in reinforcement learning.
         """
         chosen_action_index = np.argmax(self.actions_estimated_reward)
         return chosen_action_index, self._update(chosen_action_index)

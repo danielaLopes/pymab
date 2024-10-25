@@ -53,9 +53,35 @@ class UCBPolicy(StationaryPolicyMixin, Policy, ABC):
 
     @abstractmethod
     def _calculate_confidence_interval(self, action_index: int) -> float:
+        """
+        Calculate the confidence interval for a given action.
+
+        This method is abstract and should be implemented by subclasses to define
+        the specific confidence interval calculation for each UCB variant.
+
+        :param action_index: The index of the action to calculate the confidence interval for.
+        :type action_index: int
+        :return: The calculated confidence interval.
+        :rtype: float
+        """
         pass
 
     def _get_ucb_value(self, action_index: int) -> float:
+        """
+        Calculate the Upper Confidence Bound (UCB) value for a given action.
+
+        This method implements the core UCB algorithm by combining the estimated reward
+        with the confidence interval. It handles the case of unselected actions by
+        returning infinity, ensuring exploration of all actions initially.
+
+        :param action_index: The index of the action to calculate the UCB value for.
+        :type action_index: int
+        :return: The calculated UCB value, or infinity for unselected actions.
+        :rtype: float
+
+        :Theory:
+            UCB = Q(a) + U(a), where Q(a) is the estimated reward and U(a) is the confidence interval.
+        """
         if self.times_selected[action_index] == 0:
             return float("inf")
 
@@ -64,6 +90,22 @@ class UCBPolicy(StationaryPolicyMixin, Policy, ABC):
         return mean_reward + self._calculate_confidence_interval(action_index)
 
     def select_action(self, *args, **kwargs) -> Tuple[int, float]:
+        """
+        Select the next action based on the UCB algorithm.
+
+        This method implements the action selection strategy of UCB:
+        1. Initially, it selects each action once to gather initial estimates.
+        2. After that, it chooses the action with the highest UCB value.
+
+        :return: A tuple containing the index of the chosen action and the reward obtained from taking that action.
+        :rtype: Tuple[int, float]
+
+        :Example:
+            policy = UCBPolicy(n_bandits=3)
+            for _ in range(100):
+                action, reward = policy.select_action()
+                # Use the action and reward as needed
+        """
         if self.current_step < self.n_bandits:
             chosen_action_index = self.current_step
         else:
@@ -102,6 +144,26 @@ class StationaryUCBPolicy(UCBPolicy):
     c: float
 
     def _calculate_confidence_interval(self, action_index: int) -> float:
+        """
+        Calculate the confidence interval for the stationary UCB algorithm.
+
+        This method implements the standard UCB1 confidence interval calculation,
+        which assumes a stationary environment (i.e., reward distributions do not change over time).
+
+        :param action_index: The index of the action to calculate the confidence interval for.
+        :type action_index: int
+        :return: The calculated confidence interval.
+        :rtype: float
+
+        :Theory:
+            The confidence interval is calculated as sqrt((c * log(t)) / n_a),
+            where c is the exploration parameter, t is the current time step,
+            and n_a is the number of times the action has been selected.
+
+        :Optimization:
+            - Uses math.sqrt and math.log for efficient calculation.
+            - Adds 1 to current_step to avoid log(0) in the first step.
+        """
         confidence_interval = math.sqrt(
             (self.c * math.log(self.current_step + 1))
             / self.times_selected[action_index]
@@ -143,6 +205,27 @@ class SlidingWindowUCBPolicy(SlidingWindowMixin, UCBPolicy):
         SlidingWindowMixin.__init__(self, window_size=window_size)
 
     def _calculate_confidence_interval(self, action_index: int) -> float:
+        """
+        Calculate the confidence interval for the Sliding Window UCB algorithm.
+
+        This method adapts the UCB confidence interval calculation to use a sliding window,
+        which allows the algorithm to adapt to non-stationary environments by focusing on
+        recent observations.
+
+        :param action_index: The index of the action to calculate the confidence interval for.
+        :type action_index: int
+        :return: The calculated confidence interval.
+        :rtype: float
+
+        :Theory:
+            The confidence interval is calculated similarly to UCB1, but uses the minimum of
+            the current step (or window size) and the number of times the action has been selected
+            within the window.
+
+        :Optimization:
+            - Uses min() to handle both the window size and the number of selections efficiently.
+            - Adds 1 to the log term to avoid log(0) in the first step.
+        """
         confidence_interval = math.sqrt(
             (self.c * math.log(min(self.current_step, self.window_size) + 1))
             / min(self.times_selected[action_index], self.window_size)
@@ -194,6 +277,27 @@ class DiscountedUCBPolicy(DiscountedMixin, UCBPolicy):
         self.effective_n = 1 / (1 - self.discount_factor)
 
     def _calculate_confidence_interval(self, action_index: int) -> float:
+        """
+        Calculate the confidence interval for the Discounted UCB algorithm.
+
+        This method implements the confidence interval calculation for Discounted UCB,
+        which uses a discount factor to give more weight to recent observations,
+        allowing adaptation to slowly varying non-stationary environments.
+
+        :param action_index: The index of the action to calculate the confidence interval for.
+        :type action_index: int
+        :return: The calculated confidence interval.
+        :rtype: float
+
+        :Theory:
+            The confidence interval is calculated using the effective sample size (effective_n)
+            instead of the current time step. The effective_n is determined by the discount factor
+            and represents the equivalent number of observations if all had full weight.
+
+        :Optimization:
+            - Precomputes effective_n in the constructor to avoid repeated calculations.
+            - Uses min() to handle both the effective_n and the number of selections efficiently.
+        """
         confidence_interval = math.sqrt(
             (self.c * math.log(self.effective_n))
             / min(self.times_selected[action_index], self.effective_n)

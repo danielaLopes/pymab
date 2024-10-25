@@ -18,19 +18,57 @@ logger = logging.getLogger(__name__)
 
 class BernoulliBayesianUCBPolicy(StationaryUCBPolicy):
     """
-    Implements a Bayesian Upper Confidence Bound (UCB) policy for Bernoulli-distributed rewards.
+    Implements a Bayesian Upper Confidence Bound (UCB) policy for Bernoulli bandits.
 
-    This policy uses a Beta distribution as a conjugate prior for Bernoulli rewards.
-    It calculates the UCB value using the mean and variance of the posterior Beta distribution.
+    This policy uses Bayesian inference with a Beta prior to estimate the probability of success
+    for each arm, and selects actions based on an upper confidence bound of these estimates.
 
-    Attributes:
-        n_bandits (int): Number of bandit arms.
-        optimistic_initialization (float): Initial optimistic value for estimated rewards.
-        variance (float): Variance of the reward distribution.
-        c (float): Exploration parameter for UCB calculation.
-        n_mcmc_samples (int): Number of MCMC samples (not used in current implementation).
-        successes (np.array): Array to keep track of successes for each arm.
-        failures (np.array): Array to keep track of failures for each arm.
+    :ivar n_bandits: Number of bandits (actions) available
+    :type n_bandits: int
+    :ivar optimistic_initialization: Initial Q-value for all actions
+    :type optimistic_initialization: float
+    :ivar _Q_values: True Q-values for each arm (set externally)
+    :type _Q_values: np.ndarray
+    :ivar current_step: Current time step in the learning process
+    :type current_step: int
+    :ivar total_reward: Cumulative reward obtained so far
+    :type total_reward: float
+    :ivar times_selected: Number of times each action has been selected
+    :type times_selected: np.ndarray
+    :ivar actions_estimated_reward: Estimated reward for each action
+    :type actions_estimated_reward: np.ndarray
+    :ivar variance: Variance of the reward distribution
+    :type variance: float
+    :ivar reward_distribution: Type of reward distribution
+    :type reward_distribution: Type[RewardDistribution]
+    :ivar rewards_history: History of rewards for each action
+    :type rewards_history: List[List[float]]
+    :ivar c: Exploration parameter for UCB calculation
+    :type c: float
+    :ivar n_mcmc_samples: Number of MCMC samples (not used in current implementation)
+    :type n_mcmc_samples: int
+    :ivar alpha: Alpha parameters of the Beta distribution for each arm
+    :type alpha: np.ndarray
+    :ivar beta: Beta parameters of the Beta distribution for each arm
+    :type beta: np.ndarray
+    :ivar successes: Number of successful outcomes for each arm
+    :type successes: np.ndarray
+    :ivar failures: Number of failed outcomes for each arm
+    :type failures: np.ndarray
+
+    .. note::
+        Theory:
+        The Bernoulli Bayesian UCB policy maintains a Beta distribution for each arm,
+        which represents the current belief about the probability of success. The policy
+        selects actions based on an upper confidence bound of these distributions, balancing
+        exploration and exploitation. The successes and failures for each arm are tracked
+        separately to update the Beta distribution parameters.
+
+    .. note::
+        Optimizations:
+        - Uses numpy arrays for efficient storage and computation of distribution parameters.
+        - Implements optimistic initialization through the initial values of alpha and beta.
+        - Tracks successes and failures separately for quick updates and probability calculations.
     """
     n_bandits: int
     optimistic_initialization: float
@@ -71,11 +109,11 @@ class BernoulliBayesianUCBPolicy(StationaryUCBPolicy):
 
         This method computes the upper confidence bound using the properties of the Beta distribution.
 
-        Args:
-            action_index (int): Index of the action to calculate UCB for.
+        :param action_index: Index of the action to calculate UCB for.
+        :type action_index: int
 
-        Returns:
-            float: The calculated UCB value.
+        :returns: The calculated UCB value.
+        :rtype: float
         """
         alpha = self.successes[action_index] + 1
         beta = self.failures[action_index] + 1
@@ -94,11 +132,11 @@ class BernoulliBayesianUCBPolicy(StationaryUCBPolicy):
 
         This method updates the success and failure counts based on the observed reward.
 
-        Args:
-            chosen_action_index (int): Index of the chosen action.
+        :param chosen_action_index: Index of the chosen action.
+        :type chosen_action_index: int
 
-        Returns:
-            float: Observed reward.
+        :returns: Observed reward.
+        :rtype: float
         """
         reward = super()._update(chosen_action_index)
 
@@ -248,7 +286,31 @@ class BayesianUCBPolicy:
 
     This class creates and returns either a BernoulliBayesianUCBPolicy or a GaussianBayesianUCBPolicy
     based on the specified reward distribution.
+
+    :ivar n_bandits: Number of bandits (actions) available
+    :type n_bandits: int
+    :ivar optimistic_initialization: Initial Q-value for all actions
+    :type optimistic_initialization: float
+    :ivar variance: Variance of the reward distribution
+    :type variance: float
+    :ivar reward_distribution: Type of reward distribution
+    :type reward_distribution: str
+    :ivar c: Exploration parameter for UCB calculation
+    :type c: float
+    :ivar n_mcmc_samples: Number of MCMC samples (not used in current implementation)
+    :type n_mcmc_samples: int
+
+    .. note::
+        Theory:
+        Bayesian UCB policies use Bayesian inference to estimate the distribution of rewards
+        for each action. This allows for a more principled approach to balancing exploration
+        and exploitation, taking into account the uncertainty in the reward estimates.
+
+    .. note::
+        The choice between Bernoulli and Gaussian policies depends on the nature of the
+        reward distribution in the problem being solved.
     """
+
     def __new__(
         cls,
         n_bandits: int,
@@ -278,3 +340,4 @@ class BayesianUCBPolicy:
             raise ValueError(
                 f"The {reward_distribution} distribution cannot be used with the Bayesian UCB policy!"
             )
+
