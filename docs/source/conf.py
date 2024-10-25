@@ -6,7 +6,7 @@
 # -- Project information -----------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
-project = "PyMultiBandits"
+project = "PyMAB"
 copyright = "2024, Daniela Lopes"
 author = "Daniela Lopes"
 release = "0.1.0-alpha.1"
@@ -16,7 +16,6 @@ release = "0.1.0-alpha.1"
 
 extensions = [
     "sphinx.ext.autodoc",
-    "sphinx.ext.napoleon",
     "sphinx.ext.doctest",
     "piccolo_theme",
 ]
