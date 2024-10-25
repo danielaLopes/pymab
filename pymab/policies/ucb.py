@@ -100,7 +100,11 @@ class UCBPolicy(StationaryPolicyMixin, Policy, ABC):
         :return: A tuple containing the index of the chosen action and the reward obtained from taking that action.
         :rtype: Tuple[int, float]
 
-        :Example:
+        Examples:
+        Here's how to use the `select_action` method:
+
+        .. code-block:: python
+
             policy = UCBPolicy(n_bandits=3)
             for _ in range(100):
                 action, reward = policy.select_action()

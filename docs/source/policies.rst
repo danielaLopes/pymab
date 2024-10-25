@@ -24,7 +24,7 @@ Bayesian UCB (bayesian_ucb.py)
 
 Bayesian Upper Confidence Bound (UCB) is an advanced policy that uses Bayesian inference to balance exploration and exploitation. It maintains a probability distribution over the expected rewards of each arm and uses this to make decisions.
 
-.. automodule:: pymab.policies.bayesian_policy
+.. automodule:: pymab.policies.bayesian_ucb
    :members:
    :undoc-members:
    :show-inheritance:
@@ -172,5 +172,5 @@ Example Usage
                )
 
    game.game_loop()
-   
+
    game.plot_average_reward_by_step()
