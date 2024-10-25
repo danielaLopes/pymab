@@ -62,6 +62,29 @@ class Policy(ABC):
     .. note::
         Subclasses should implement the abstract methods to define specific policies.
     """
+    
+    def __init__(
+        self,
+        *,
+        n_bandits: int,
+        optimistic_initialization: float = 0.0,
+        variance: float = 1.0,
+        reward_distribution: str = "gaussian",
+        context_func: Callable = no_context_func,
+    ) -> None:
+        self.n_bandits = n_bandits
+        self.optimistic_initialization = optimistic_initialization
+        self._Q_values = None
+        self.current_step = 0
+        self.total_reward = 0
+        self.variance = variance
+        self.reward_distribution = self.get_reward_distribution(reward_distribution)
+        self.times_selected = np.zeros(self.n_bandits)
+        self.actions_estimated_reward = np.full(
+            self.n_bandits, self.optimistic_initialization, dtype=float
+        )
+        self.context_func = context_func
+        self.rewards_history = [[] for _ in range(n_bandits)]
 
     @staticmethod
     def get_reward_distribution(name: str) -> Type[RewardDistribution]:
