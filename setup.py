@@ -8,11 +8,13 @@ setup(
     version="0.1.0",
     packages=find_packages(exclude=["tests", "documentation"]),
     install_requires=[
+        "joblib",
         "matplotlib",
         "numpy",
         "pandas",
         "plotly",
         "scipy",
+        "tqdm",
     ],
     include_package_data=True,
     package_data={
