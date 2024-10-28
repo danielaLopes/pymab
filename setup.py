@@ -12,7 +12,6 @@ setup(
         "numpy",
         "pandas",
         "plotly",
-        "pymc3",
         "scipy",
     ],
     include_package_data=True,
