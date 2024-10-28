@@ -15,22 +15,14 @@ def get_default_layout(
         "yaxis_title": yaxis_title,
         "font": dict(size=12),
         "legend": dict(
-            # orientation="h",
-            # entrywidth=0.2,
-            # entrywidthmode='fraction',
-            # yanchor="bottom",
-            # y=1.1,
-            # xanchor="right",
-            # x=0.1,
             font=dict(size=10),
             itemsizing="constant",
             traceorder="normal",
             itemclick="toggle",
             itemdoubleclick="toggleothers",
         ),
-        # "height": 900,
-        # "width": 1000,
-        # "margin": dict(l=0, r=0, t=0, b=150)
+        "height": 900,
+        "width": 1000,
     }
 
 

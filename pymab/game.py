@@ -267,8 +267,8 @@ class Game:
         compared to the optimal strategy. It quantifies the difference between the reward obtained by the policy and
         the reward that would have been obtained by always selecting the best possible action
 
-        Returns:
-            np.ndarray: The cumulative regret for each policy.
+        :return: The cumulative regret for each policy.
+        :rtype: np.ndarray
         """
         return np.cumsum(np.mean(self.regret_by_policy, axis=0), axis=0)
 
@@ -316,7 +316,7 @@ class Game:
             policy.reset()
 
     def plot_average_reward_by_step(
-        self, save: bool = True, plot_name: str = ""
+        self, save: bool = True, plot_name: str = "", plot_config: dict[str, Any] = {}
     ) -> None:
         fig = go.Figure()
 
@@ -331,8 +331,11 @@ class Game:
                 )
             )
 
-        fig.update_layout(
-            **get_default_layout(
+        if plot_config:
+            fig.update_layout(**plot_config)
+        else:
+            fig.update_layout(
+                **get_default_layout(
                 title=f"Cumulative reward obtained during the {self.n_steps} steps for {self.n_episodes} episodes",
                 xaxis_title="Steps",
                 yaxis_title="Cumulative reward",
@@ -346,7 +349,7 @@ class Game:
             )
 
     def plot_average_reward_by_episode(
-        self, save: bool = True, plot_name: str = ""
+        self, save: bool = True, plot_name: str = "", plot_config: dict[str, Any] = {}
     ) -> None:
         fig = go.Figure()
 
@@ -361,8 +364,11 @@ class Game:
                 )
             )
 
-        fig.update_layout(
-            **get_default_layout(
+        if plot_config:
+            fig.update_layout(**plot_config)
+        else:
+            fig.update_layout(
+                **get_default_layout(
                 title=f"Average reward obtained during the {self.n_steps} steps for {self.n_episodes} episodes",
                 xaxis_title="Episodes",
                 yaxis_title="Average reward",
@@ -376,7 +382,7 @@ class Game:
             )
 
     def plot_average_reward_by_step_smoothed(
-        self, smooth_factor: int = 50, save: bool = True, plot_name: str = ""
+        self, smooth_factor: int = 50, save: bool = True, plot_name: str = "", plot_config: dict[str, Any] = {}
     ) -> None:
         fig = go.Figure()
 
@@ -394,8 +400,11 @@ class Game:
                 )
             )
 
-        fig.update_layout(
-            **get_default_layout(
+        if plot_config:
+            fig.update_layout(**plot_config)
+        else:
+            fig.update_layout(
+                **get_default_layout(
                 title=f"Smoothed average reward (factor: {smooth_factor}) during the {self.n_steps} steps for {self.n_episodes} episodes",
                 xaxis_title="Steps",
                 yaxis_title="Average reward",
@@ -410,7 +419,7 @@ class Game:
             )
 
     def plot_bandit_selection_evolution(
-        self, save: bool = True, plot_name: str = ""
+        self, save: bool = True, plot_name: str = "", plot_config: dict[str, Any] = {}
     ) -> None:
         fig = go.Figure()
 
@@ -437,8 +446,11 @@ class Game:
                     )
                 )
 
-        fig.update_layout(
-            **get_default_layout(
+        if plot_config:
+            fig.update_layout(**plot_config)
+        else:
+            fig.update_layout(
+                **get_default_layout(
                 title="Arm Selections by Policy Over Time",
                 xaxis_title="Steps",
                 yaxis_title="Policy",
@@ -452,7 +464,7 @@ class Game:
             )
 
     def plot_cumulative_regret_by_step(
-        self, save: bool = True, plot_name: str = ""
+        self, save: bool = True, plot_name: str = "", plot_config: dict[str, Any] = {}
     ) -> None:
         fig = go.Figure()
 
@@ -467,8 +479,11 @@ class Game:
                 )
             )
 
-        fig.update_layout(
-            **get_default_layout(
+        if plot_config:
+            fig.update_layout(**plot_config)
+        else:
+            fig.update_layout(
+                **get_default_layout(
                 title=f"Cumulative regret during the {self.n_steps} steps for {self.n_episodes} episodes",
                 xaxis_title="Steps",
                 yaxis_title="Cumulative Regret",
@@ -481,7 +496,7 @@ class Game:
                 self.results_folder / f"cumulative_regret_by_step_{plot_name}.html"
             )
 
-    def plot_Q_values(self, save: bool = True, plot_name: str = "") -> None:
+    def plot_Q_values(self, save: bool = True, plot_name: str = "", plot_config: dict[str, Any] = {}) -> None:
         fig = go.Figure()
 
         fig.add_trace(
@@ -493,8 +508,11 @@ class Game:
             )
         )
 
-        fig.update_layout(
-            **get_default_layout(
+        if plot_config:
+            fig.update_layout(**plot_config)
+        else:
+            fig.update_layout(
+                **get_default_layout(
                 title="Q values for each action",
                 xaxis_title="Actions",
                 yaxis_title="Q value",
@@ -506,7 +524,7 @@ class Game:
             fig.write_html(self.results_folder / f"Q_values_{plot_name}.html")
 
     def plot_Q_values_evolution_by_bandit_first_episode(
-        self, save: bool = True, plot_name: str = ""
+        self, save: bool = True, plot_name: str = "", plot_config: dict[str, Any] = {}
     ) -> None:
         fig = go.Figure()
 
@@ -523,8 +541,11 @@ class Game:
                 )
             )
 
-        fig.update_layout(
-            **get_default_layout(
+        if plot_config:
+            fig.update_layout(**plot_config)
+        else:
+            fig.update_layout(
+                **get_default_layout(
                 title=f"Q-values evolution for Bandits during the first episode ({self.n_steps} steps)",
                 xaxis_title="Steps",
                 yaxis_title="Q-value",
@@ -538,7 +559,7 @@ class Game:
                 / f"Q_values_evolution_by_bandwidth_first_episode_{plot_name}.html"
             )
 
-    def plot_total_reward_by_step(self, save: bool = True, plot_name: str = "") -> None:
+    def plot_total_reward_by_step(self, save: bool = True, plot_name: str = "", plot_config: dict[str, Any] = {}) -> None:
         fig = go.Figure()
 
         for policy_index, policy in enumerate(self.policies):
@@ -552,8 +573,11 @@ class Game:
                 )
             )
 
-        fig.update_layout(
-            **get_default_layout(
+        if plot_config:
+            fig.update_layout(**plot_config)
+        else:
+            fig.update_layout(
+                **get_default_layout(
                 title=f"Cumulative reward obtained during the {self.n_steps} steps for {self.n_episodes} episodes",
                 xaxis_title="Steps",
                 yaxis_title="Cumulative reward",
@@ -567,7 +591,7 @@ class Game:
             )
 
     def plot_rate_optimal_actions_by_step(
-        self, save: bool = True, plot_name: str = ""
+        self, save: bool = True, plot_name: str = "", plot_config: dict[str, Any] = {}
     ) -> None:
         fig = go.Figure()
 
@@ -591,8 +615,11 @@ class Game:
                 )
             )
 
-        fig.update_layout(
-            **get_default_layout(
+        if plot_config:
+            fig.update_layout(**plot_config)
+        else:
+            fig.update_layout(
+                **get_default_layout(
                 title=f"Percentage of optimal actions chosen during the {self.n_steps} steps for {self.n_episodes} episodes",
                 xaxis_title="Steps",
                 yaxis_title="% Optimal actions",
