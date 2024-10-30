@@ -23,37 +23,49 @@ class GreedyPolicy(StationaryPolicyMixin, Policy):
     It inherits from StationaryPolicyMixin and Policy, combining stationary behavior
     with basic policy functionality.
 
-    :ivar n_bandits: Number of bandit arms
-    :type n_bandits: int
-    :ivar optimistic_initialization: Initial optimistic value for estimated rewards
-    :type optimistic_initialization: float
-    :ivar _Q_values: True Q-values for each arm (set externally)
-    :type _Q_values: np.ndarray
-    :ivar current_step: Current time step in the learning process
-    :type current_step: int
-    :ivar total_reward: Cumulative reward obtained so far
-    :type total_reward: float
-    :ivar times_selected: Number of times each arm has been selected
-    :type times_selected: np.ndarray
-    :ivar actions_estimated_reward: Estimated reward for each action
-    :type actions_estimated_reward: np.ndarray
-    :ivar variance: Variance of the reward distribution
-    :type variance: float
-    :ivar reward_distribution: Type of reward distribution used
-    :type reward_distribution: Type[RewardDistribution]
-    :ivar rewards_history: History of rewards for each arm
-    :type rewards_history: List[List[float]]
+    Args:
+        n_bandits: Number of bandit arms available.
+        optimistic_initialization: Initial value for all action estimates. Defaults to 0.
+        variance: Variance of the reward distribution. Defaults to 1.0.
+        reward_distribution: Type of reward distribution. Defaults to "gaussian".
 
-    .. note::
-        The Greedy policy is a simple but effective approach for multi-armed bandit problems.
-        It always chooses the action that currently appears to be the best, based on the
-        estimated rewards. This can lead to quick convergence to a good solution, but may
-        also get stuck in local optima if the initial estimates are inaccurate.
+    Attributes:
+        Inherits all attributes from Policy class, with no additional attributes.
 
-    .. note::
-        Optimistic initialization can be used to encourage initial exploration by setting
-        the initial estimated rewards higher than expected. This helps to ensure that all
-        actions are tried at least once before settling on a preferred action.
+    Note:
+        Theory:
+        The Greedy policy represents the pure exploitation approach to the
+        exploration-exploitation dilemma:
+
+        1. Action Selection:
+           - Always choose arg max_a Q(a)
+           - Q(a) is the estimated reward for action a
+           - No explicit exploration mechanism
+
+        2. Key Characteristics:
+           - Fast convergence when initial estimates are accurate
+           - Risk of suboptimal performance with poor initialization
+           - No guaranteed exploration of all actions
+
+        3. Optimistic Initialization:
+           Can be used to encourage initial exploration by setting high
+           initial values, causing the policy to try actions until their
+           estimates drop below the best-known action's value.
+
+    Example:
+        ```python
+        # Create a policy with optimistic initialization
+        policy = GreedyPolicy(
+            n_bandits=5,
+            optimistic_initialization=1.0,
+            reward_distribution="gaussian"
+        )
+
+        # Run for 100 steps
+        for _ in range(100):
+            action, reward = policy.select_action()
+            # Process reward...
+        ```
     """
 
     def __init__(
@@ -78,10 +90,12 @@ class GreedyPolicy(StationaryPolicyMixin, Policy):
         This method implements the core of the Greedy algorithm by choosing the action
         with the highest estimated reward based on current knowledge.
 
-        :return: A tuple containing the index of the chosen action and the reward obtained from taking that action
-        :rtype: Tuple[int, float]
+        Returns:
+            A tuple containing:
+                - Index of the chosen action (int)
+                - Reward received for the action (float)
 
-        .. note::
+        Note:
             The Greedy policy does not explicitly explore, which means it may miss out on
             potentially better actions if the initial estimates are inaccurate. This is known
             as the exploration-exploitation trade-off in reinforcement learning.

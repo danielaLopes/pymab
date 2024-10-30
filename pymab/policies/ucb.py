@@ -269,6 +269,24 @@ class DiscountedUCBPolicy(DiscountedMixin, UCBPolicy):
         c: float = 1.0,
         discount_factor: float = 0.9,
     ):
+        """
+        Initialize a Discounted UCB policy.
+
+        :param n_bandits: Number of bandits (arms) in the problem.
+        :type n_bandits: int    
+        :param optimistic_initialization: Initial value for estimated rewards.
+        :type optimistic_initialization: float
+        :param variance: Variance of the reward distribution.
+        :type variance: float
+        :param reward_distribution: Type of reward distribution ("gaussian" or "bernoulli").
+        :type reward_distribution: str
+        :param c: Exploration parameter controlling confidence bound width.
+        :type c: float
+        :param discount_factor: Factor for discounting past rewards (between 0 and 1).
+
+        The discount factor determines how much weight is given to past observations,
+        with values closer to 1 giving more weight to historical data.
+        """
         UCBPolicy.__init__(
             self,
             n_bandits=n_bandits,

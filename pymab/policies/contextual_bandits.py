@@ -25,44 +25,53 @@ class ContextualBanditPolicy(StationaryPolicyMixin, Policy):
 
     Contextual Bandits implements a linear model to predict rewards based on the context, where the weights are updated.
 
-    :ivar n_bandits: Number of bandits (actions) available
-    :type n_bandits: int
-    :ivar optimistic_initialization: Initial Q-value for all actions
-    :type optimistic_initialization: float
-    :ivar _Q_values: True Q-values for each arm (set externally)
-    :type _Q_values: np.ndarray
-    :ivar current_step: Current time step in the learning process
-    :type current_step: int
-    :ivar total_reward: Cumulative reward obtained so far
-    :type total_reward: float
-    :ivar times_selected: Number of times each action has been selected
-    :type times_selected: np.ndarray
-    :ivar actions_estimated_reward: Estimated reward for each action
-    :type actions_estimated_reward: np.ndarray
-    :ivar variance: Variance of the reward distribution
-    :type variance: float
-    :ivar reward_distribution: Type of reward distribution
-    :type reward_distribution: Type[RewardDistribution]
-    :ivar rewards_history: History of rewards for each action
-    :type rewards_history: List[List[float]]
-    :ivar context_dim: The dimension of the context
-    :type context_dim: int
-    :ivar theta: Matrix of shape (n_bandits, context_dim) where each row stores the linear coefficients for each bandit
-    :type theta: np.ndarray
-    :ivar learning_rate: Controls how quickly the linear coefficients (theta) are updated based on new observations
-    :type learning_rate: float
+    Args:
+        n_bandits: Number of bandits (actions) available.
+        context_dim: Dimension of the context vector.
+        context_func: Function that generates context vectors.
+        optimistic_initialization: Initial Q-value for all actions. Defaults to 0.
+        variance: Variance of the reward distribution. Defaults to 1.0.
+        reward_distribution: Type of reward distribution. Defaults to "gaussian".
+        learning_rate: Rate at which linear coefficients are updated. Defaults to 0.1.
 
-    .. note::
+    Attributes:
+        context_dim (int): Dimension of the context vector.
+        theta (np.ndarray): Matrix of shape (n_bandits, context_dim) storing linear 
+            coefficients for each bandit.
+        learning_rate (float): Learning rate for updating coefficients.
+
+    Note:
         Theory:
-        Contextual Bandits extend the traditional multi-armed bandit problem by incorporating
-        contextual information. This allows the policy to adapt its decisions based on the
-        current state or context, potentially leading to more efficient learning and better
-        performance in non-stationary environments.
+        Contextual Bandits extend traditional multi-armed bandits by incorporating
+        contextual information. The policy learns a linear mapping from context to
+        expected rewards for each action, enabling more informed decisions based on
+        the current state or environment.
 
-    .. note::
-        Optimizations:
-        - Uses numpy arrays for efficient storage and computation of theta values.
-        - Implements a linear model for quick updates and predictions.
+        The linear model updates follow the rule:
+        θ_i = θ_i + α × (r - θ_i · c) × c
+        where:
+        - θ_i is the coefficient vector for action i
+        - α is the learning rate
+        - r is the observed reward
+        - c is the context vector
+
+    Example:
+        A typical use case might be a recommendation system where the context
+        includes user features:
+        ```python
+        def get_user_context():
+            return np.array([
+                [user.age, user.location, user.interests],  # features for action 1
+                [user.age, user.location, user.interests],  # features for action 2
+            ]).T
+
+        policy = ContextualBanditPolicy(
+            n_bandits=2,
+            context_dim=3,
+            context_func=get_user_context,
+            learning_rate=0.1
+        )
+        ```
     """
 
     def __init__(
@@ -97,12 +106,12 @@ class ContextualBanditPolicy(StationaryPolicyMixin, Policy):
         The coefficients are updated using the following formula:
         θ_i = θ_i + α × (r - θ_i · c) × c, where c is the context and α is the learning rate.
 
-        :param chosen_action_index: The index of the chosen action
-        :type chosen_action_index: int
-        :param context_chosen_action: The context when the action was chosen
-        :type context_chosen_action: np.array
-        :return: The reward obtained from the chosen action
-        :rtype: float
+        Args:
+            chosen_action_index: Index of the chosen action.
+            context_chosen_action: Context vector when the action was chosen.
+
+        Returns:
+            The reward obtained from the chosen action.
         """
         reward = super()._update(chosen_action_index)
         self.theta[chosen_action_index] += (
@@ -128,11 +137,16 @@ class ContextualBanditPolicy(StationaryPolicyMixin, Policy):
         and the current context, which represents the weighted sum of the features in the current context, and used to
         estimate rewards.
 
-        :param context: The current context. It's shape should be (context_dim, n_bandits), inverse of theta.
-        :type: np.array
-        :returns: The selected action and the expected reward.
-        :rtype: Tuple[int, float]
-        :raises ValueError: If the context dimensions do not match the expected dimensions
+        Args:
+            context: Current context matrix of shape (context_dim, n_bandits).
+
+        Returns:
+            A tuple containing:
+                - Index of the chosen action (int)
+                - Reward received (float)
+
+        Raises:
+            ValueError: If context dimensions don't match expected dimensions.
         """
         if context.shape[0] != self.context_dim:
             raise ValueError(

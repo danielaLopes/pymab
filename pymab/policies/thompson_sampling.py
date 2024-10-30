@@ -26,28 +26,40 @@ class BernoulliThompsonSamplingPolicy(StationaryPolicyMixin, Policy):
     It uses the Beta distribution to model the probability of success for each action and
     updates these probabilities based on observed rewards.
 
-    :ivar n_bandits: Number of bandit arms.
-    :type n_bandits: int
-    :ivar optimistic_initialization: Initial optimistic value for estimated rewards.
-    :type optimistic_initialization: float
-    :ivar _Q_values: True values of the bandit arms.
-    :type _Q_values: np.array
-    :ivar current_step: Current step count.
-    :type current_step: int
-    :ivar total_reward: Total accumulated reward.
-    :type total_reward: float
-    :ivar times_selected: Count of times each bandit arm has been selected.
-    :type times_selected: np.array
-    :ivar actions_estimated_reward: Estimated rewards for each action.
-    :type actions_estimated_reward: np.array
-    :ivar variance: Variance of the reward distribution.
-    :type variance: float
-    :ivar reward_distribution: Type of reward distribution used. Should always be Bernoulli.
-    :type reward_distribution: RewardDistribution
-    :ivar successes: Alpha values for Beta distribution (success counts).
-    :type successes: np.array
-    :ivar failures: Beta values for Beta distribution (failure counts).
-    :type failures: np.array
+    Args:
+        n_bandits: Number of bandit arms available.
+        optimistic_initialization: Initial value for all action estimates. Defaults to 0.
+        variance: Variance of the reward distribution. Defaults to 1.0.
+        reward_distribution: Must be "bernoulli". Defaults to "bernoulli".
+
+    Attributes:
+        successes (np.ndarray): Number of successful outcomes for each arm.
+        failures (np.ndarray): Number of failed outcomes for each arm.
+        thomson_sampled (List[float]): Last sampled values from posterior distributions.
+
+    Note:
+        Theory:
+        Thompson Sampling implements Bayesian exploration by:
+        1. Maintaining Beta(α, β) posterior for each arm
+        2. α = successes + 1, β = failures + 1 (adding 1 for uniform prior)
+        3. Sampling θ ~ Beta(α, β) for each arm
+        4. Selecting arm with highest sampled θ
+        
+        The Beta distribution is the conjugate prior for Bernoulli likelihood,
+        making updates simple and computationally efficient.
+
+    Example:
+        ```python
+        policy = BernoulliThompsonSamplingPolicy(
+            n_bandits=5,
+            reward_distribution="bernoulli"
+        )
+
+        # Run for 1000 steps
+        for _ in range(1000):
+            action, reward = policy.select_action()
+            # Process binary reward (0 or 1)...
+        ```
     """
 
     n_bandits: int
@@ -90,10 +102,17 @@ class BernoulliThompsonSamplingPolicy(StationaryPolicyMixin, Policy):
         Beta distribution. This makes the Bayesian updating process straightforward.
 
         Args:
-            chosen_action_index (int): Index of the chosen action.
+            chosen_action_index: Index of the chosen action.
+            *args: Variable length argument list.
+            **kwargs: Arbitrary keyword arguments.
 
-        :return: Observed reward.
-        :rtype: float
+        Returns:
+            The observed reward (0 or 1).
+
+        Note:
+            Uses conjugate prior property of Beta-Bernoulli:
+            - Success (reward = 1): Increment α
+            - Failure (reward = 0): Increment β
         """
         reward = super()._update(chosen_action_index)
 
@@ -105,6 +124,19 @@ class BernoulliThompsonSamplingPolicy(StationaryPolicyMixin, Policy):
         return reward
 
     def select_action(self, *args, **kwargs) -> Tuple[int, float]:
+        """Select action using Thompson Sampling.
+
+        Returns:
+            A tuple containing:
+                - Index of the chosen action (int)
+                - Reward received for the action (float)
+
+        Note:
+            Implementation:
+            1. Sample θ ~ Beta(α, β) for each arm
+            2. Select arm with highest θ
+            3. Observe reward and update parameters
+        """
         self.thomson_sampled = [
             np.random.beta(self.successes[i] + 1, self.failures[i] + 1)
             for i in range(self.n_bandits)
@@ -127,11 +159,6 @@ class BernoulliThompsonSamplingPolicy(StationaryPolicyMixin, Policy):
     def plot_distribution(self) -> None:
         """
         Plots the distributions of the expected reward for the current step.
-
-        :param policy: The policy instance (either BernoulliThompsonSamplingPolicy or GaussianThompsonSamplingPolicy).
-        :type policy: Union[BernoulliThompsonSamplingPolicy, GaussianThompsonSamplingPolicy]
-        :param step_num: The number of steps (iterations) the policy has been executed.
-        :type step_num: int
         """
         fig, axes = plt.subplots(
             1, self.n_bandits, figsize=(15, 6), constrained_layout=True
@@ -171,28 +198,39 @@ class GaussianThompsonSamplingPolicy(StationaryPolicyMixin, Policy):
     It models the mean reward for each action using a Gaussian distribution and updates
     these means based on observed rewards.
 
-    :ivar n_bandits: Number of bandit arms.
-    :type n_bandits: int
-    :ivar optimistic_initialization: Initial optimistic value for estimated rewards.
-    :type optimistic_initialization: float
-    :ivar _Q_values: True values of the bandit arms.
-    :type _Q_values: np.array
-    :ivar current_step: Current step count.
-    :type current_step: int
-    :ivar total_reward: Total accumulated reward.
-    :type total_reward: float
-    :ivar times_selected: Count of times each bandit arm has been selected.
-    :type times_selected: np.array
-    :ivar actions_estimated_reward: Estimated rewards for each action.
-    :type actions_estimated_reward: np.array
-    :ivar variance: Variance of the reward distribution.
-    :type variance: float
-    :ivar reward_distribution: Type of reward distribution used. Should always be Gaussian.
-    :type reward_distribution: RewardDistribution
-    :ivar means: Mean rewards for each action.
-    :type means: np.array
-    :ivar precisions: Precision (inverse of variance) for each action.
-    :type precisions: np.array
+    Args:
+        n_bandits: Number of bandit arms available.
+        optimistic_initialization: Initial value for all action estimates. Defaults to 0.
+        variance: Variance of the reward distribution. Defaults to 1.0.
+        reward_distribution: Must be "gaussian". Defaults to "gaussian".
+
+    Attributes:
+        means (np.ndarray): Posterior mean for each arm.
+        precisions (np.ndarray): Posterior precision (1/variance) for each arm.
+
+    Note:
+        Theory:
+        The policy maintains a Normal distribution for each arm's mean reward:
+        1. Uses conjugate Normal prior with known variance
+        2. Updates posterior mean and precision after each observation
+        3. Samples from posterior and selects highest sample
+        
+        The Normal distribution is conjugate to itself with known variance,
+        allowing closed-form Bayesian updates.
+
+    Example:
+        ```python
+        policy = GaussianThompsonSamplingPolicy(
+            n_bandits=5,
+            variance=1.0,
+            reward_distribution="gaussian"
+        )
+
+        # Run for 1000 steps
+        for _ in range(1000):
+            action, reward = policy.select_action()
+            # Process continuous reward...
+        ```
     """
 
     n_bandits: int
@@ -230,11 +268,19 @@ class GaussianThompsonSamplingPolicy(StationaryPolicyMixin, Policy):
             The posterior distribution of the mean given Gaussian observations remains Gaussian, which allows for a Bayesian update, but it involves maintaining and updating the mean and variance parameters.
         The means and precisions (tau) arrays maintain the posterior mean and precision (inverse of variance) for each action. These are updated after each observed reward using Bayesian inference.
 
-        :param chosen_action_index: Index of the chosen action.
-        :type chosen_action_index: int
+        Args:
+            chosen_action_index: Index of the chosen action.
+            *args: Variable length argument list.
+            **kwargs: Arbitrary keyword arguments.
 
-        :return: Observed reward.
-        :rtype: float
+        Returns:
+            The observed reward (continuous value).
+
+        Note:
+            Implementation:
+            1. Compute posterior mean using precision-weighted average
+            2. Update precision by adding 1 (for unit variance likelihood)
+            3. Store updated parameters for chosen arm
         """
         reward = super()._update(chosen_action_index)
 
@@ -250,6 +296,19 @@ class GaussianThompsonSamplingPolicy(StationaryPolicyMixin, Policy):
         return reward
 
     def select_action(self, *args, **kwargs) -> Tuple[int, float]:
+        """Select action using Thompson Sampling.
+
+        Returns:
+            A tuple containing:
+                - Index of the chosen action (int)
+                - Reward received for the action (float)
+
+        Note:
+            Implementation:
+            1. Sample μ ~ N(mean, 1/precision) for each arm
+            2. Select arm with highest sampled μ
+            3. Observe reward and update parameters
+        """
         samples = [
             np.random.normal(self.means[i], 1 / np.sqrt(self.precisions[i]))
             for i in range(self.n_bandits)
@@ -272,11 +331,6 @@ class GaussianThompsonSamplingPolicy(StationaryPolicyMixin, Policy):
     def plot_distribution(self) -> None:
         """
         Plots the distributions of the expected reward for the current step.
-
-        :param policy: The policy instance (either BernoulliThompsonSamplingPolicy or GaussianThompsonSamplingPolicy).
-        :type policy: Union[BernoulliThompsonSamplingPolicy, GaussianThompsonSamplingPolicy]
-        :param step_num: The number of steps (iterations) the policy has been executed.
-        :type step_num: int
         """
         fig, axes = plt.subplots(
             1, self.n_bandits, figsize=(15, 6), constrained_layout=True
@@ -312,6 +366,40 @@ class GaussianThompsonSamplingPolicy(StationaryPolicyMixin, Policy):
 
 
 class ThompsonSamplingPolicy:
+    """Factory class for creating Thompson Sampling policies.
+
+    This class serves as a factory to create the appropriate Thompson Sampling policy
+    based on the reward distribution type (Bernoulli or Gaussian).
+
+    Args:
+        n_bandits: Number of bandit arms available.
+        optimistic_initialization: Initial value for all action estimates. Defaults to 0.
+        variance: Variance of the reward distribution. Defaults to 1.0.
+        reward_distribution: Type of reward distribution ("bernoulli" or "gaussian").
+            Defaults to "gaussian".
+
+    Returns:
+        The appropriate Thompson Sampling policy instance.
+
+    Raises:
+        ValueError: If an unsupported reward distribution is specified.
+
+    Example:
+        ```python
+        # Create a Bernoulli policy
+        policy = ThompsonSamplingPolicy(
+            n_bandits=5,
+            reward_distribution="bernoulli"
+        )
+
+        # Create a Gaussian policy
+        policy = ThompsonSamplingPolicy(
+            n_bandits=5,
+            reward_distribution="gaussian"
+        )
+        ```
+    """
+    
     def __new__(
         cls,
         n_bandits: int,

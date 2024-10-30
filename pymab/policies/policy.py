@@ -36,31 +36,26 @@ class Policy(ABC):
     It handles common functionality such as reward tracking, action selection,
     and policy updates.
 
-    :ivar n_bandits: Number of bandits (actions) available
-    :type n_bandits: int
-    :ivar optimistic_initialization: Initial Q-value for all actions
-    :type optimistic_initialization: float
-    :ivar _Q_values: Array storing true Q-values for each action
-    :type _Q_values: np.array
-    :ivar current_step: Current time step in the learning process
-    :type current_step: int
-    :ivar total_reward: Cumulative reward obtained so far
-    :type total_reward: float
-    :ivar times_selected: Number of times each action has been selected
-    :type times_selected: np.array
-    :ivar actions_estimated_reward: Estimated reward for each action
-    :type actions_estimated_reward: np.array
-    :ivar variance: Variance of the reward distribution
-    :type variance: float
-    :ivar reward_distribution: Type of reward distribution
-    :type reward_distribution: Type[RewardDistribution]
-    :ivar context_func: Function to generate context (if applicable)
-    :type context_func: Callable
-    :ivar rewards_history: History of rewards for each action
-    :type rewards_history: List[List[float]]
+    Args:
+        n_bandits: Number of bandits (actions) available.
+        optimistic_initialization: Initial Q-value for all actions. Defaults to 0.0.
+        variance: Variance of the reward distribution. Defaults to 1.0.
+        reward_distribution: Type of reward distribution ("gaussian", "bernoulli", or "uniform"). 
+            Defaults to "gaussian".
+        context_func: Function to generate context. Defaults to no_context_func.
 
-    .. note::
-        Subclasses should implement the abstract methods to define specific policies.
+    Attributes:
+        n_bandits (int): Number of available actions.
+        optimistic_initialization (float): Initial value for all action estimates.
+        _Q_values (np.ndarray): True Q-values for each action.
+        current_step (int): Current time step in the learning process.
+        total_reward (float): Cumulative reward obtained.
+        times_selected (np.ndarray): Selection count for each action.
+        actions_estimated_reward (np.ndarray): Current reward estimates.
+        variance (float): Reward distribution variance.
+        reward_distribution (Type[RewardDistribution]): Reward distribution class.
+        context_func (Callable): Context generation function.
+        rewards_history (List[List[float]]): History of rewards per action.
     """
     
     def __init__(
@@ -91,14 +86,20 @@ class Policy(ABC):
         """
         Get the reward distribution class based on the given name.
 
-        :param name: Name of the reward distribution
-        :type name: str
-        :return: Reward distribution class
-        :rtype: Type[RewardDistribution]
-        :raises ValueError: If an unknown reward distribution name is provided
+        Args:
+            name: Name of the reward distribution.
 
-        .. note::
-            Supported distributions are 'gaussian', 'bernoulli', and 'uniform'.
+        Returns:
+            The corresponding reward distribution class.
+
+        Raises:
+            ValueError: If an unknown distribution name is provided.
+
+        Note:
+            Supported distributions are:
+            - 'gaussian': Normal distribution
+            - 'bernoulli': Binary distribution
+            - 'uniform': Uniform distribution
         """
         distributions = {
             "gaussian": GaussianRewardDistribution,
@@ -113,10 +114,11 @@ class Policy(ABC):
         """
         Get the actual reward for a given action.
 
-        :param action_index: Index of the chosen action
-        :type action_index: int
-        :return: Reward value
-        :rtype: float
+        Args:
+            action_index: Index of the chosen action.
+
+        Returns:
+            The reward value sampled from the distribution.
         """
         return self.reward_distribution.get_reward(
             self.Q_values[action_index], self.variance
@@ -126,10 +128,13 @@ class Policy(ABC):
         """
         Update the policy based on the chosen action and received reward.
 
-        :param chosen_action_index: Index of the chosen action
-        :type chosen_action_index: int
-        :return: Reward received for the chosen action
-        :rtype: float
+        Args:
+            chosen_action_index: Index of the chosen action.
+            *args: Variable length argument list.
+            **kwargs: Arbitrary keyword arguments.
+
+        Returns:
+            The reward received for the chosen action.
         """
         self.current_step += 1
         reward = self._get_actual_reward(chosen_action_index)
@@ -147,10 +152,9 @@ class Policy(ABC):
         """
         Update the estimated reward for a given action.
 
-        :param action_index: Index of the action to update
-        :type action_index: int
-        :param reward: Reward received for the action
-        :type reward: float
+        Args:
+            action_index: Index of the action to update.
+            reward: Reward received for the action.
         """
         pass
 
@@ -158,8 +162,12 @@ class Policy(ABC):
         """
         Update the sliding window of rewards for a given action.
 
-        :param chosen_action_index: Index of the chosen action
-        :type chosen_action_index: int
+        Args:
+            chosen_action_index: Index of the chosen action.
+
+        Note:
+            This method maintains a fixed-size window of recent rewards
+            and updates the estimated reward based on this window.
         """
         if len(self.rewards_history[chosen_action_index]) > self.sliding_window_size:
             self.rewards_history[chosen_action_index] = self.rewards_history[
@@ -175,9 +183,11 @@ class Policy(ABC):
         """
         Get the true Q-values for all actions.
 
-        :return: List of Q-values
-        :rtype: List[float]
-        :raises ValueError: If Q_values have not been set
+        Returns:
+            List of true Q-values.
+
+        Raises:
+            ValueError: If Q-values haven't been set.
         """
         if self._Q_values is None:
             raise ValueError("Q_values not set yet!")
@@ -188,9 +198,11 @@ class Policy(ABC):
         """
         Set the true Q-values for all actions.
 
-        :param Q_values: List of Q-values to set
-        :type Q_values: List[float]
-        :raises ValueError: If the length of Q_values doesn't match n_bandits
+        Args:
+            Q_values: List of Q-values to set.
+
+        Raises:
+            ValueError: If length of Q_values doesn't match n_bandits.
         """
         if len(Q_values) != self.n_bandits:
             raise ValueError("Q_values length needs to match n_bandits!")
@@ -201,8 +213,14 @@ class Policy(ABC):
         """
         Select an action based on the policy.
 
-        :return: Tuple containing the chosen action index and the reward
-        :rtype: Tuple[int, float]
+        Args:
+            *args: Variable length argument list.
+            **kwargs: Arbitrary keyword arguments.
+
+        Returns:
+            A tuple containing:
+            - Index of the chosen action (int)
+            - Reward received for the action (float)
         """
         pass
 
@@ -210,7 +228,12 @@ class Policy(ABC):
         """
         Reset the policy to its initial state.
 
-        This method resets all counters, rewards, and estimates to their initial values.
+        This method resets:
+        - Current step counter
+        - Total reward
+        - Action selection counts
+        - Estimated rewards
+        - Reward history
         """
         self.current_step = 0
         self.total_reward = 0
@@ -229,7 +252,7 @@ class Policy(ABC):
         This method visualizes the reward distributions for all actions, showing
         both the estimated rewards and true rewards (if known).
 
-        .. note::
+        Note:
             This method handles both Bernoulli and Gaussian reward distributions.
         """
         fig, axes = plt.subplots(

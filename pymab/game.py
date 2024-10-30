@@ -106,22 +106,68 @@ class RandomArmSwappingEnvironmentMixin(EnvironmentChangeMixin):
 
 
 class Game:
-    n_episodes: int
-    n_steps: int
-    Q_values: np.ndarray
-    set_Q_values_flag: bool
-    Q_values_mean: float
-    Q_values_variance: float
-    reward_distribution: Type[RewardDistribution]
-    policies: List[Policy]
-    n_bandits: int
-    rewards: np.ndarray
-    actions_selected_by_policy: np.ndarray
-    optimal_actions: np.ndarray
-    regret_by_policy: np.ndarray
-    is_stationary: bool
-    results_folder: Path
+    """Multi-armed bandit simulation environment with support for various reward distributions.
 
+    This class provides a comprehensive framework for running multi-armed bandit experiments
+    with different policies and environment types. It supports stationary and non-stationary
+    environments, multiple reward distributions, and various visualization options.
+
+    Args:
+        n_episodes: Number of episodes to run.
+        n_steps: Number of steps per episode.
+        policies: List of policies to evaluate.
+        n_bandits: Number of bandit arms.
+        Q_values: Optional initial Q-values for arms. If None, generated randomly.
+            Defaults to None.
+        Q_values_mean: Mean for random Q-value generation. Defaults to 0.0.
+        Q_values_variance: Variance for random Q-value generation. Defaults to 1.0.
+        environment_change: Type of environment dynamics. Can be EnvironmentChangeType
+            or custom EnvironmentChangeMixin. Defaults to STATIONARY.
+        change_params: Parameters for non-stationary environments. Defaults to None.
+        results_folder: Path to save visualization results. Defaults to DEFAULT_RESULTS_FOLDER.
+
+    Attributes:
+        n_episodes (int): Number of episodes.
+        n_steps (int): Steps per episode.
+        Q_values (np.ndarray): True Q-values for each arm.
+        reward_distribution (Type[RewardDistribution]): Reward distribution type.
+        policies (List[Policy]): Bandit policies being evaluated.
+        rewards_by_policy (np.ndarray): Rewards obtained by each policy.
+        actions_selected_by_policy (np.ndarray): Actions chosen by each policy.
+        optimal_actions (np.ndarray): Optimal action at each step.
+        regret_by_policy (np.ndarray): Regret incurred by each policy.
+        Q_values_history (np.ndarray): History of Q-values over time.
+
+    Raises:
+        ValueError: If policies use different reward distributions or if
+            Bernoulli Q-values are outside [0,1].
+
+    Example:
+        ```python
+        policies = [
+            EpsilonGreedyPolicy(n_bandits=5, epsilon=0.1),
+            UCBPolicy(n_bandits=5)
+        ]
+        
+        game = Game(
+            n_episodes=100,
+            n_steps=1000,
+            policies=policies,
+            n_bandits=5,
+            environment_change=EnvironmentChangeType.GRADUAL,
+            change_params={"change_rate": 0.01}
+        )
+        
+        game.game_loop()
+        game.plot_average_reward_by_step()
+        ```
+
+    Note:
+        - All policies must use the same reward distribution type
+        - For Bernoulli distributions, Q-values must be in [0,1]
+        - Environment changes affect all policies simultaneously
+    """
+    
     def __init__(
         self,
         *,
@@ -267,12 +313,33 @@ class Game:
         compared to the optimal strategy. It quantifies the difference between the reward obtained by the policy and
         the reward that would have been obtained by always selecting the best possible action
 
-        :return: The cumulative regret for each policy.
-        :rtype: np.ndarray
+        Returns:
+            Array of shape (n_steps, n_policies) containing cumulative regret.
+
+        Note:
+            Regret measures the difference between:
+            - Reward obtained by the policy
+            - Reward that would have been obtained by always selecting the best action
         """
         return np.cumsum(np.mean(self.regret_by_policy, axis=0), axis=0)
 
     def game_loop(self) -> None:
+        """Run the main simulation loop.
+
+        This method:
+        1. Runs all episodes
+        2. For each episode:
+           - Initializes/updates Q-values
+           - Tracks optimal actions
+           - For each step:
+             - Updates environment
+             - Has each policy select actions
+             - Records rewards and regret
+
+        Note:
+            This is the core simulation method that should be called
+            after initializing the Game instance.
+        """
         logger.info(
             f"Starting game loop for {self.n_episodes} episodes, {self.n_steps} in each episode, and analysing {len(self.policies)} policies ..."
         )

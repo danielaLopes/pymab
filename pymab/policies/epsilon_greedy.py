@@ -22,39 +22,49 @@ class EpsilonGreedyPolicy(GreedyPolicy):
     This policy balances exploration and exploitation by choosing the best-known action
     (exploitation) with probability 1-ε, and a random action (exploration) with probability ε.
 
-    :ivar n_bandits: Number of bandits (actions) available
-    :type n_bandits: int
-    :ivar optimistic_initialization: Initial Q-value for all actions
-    :type optimistic_initialization: float
-    :ivar _Q_values: True Q-values for each arm (set externally)
-    :type _Q_values: np.ndarray
-    :ivar current_step: Current time step in the learning process
-    :type current_step: int
-    :ivar total_reward: Cumulative reward obtained so far
-    :type total_reward: float
-    :ivar times_selected: Number of times each action has been selected
-    :type times_selected: np.ndarray
-    :ivar actions_estimated_reward: Estimated reward for each action
-    :type actions_estimated_reward: np.ndarray
-    :ivar variance: Variance of the reward distribution
-    :type variance: float
-    :ivar reward_distribution: Type of reward distribution
-    :type reward_distribution: Type[RewardDistribution]
-    :ivar rewards_history: History of rewards for each action
-    :type rewards_history: List[List[float]]
-    :ivar epsilon: Exploration rate
-    :type epsilon: float
+    Args:
+        n_bandits: Number of bandits (actions) available.
+        optimistic_initialization: Initial Q-value for all actions. Defaults to 0.
+        variance: Variance of the reward distribution. Defaults to 1.0.
+        reward_distribution: Type of reward distribution. Defaults to "gaussian".
+        epsilon: Exploration rate (0 ≤ ε ≤ 1). Defaults to 0.1.
 
-    .. note::
+    Attributes:
+        epsilon (float): Probability of choosing a random action for exploration.
+
+    Note:
         Theory:
-        The Epsilon-Greedy policy addresses the exploration-exploitation dilemma in reinforcement
-        learning. It improves upon the purely greedy approach by allowing for occasional
-        exploration, which can lead to discovering better actions in the long run.
+        The Epsilon-Greedy strategy addresses the exploration-exploitation dilemma
+        by using a simple probability-based approach:
+        
+        1. Exploration (ε probability):
+           - Randomly select any non-greedy action
+           - Helps discover potentially better actions
+           - Prevents getting stuck in local optima
+        
+        2. Exploitation (1-ε probability):
+           - Select the action with highest estimated reward
+           - Capitalizes on current knowledge
+           - Maximizes immediate reward
 
-    .. note::
-        Optimizations:
-        - Uses numpy arrays for efficient storage and computation of Q-values and action counts.
-        - Implements optimistic initialization to encourage initial exploration.
+        The value of ε controls the balance:
+        - Higher ε: More exploration, slower convergence
+        - Lower ε: More exploitation, risk of suboptimal solutions
+
+    Example:
+        ```python
+        # Create a policy with 10% exploration rate
+        policy = EpsilonGreedyPolicy(
+            n_bandits=5,
+            epsilon=0.1,
+            reward_distribution="gaussian"
+        )
+        
+        # Select actions
+        for _ in range(100):
+            action, reward = policy.select_action()
+            # Process reward...
+        ```
     """
 
     def __init__(
@@ -78,16 +88,23 @@ class EpsilonGreedyPolicy(GreedyPolicy):
         """
         Select an action based on the Epsilon-Greedy policy.
 
-        This method implements the core of the Epsilon-Greedy algorithm:
-        - With probability ε, choose a random action (exploration).
-        - With probability 1-ε, choose the action with the highest estimated reward (exploitation).
+        Returns:
+            A tuple containing:
+                - Index of the chosen action (int)
+                - Reward received for the action (float)
 
-        :return: A tuple containing the index of the chosen action and the updated reward estimate for the chosen action
-        :rtype: Tuple[int, float]
-
-        .. note::
-            The method ensures that during exploration, the greedy action is not selected,
-            forcing true exploration.
+        Note:
+            Implementation Details:
+            1. Generate random number r ∈ [0, 1]
+            2. If r < ε:
+               - Find the greedy action (highest estimated reward)
+               - Remove it from possible choices
+               - Select randomly from remaining actions
+            3. If r ≥ ε:
+               - Select the greedy action (highest estimated reward)
+            
+            This ensures that exploration explicitly avoids the greedy action,
+            promoting true exploration of alternative actions.
         """
         r = random.uniform(0, 1)
         chosen_action_index = np.argmax(self.actions_estimated_reward)
