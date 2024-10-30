@@ -6,7 +6,7 @@
 PyMAB documentation
 ============================
 
-.. image:: _static/icon.png
+.. image:: _build/_static/icon.png
    :alt: PyMAB icon
    :width: 200px
    :align: left

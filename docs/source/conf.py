@@ -84,11 +84,16 @@ exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
 
 html_theme = "piccolo_theme"
 html_theme_options = {
+    'logo_only': False,
+    'display_version': True,
     "globaltoc_collapse": False,
     "globaltoc_maxdepth": 4,
     "navigation_with_keys": True,
 }
 html_static_path = ["_static"]
+html_favicon = '_static/icon.png'
+
+html_logo = '_static/icon.png'
 
 add_module_names = False
 python_use_unqualified_type_names = True
