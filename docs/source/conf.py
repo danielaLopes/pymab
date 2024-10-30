@@ -6,6 +6,12 @@
 # -- Project information -----------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
+import os
+import sys
+
+sys.path.insert(0, os.path.abspath('../..'))
+
+
 project = "PyMAB"
 copyright = "2024, Daniela Lopes"
 author = "Daniela Lopes"
@@ -81,8 +87,6 @@ html_theme_options = {
     "globaltoc_collapse": False,
     "globaltoc_maxdepth": 4,
     "navigation_with_keys": True,
-    "show_nav_level": 2,
-    "show_toc_level": 2,
 }
 html_static_path = ["_static"]
 
