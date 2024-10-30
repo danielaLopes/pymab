@@ -45,6 +45,10 @@ jobs:
       run: |
         mkdir -p docs/source/_static
         mkdir -p docs/source/_templates
+        # Ensure icon exists in source directory
+        if [ -f "docs/source/_static/icon.png" ]; then
+          cp docs/source/_static/icon.png docs/source/_static/
+        fi
         touch docs/source/_static/.gitkeep
         touch docs/source/_templates/.gitkeep
     - name: Build documentation
