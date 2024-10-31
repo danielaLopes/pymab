@@ -6,7 +6,6 @@ from functools import lru_cache
 import logging
 from pathlib import Path
 
-from plotly.subplots import make_subplots
 from tqdm import tqdm
 import typing
 
@@ -61,7 +60,7 @@ class StationaryEnvironmentMixin(EnvironmentChangeMixin):
 class GradualChangeEnvironmentMixin(EnvironmentChangeMixin):
     """
     Non-stationary environment where the rewards distributions change gradually over time. The change is applied by
-    adding a different random value drawn from a normal distribution with 0 mean and {self.change_rate} standard
+    adding a different random value drawn from a normal distribution with 0 mean and self.change_rate standard
     deviation to each of the Q-values at each step.
     """
 
@@ -75,8 +74,8 @@ class GradualChangeEnvironmentMixin(EnvironmentChangeMixin):
 class AbruptChangeEnvironmentMixin(EnvironmentChangeMixin):
     """
     Non-stationary environment where the rewards distributions change abruptly and periodically. The change is applied
-    by adding a different random value drawn from a normal distribution with 0 mean and {self.change_magnitude} standard
-    deviation to each of the Q-values every {self.change_frequency} steps.
+    by adding a different random value drawn from a normal distribution with 0 mean and self.change_magnitude standard
+    deviation to each of the Q-values every self.change_frequency steps.
     """
 
     def __init__(self, change_frequency: int, change_magnitude: float):
