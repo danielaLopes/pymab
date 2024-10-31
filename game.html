@@ -1,0 +1,892 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="./">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Game documentation &#8212; PyMAB 0.1.0-alpha.1 documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=fa44fd50" />
+    <link rel="stylesheet" type="text/css" href="_static/basic_mod.css?v=9b2032db" />
+    <script src="_static/documentation_options.js?v=6940f236"></script>
+    <script src="_static/doctools.js?v=9a2dae69"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/js/theme.js"></script>
+    <script src="_static/js/petite-vue.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Reward Distribution documentation" href="reward_distribution.html" />
+    <link rel="prev" title="Policies documentation" href="policies.html" /> 
+  </head><body data-dark_mode_code_blocks="true">
+
+<div id="top_nav">
+    
+
+    <nav>
+        
+            
+        
+
+        <p id="toggle_sidebar">
+            <a href="#" title="Toggle sidebar">|||</a>
+        </p>
+        <h1><a href="index.html" title="Go to homepage">PyMAB 0.1.0-alpha.1 documentation</a></h1>
+
+        <a id="mode_toggle" href="#" @click.prevent="handleClick" :title="mode">
+    <template v-if="mode == 'light'">
+        <svg width="100%" height="100%" viewBox="0 0 79 80" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xml:space="preserve" style="fill-rule:evenodd;clip-rule:evenodd;stroke-linejoin:round;stroke-miterlimit:2;"><g id="mode_light"><rect id="Bounds" x="0" y="-0" width="78.623" height="79.049" style="fill:none;"/><circle cx="39.311" cy="39.524" r="15.734" style="fill:#fff;"/><g id="beams"><g id="beam"><path id="beam1" serif:id="beam" d="M44.212,4.901c0,-2.705 -2.196,-4.901 -4.901,-4.901c-2.704,-0 -4.9,2.196 -4.9,4.901l-0,9.614c-0,2.705 2.196,4.901 4.9,4.901c2.705,0 4.901,-2.196 4.901,-4.901l0,-9.614Z" style="fill:#fff;"/></g><g id="beam2" serif:id="beam"><path id="beam3" serif:id="beam" d="M67.48,18.073c1.913,-1.912 1.913,-5.018 0,-6.931c-1.912,-1.912 -5.018,-1.912 -6.931,0l-6.798,6.799c-1.912,1.912 -1.912,5.018 0,6.931c1.913,1.912 5.018,1.912 6.931,-0l6.798,-6.799Z" style="fill:#fff;"/></g><g id="beam4" serif:id="beam"><path id="beam5" serif:id="beam" d="M25.728,61.108c1.912,-1.913 1.912,-5.018 -0,-6.931c-1.913,-1.913 -5.019,-1.913 -6.931,-0l-6.799,6.798c-1.912,1.913 -1.912,5.019 0,6.931c1.913,1.913 5.019,1.913 6.931,0l6.799,-6.798Z" style="fill:#fff;"/></g><g id="beam6" serif:id="beam"><path id="beam7" serif:id="beam" d="M60.682,54.177c-1.913,-1.913 -5.018,-1.913 -6.931,-0c-1.912,1.913 -1.912,5.018 0,6.931l6.798,6.798c1.913,1.913 5.019,1.913 6.931,0c1.913,-1.912 1.913,-5.018 0,-6.931l-6.798,-6.798Z" style="fill:#fff;"/></g><g id="beam8" serif:id="beam"><path id="beam9" serif:id="beam" d="M4.901,34.623c-2.705,0 -4.901,2.196 -4.901,4.901c0,2.705 2.196,4.901 4.901,4.901l9.614,0c2.705,0 4.901,-2.196 4.901,-4.901c0,-2.705 -2.196,-4.901 -4.901,-4.901l-9.614,0Z" style="fill:#fff;"/></g><g id="beam10" serif:id="beam"><path id="beam11" serif:id="beam" d="M44.212,64.534c0,-2.705 -2.196,-4.901 -4.901,-4.901c-2.704,-0 -4.9,2.196 -4.9,4.901l-0,9.614c-0,2.705 2.196,4.901 4.9,4.901c2.705,-0 4.901,-2.196 4.901,-4.901l0,-9.614Z" style="fill:#fff;"/></g><g id="beam12" serif:id="beam"><path id="beam13" serif:id="beam" d="M18.929,11.142c-1.912,-1.912 -5.018,-1.912 -6.931,0c-1.912,1.913 -1.912,5.019 0,6.931l6.799,6.799c1.912,1.912 5.018,1.912 6.931,-0c1.912,-1.913 1.912,-5.019 -0,-6.931l-6.799,-6.799Z" style="fill:#fff;"/></g><g id="beam14" serif:id="beam"><path id="beam15" serif:id="beam" d="M64.108,34.623c-2.705,0 -4.901,2.196 -4.901,4.901c-0,2.705 2.196,4.901 4.901,4.901l9.614,0c2.705,0 4.901,-2.196 4.901,-4.901c-0,-2.705 -2.196,-4.901 -4.901,-4.901l-9.614,0Z" style="fill:#fff;"/></g></g></g></svg>
+    </template>
+
+    <template v-if="mode == 'dark'">
+        <svg width="100%" height="100%" viewBox="0 0 79 80" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xml:space="preserve" style="fill-rule:evenodd;clip-rule:evenodd;stroke-linejoin:round;stroke-miterlimit:2;"><g id="mode_dark"><rect id="Bounds" x="0" y="-0" width="78.623" height="79.049" style="fill:none;"/><circle cx="39.311" cy="39.524" r="15.734" style="fill:#fff;"/><g id="beams"><g id="beam"><path id="beam1" serif:id="beam" d="M44.212,14.515c0,-2.705 -2.196,-4.901 -4.901,-4.901c-2.704,0 -4.901,2.196 -4.901,4.901c0,2.705 2.197,4.901 4.901,4.901c2.705,0 4.901,-2.196 4.901,-4.901Z" style="fill:#fff;"/></g><g id="beam2" serif:id="beam"><path id="beam3" serif:id="beam" d="M60.662,24.892c1.902,-1.902 1.902,-4.99 0,-6.892l-0.04,-0.039c-1.901,-1.902 -4.989,-1.902 -6.891,-0c-1.901,1.901 -1.901,4.989 0,6.891l0.04,0.04c1.902,1.901 4.989,1.901 6.891,-0Z" style="fill:#fff;"/></g><g id="beam4" serif:id="beam"><path id="beam5" serif:id="beam" d="M25.732,61.103c1.91,-1.91 1.91,-5.011 0,-6.921l-0.009,-0.01c-1.91,-1.91 -5.012,-1.91 -6.921,-0c-1.91,1.91 -1.91,5.011 -0,6.921l0.01,0.01c1.909,1.91 5.011,1.91 6.92,-0Z" style="fill:#fff;"/></g><g id="beam6" serif:id="beam"><path id="beam7" serif:id="beam" d="M60.672,54.167c-1.907,-1.907 -5.004,-1.907 -6.911,0l-0.02,0.02c-1.907,1.907 -1.907,5.004 0,6.911c1.907,1.907 5.004,1.907 6.911,-0l0.02,-0.02c1.907,-1.907 1.907,-5.004 0,-6.911Z" style="fill:#fff;"/></g><g id="beam8" serif:id="beam"><path id="beam9" serif:id="beam" d="M14.52,34.623c-2.702,0 -4.896,2.194 -4.896,4.896l0,0.01c0,2.702 2.194,4.896 4.896,4.896c2.702,0 4.896,-2.194 4.896,-4.896l-0,-0.01c-0,-2.702 -2.194,-4.896 -4.896,-4.896Z" style="fill:#fff;"/></g><g id="beam10" serif:id="beam"><path id="beam11" serif:id="beam" d="M44.212,64.534c0,-2.705 -2.196,-4.901 -4.901,-4.901c-2.704,-0 -4.901,2.196 -4.901,4.901c0,2.704 2.197,4.9 4.901,4.9c2.705,0 4.901,-2.196 4.901,-4.9Z" style="fill:#fff;"/></g><g id="beam12" serif:id="beam"><path id="beam13" serif:id="beam" d="M25.73,17.943c-1.911,-1.911 -5.015,-1.911 -6.926,0l-0.005,0.005c-1.911,1.911 -1.911,5.015 0,6.926c1.911,1.911 5.015,1.911 6.926,0l0.005,-0.005c1.911,-1.911 1.911,-5.014 -0,-6.926Z" style="fill:#fff;"/></g><g id="beam14" serif:id="beam"><path id="beam15" serif:id="beam" d="M64.098,34.623c-2.699,0 -4.891,2.192 -4.891,4.892l-0,0.019c-0,2.699 2.192,4.891 4.891,4.891c2.7,0 4.892,-2.192 4.892,-4.891l0,-0.019c0,-2.7 -2.192,-4.892 -4.892,-4.892Z" style="fill:#fff;"/></g></g></g></svg>
+    </template>
+
+    <template v-if="mode == 'darkest'">
+        <svg width="100%" height="100%" viewBox="0 0 79 80" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xml:space="preserve" style="fill-rule:evenodd;clip-rule:evenodd;stroke-linejoin:round;stroke-miterlimit:2;"><g id="mode_darkest"><rect id="Bounds" x="0" y="-0" width="78.623" height="79.049" style="fill:none;"/><path d="M39.315,23.791c8.684,-0 15.734,7.05 15.734,15.733c0,8.684 -7.05,15.734 -15.734,15.734c-8.683,0 -15.733,-7.05 -15.733,-15.734c-0,-8.683 7.05,-15.733 15.733,-15.733Zm0,4.737c6.069,0 10.997,4.927 10.997,10.996c-0,6.069 -4.928,10.996 -10.997,10.996c-6.068,0 -10.996,-4.927 -10.996,-10.996c0,-6.069 4.928,-10.996 10.996,-10.996Z" style="fill:#fff;"/><g id="beams"><g id="beam"><path id="beam1" serif:id="beam" d="M44.216,14.515c0,-2.705 -2.196,-4.901 -4.901,-4.901c-2.704,0 -4.9,2.196 -4.9,4.901c-0,2.705 2.196,4.901 4.9,4.901c2.705,0 4.901,-2.196 4.901,-4.901Z" style="fill:#fff;"/></g><g id="beam2" serif:id="beam"><path id="beam3" serif:id="beam" d="M60.666,24.892c1.902,-1.902 1.902,-4.99 0,-6.892l-0.04,-0.039c-1.901,-1.902 -4.989,-1.902 -6.891,-0c-1.901,1.901 -1.901,4.989 0,6.891l0.04,0.04c1.902,1.901 4.99,1.901 6.891,-0Z" style="fill:#fff;"/></g><g id="beam4" serif:id="beam"><path id="beam5" serif:id="beam" d="M25.737,61.103c1.909,-1.91 1.909,-5.011 -0,-6.921l-0.01,-0.01c-1.91,-1.91 -5.011,-1.91 -6.921,-0c-1.91,1.91 -1.91,5.011 -0,6.921l0.01,0.01c1.91,1.91 5.011,1.91 6.921,-0Z" style="fill:#fff;"/></g><g id="beam6" serif:id="beam"><path id="beam7" serif:id="beam" d="M60.676,54.167c-1.907,-1.907 -5.004,-1.907 -6.911,0l-0.02,0.02c-1.907,1.907 -1.907,5.004 0,6.911c1.907,1.907 5.004,1.907 6.911,-0l0.02,-0.02c1.907,-1.907 1.907,-5.004 0,-6.911Z" style="fill:#fff;"/></g><g id="beam8" serif:id="beam"><path id="beam9" serif:id="beam" d="M14.524,34.623c-2.702,0 -4.896,2.194 -4.896,4.896l0,0.01c0,2.702 2.194,4.896 4.896,4.896c2.702,0 4.896,-2.194 4.896,-4.896l0,-0.01c0,-2.702 -2.194,-4.896 -4.896,-4.896Z" style="fill:#fff;"/></g><g id="beam10" serif:id="beam"><path id="beam11" serif:id="beam" d="M44.216,64.534c0,-2.705 -2.196,-4.901 -4.901,-4.901c-2.704,-0 -4.9,2.196 -4.9,4.901c-0,2.704 2.196,4.9 4.9,4.9c2.705,0 4.901,-2.196 4.901,-4.9Z" style="fill:#fff;"/></g><g id="beam12" serif:id="beam"><path id="beam13" serif:id="beam" d="M25.734,17.943c-1.911,-1.911 -5.015,-1.911 -6.926,0l-0.005,0.005c-1.911,1.911 -1.911,5.015 0,6.926c1.911,1.911 5.015,1.911 6.926,0l0.005,-0.005c1.911,-1.911 1.911,-5.014 0,-6.926Z" style="fill:#fff;"/></g><g id="beam14" serif:id="beam"><path id="beam15" serif:id="beam" d="M64.103,34.623c-2.7,0 -4.892,2.192 -4.892,4.892l-0,0.019c-0,2.699 2.192,4.891 4.892,4.891c2.699,0 4.891,-2.192 4.891,-4.891l0,-0.019c0,-2.7 -2.192,-4.892 -4.891,-4.892Z" style="fill:#fff;"/></g></g></g></svg>
+    </template>
+</a>
+
+<script>
+(function() {
+    const LOCAL_STORAGE_KEY = 'piccoloThemeMode'
+
+    var initialMode = localStorage.getItem(LOCAL_STORAGE_KEY)
+
+    if (initialMode) {
+        // Make sure the value in local storage is valid
+        if (['light', 'dark', 'darkest'].indexOf(initialMode) == -1) {
+            initialMode = 'light'
+            localStorage.setItem(LOCAL_STORAGE_KEY, initialMode)
+        }
+    } else {
+        // Check if the client prefers dark mode
+        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            initialMode = 'dark'
+        } else {
+            initialMode = 'light'
+        }
+        localStorage.setItem(LOCAL_STORAGE_KEY, initialMode)
+    }
+
+    document.documentElement.dataset.mode = initialMode
+
+    PetiteVue.createApp({
+        'mode': initialMode,
+        handleClick() {
+            let currentMode = this.mode
+
+            if (currentMode == 'light') {
+                this.mode = 'dark'
+            } else if (currentMode == 'dark') {
+                this.mode = 'darkest'
+            } else if (currentMode == 'darkest') {
+                this.mode = 'light'
+            }
+
+            document.documentElement.dataset.mode = this.mode
+            localStorage.setItem(LOCAL_STORAGE_KEY, this.mode)
+
+            console.log(this.mode)
+        }
+    }).mount('#mode_toggle')
+})()
+</script>
+            <p class="mobile_search_link">
+                <a href="search.html" title="Search">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 65 64" fill-rule="evenodd" stroke-linejoin="round" stroke-miterlimit="2">
+                        <path d="M14.873 40.009c-2.315-3.943-3.642-8.532-3.642-13.429C11.231 11.91 23.141 0 37.811 0s26.58 11.91 26.58 26.58-11.91 26.58-26.58 26.58a26.44 26.44 0 0 1-14.277-4.161L9.739 62.794a3.12 3.12 0 0 1-4.413 0L.913 58.382c-1.217-1.218-1.217-3.196 0-4.413l13.96-13.96zM37.811 8.054c10.225 0 18.526 8.301 18.526 18.526s-8.301 18.526-18.526 18.526-18.526-8.301-18.526-18.526S27.586 8.054 37.811 8.054z" fill="#fff" />
+                    </svg>
+                </a>
+            </p>
+        
+
+        <div class="searchbox_wrapper">
+            
+<search id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+    </nav>
+</div>
+
+    
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper"><p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="policies.html">Policies documentation</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Game documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="reward_distribution.html">Reward Distribution documentation</a></li>
+</ul>
+
+        </div>
+      </div>
+
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <section id="game-documentation">
+<h1>Game documentation<a class="headerlink" href="#game-documentation" title="Link to this heading">¶</a></h1>
+<section id="game-game-py">
+<h2>Game (game.py)<a class="headerlink" href="#game-game-py" title="Link to this heading">¶</a></h2>
+<p>The Game class is the core component of the PyMultiBandits library. It simulates a multi-armed bandit environment where various policies can be tested and compared. Key features include:</p>
+<ul class="simple">
+<li><p>Configurable number of bandits and episodes</p></li>
+<li><p>Support for multiple policies in a single game</p></li>
+<li><p>Built-in methods for running simulations and collecting data</p></li>
+<li><p>Visualization tools for analyzing policy performance</p></li>
+</ul>
+<p>This class provides a flexible framework for experimenting with different bandit algorithms and understanding their behavior in various scenarios.</p>
+<dl class="py class" id="module-pymab.game">
+<dt class="sig sig-object py" id="pymab.game.EnvironmentChangeType">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">EnvironmentChangeType</span></span><a class="reference internal" href="_modules/pymab/game.html#EnvironmentChangeType"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pymab.game.EnvironmentChangeType" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/enum.html#enum.Enum" title="(in Python v3.13)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Enum</span></code></a></p>
+<p>An enumeration.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pymab.game.EnvironmentChangeType.STATIONARY">
+<span class="sig-name descname"><span class="pre">STATIONARY</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'stationary'</span></em><a class="headerlink" href="#pymab.game.EnvironmentChangeType.STATIONARY" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pymab.game.EnvironmentChangeType.GRADUAL">
+<span class="sig-name descname"><span class="pre">GRADUAL</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'gradual'</span></em><a class="headerlink" href="#pymab.game.EnvironmentChangeType.GRADUAL" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pymab.game.EnvironmentChangeType.ABRUPT">
+<span class="sig-name descname"><span class="pre">ABRUPT</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'abrupt'</span></em><a class="headerlink" href="#pymab.game.EnvironmentChangeType.ABRUPT" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pymab.game.EnvironmentChangeType.RANDOM_ARM_SWAPPING">
+<span class="sig-name descname"><span class="pre">RANDOM_ARM_SWAPPING</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'random_arm_swapping'</span></em><a class="headerlink" href="#pymab.game.EnvironmentChangeType.RANDOM_ARM_SWAPPING" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="pymab.game.EnvironmentChangeMixin">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">EnvironmentChangeMixin</span></span><a class="reference internal" href="_modules/pymab/game.html#EnvironmentChangeMixin"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pymab.game.EnvironmentChangeMixin" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/abc.html#abc.ABC" title="(in Python v3.13)"><code class="xref py py-class docutils literal notranslate"><span class="pre">ABC</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="pymab.game.EnvironmentChangeMixin.apply_change">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">apply_change</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Q_values</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">step</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pymab/game.html#EnvironmentChangeMixin.apply_change"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pymab.game.EnvironmentChangeMixin.apply_change" title="Link to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>Q_values</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.1)"><em>ndarray</em></a>)</p></li>
+<li><p><strong>step</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><em>int</em></a>)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.1)"><em>ndarray</em></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="pymab.game.StationaryEnvironmentMixin">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">StationaryEnvironmentMixin</span></span><a class="reference internal" href="_modules/pymab/game.html#StationaryEnvironmentMixin"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pymab.game.StationaryEnvironmentMixin" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#pymab.game.EnvironmentChangeMixin" title="pymab.game.EnvironmentChangeMixin"><code class="xref py py-class docutils literal notranslate"><span class="pre">EnvironmentChangeMixin</span></code></a></p>
+<p>Stationary environment’s rewards distributions never change, so the Q-values are returned as sampled for each step.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="pymab.game.StationaryEnvironmentMixin.apply_change">
+<span class="sig-name descname"><span class="pre">apply_change</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Q_values</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">step</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pymab/game.html#StationaryEnvironmentMixin.apply_change"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pymab.game.StationaryEnvironmentMixin.apply_change" title="Link to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>Q_values</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.1)"><em>ndarray</em></a>)</p></li>
+<li><p><strong>step</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><em>int</em></a>)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.1)"><em>ndarray</em></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="pymab.game.GradualChangeEnvironmentMixin">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">GradualChangeEnvironmentMixin</span></span><a class="reference internal" href="_modules/pymab/game.html#GradualChangeEnvironmentMixin"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pymab.game.GradualChangeEnvironmentMixin" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#pymab.game.EnvironmentChangeMixin" title="pymab.game.EnvironmentChangeMixin"><code class="xref py py-class docutils literal notranslate"><span class="pre">EnvironmentChangeMixin</span></code></a></p>
+<p>Non-stationary environment where the rewards distributions change gradually over time. The change is applied by
+adding a different random value drawn from a normal distribution with 0 mean and self.change_rate standard
+deviation to each of the Q-values at each step.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="pymab.game.GradualChangeEnvironmentMixin.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">change_rate</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pymab/game.html#GradualChangeEnvironmentMixin.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pymab.game.GradualChangeEnvironmentMixin.__init__" title="Link to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>change_rate</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><em>float</em></a>)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pymab.game.GradualChangeEnvironmentMixin.apply_change">
+<span class="sig-name descname"><span class="pre">apply_change</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Q_values</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">step</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pymab/game.html#GradualChangeEnvironmentMixin.apply_change"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pymab.game.GradualChangeEnvironmentMixin.apply_change" title="Link to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>Q_values</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.1)"><em>ndarray</em></a>)</p></li>
+<li><p><strong>step</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><em>int</em></a>)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.1)"><em>ndarray</em></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="pymab.game.AbruptChangeEnvironmentMixin">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">AbruptChangeEnvironmentMixin</span></span><a class="reference internal" href="_modules/pymab/game.html#AbruptChangeEnvironmentMixin"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pymab.game.AbruptChangeEnvironmentMixin" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#pymab.game.EnvironmentChangeMixin" title="pymab.game.EnvironmentChangeMixin"><code class="xref py py-class docutils literal notranslate"><span class="pre">EnvironmentChangeMixin</span></code></a></p>
+<p>Non-stationary environment where the rewards distributions change abruptly and periodically. The change is applied
+by adding a different random value drawn from a normal distribution with 0 mean and self.change_magnitude standard
+deviation to each of the Q-values every self.change_frequency steps.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="pymab.game.AbruptChangeEnvironmentMixin.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">change_frequency</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">change_magnitude</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pymab/game.html#AbruptChangeEnvironmentMixin.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pymab.game.AbruptChangeEnvironmentMixin.__init__" title="Link to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>change_frequency</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><em>int</em></a>)</p></li>
+<li><p><strong>change_magnitude</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><em>float</em></a>)</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pymab.game.AbruptChangeEnvironmentMixin.apply_change">
+<span class="sig-name descname"><span class="pre">apply_change</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Q_values</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">step</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pymab/game.html#AbruptChangeEnvironmentMixin.apply_change"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pymab.game.AbruptChangeEnvironmentMixin.apply_change" title="Link to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>Q_values</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.1)"><em>ndarray</em></a>)</p></li>
+<li><p><strong>step</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><em>int</em></a>)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.1)"><em>ndarray</em></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="pymab.game.RandomArmSwappingEnvironmentMixin">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">RandomArmSwappingEnvironmentMixin</span></span><a class="reference internal" href="_modules/pymab/game.html#RandomArmSwappingEnvironmentMixin"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pymab.game.RandomArmSwappingEnvironmentMixin" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#pymab.game.EnvironmentChangeMixin" title="pymab.game.EnvironmentChangeMixin"><code class="xref py py-class docutils literal notranslate"><span class="pre">EnvironmentChangeMixin</span></code></a></p>
+<p>Non-stationary environment where the rewards distributions between arms get swapped abruptly and at random steps.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="pymab.game.RandomArmSwappingEnvironmentMixin.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">shift_probability</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pymab/game.html#RandomArmSwappingEnvironmentMixin.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pymab.game.RandomArmSwappingEnvironmentMixin.__init__" title="Link to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>shift_probability</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><em>float</em></a>)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pymab.game.RandomArmSwappingEnvironmentMixin.apply_change">
+<span class="sig-name descname"><span class="pre">apply_change</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Q_values</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">step</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pymab/game.html#RandomArmSwappingEnvironmentMixin.apply_change"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pymab.game.RandomArmSwappingEnvironmentMixin.apply_change" title="Link to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>Q_values</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.1)"><em>ndarray</em></a>)</p></li>
+<li><p><strong>step</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><em>int</em></a>)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.1)"><em>ndarray</em></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="pymab.game.Game">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Game</span></span><a class="reference internal" href="_modules/pymab/game.html#Game"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pymab.game.Game" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.13)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>Multi-armed bandit simulation environment with support for various reward distributions.</p>
+<p>This class provides a comprehensive framework for running multi-armed bandit experiments
+with different policies and environment types. It supports stationary and non-stationary
+environments, multiple reward distributions, and various visualization options.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>n_episodes</strong> – Number of episodes to run.</p></li>
+<li><p><strong>n_steps</strong> – Number of steps per episode.</p></li>
+<li><p><strong>policies</strong> – List of policies to evaluate.</p></li>
+<li><p><strong>n_bandits</strong> – Number of bandit arms.</p></li>
+<li><p><strong>Q_values</strong> – Optional initial Q-values for arms. If None, generated randomly.
+Defaults to None.</p></li>
+<li><p><strong>Q_values_mean</strong> – Mean for random Q-value generation. Defaults to 0.0.</p></li>
+<li><p><strong>Q_values_variance</strong> – Variance for random Q-value generation. Defaults to 1.0.</p></li>
+<li><p><strong>environment_change</strong> – Type of environment dynamics. Can be EnvironmentChangeType
+or custom EnvironmentChangeMixin. Defaults to STATIONARY.</p></li>
+<li><p><strong>change_params</strong> – Parameters for non-stationary environments. Defaults to None.</p></li>
+<li><p><strong>results_folder</strong> – Path to save visualization results. Defaults to DEFAULT_RESULTS_FOLDER.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pymab.game.Game.n_episodes">
+<span class="sig-name descname"><span class="pre">n_episodes</span></span><a class="headerlink" href="#pymab.game.Game.n_episodes" title="Link to this definition">¶</a></dt>
+<dd><p>Number of episodes.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><em>int</em></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pymab.game.Game.n_steps">
+<span class="sig-name descname"><span class="pre">n_steps</span></span><a class="headerlink" href="#pymab.game.Game.n_steps" title="Link to this definition">¶</a></dt>
+<dd><p>Steps per episode.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><em>int</em></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pymab.game.Game.Q_values">
+<span class="sig-name descname"><span class="pre">Q_values</span></span><a class="headerlink" href="#pymab.game.Game.Q_values" title="Link to this definition">¶</a></dt>
+<dd><p>True Q-values for each arm.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>np.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pymab.game.Game.reward_distribution">
+<span class="sig-name descname"><span class="pre">reward_distribution</span></span><a class="headerlink" href="#pymab.game.Game.reward_distribution" title="Link to this definition">¶</a></dt>
+<dd><p>Reward distribution type.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><em>Type</em>[<a class="reference internal" href="reward_distribution.html#pymab.reward_distribution.RewardDistribution" title="pymab.reward_distribution.RewardDistribution"><em>RewardDistribution</em></a>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pymab.game.Game.policies">
+<span class="sig-name descname"><span class="pre">policies</span></span><a class="headerlink" href="#pymab.game.Game.policies" title="Link to this definition">¶</a></dt>
+<dd><p>Bandit policies being evaluated.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><em>List</em>[<a class="reference internal" href="policies.html#pymab.policies.policy.Policy" title="pymab.policies.policy.Policy"><em>Policy</em></a>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pymab.game.Game.rewards_by_policy">
+<span class="sig-name descname"><span class="pre">rewards_by_policy</span></span><a class="headerlink" href="#pymab.game.Game.rewards_by_policy" title="Link to this definition">¶</a></dt>
+<dd><p>Rewards obtained by each policy.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>np.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pymab.game.Game.actions_selected_by_policy">
+<span class="sig-name descname"><span class="pre">actions_selected_by_policy</span></span><a class="headerlink" href="#pymab.game.Game.actions_selected_by_policy" title="Link to this definition">¶</a></dt>
+<dd><p>Actions chosen by each policy.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>np.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pymab.game.Game.optimal_actions">
+<span class="sig-name descname"><span class="pre">optimal_actions</span></span><a class="headerlink" href="#pymab.game.Game.optimal_actions" title="Link to this definition">¶</a></dt>
+<dd><p>Optimal action at each step.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>np.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pymab.game.Game.regret_by_policy">
+<span class="sig-name descname"><span class="pre">regret_by_policy</span></span><a class="headerlink" href="#pymab.game.Game.regret_by_policy" title="Link to this definition">¶</a></dt>
+<dd><p>Regret incurred by each policy.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>np.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pymab.game.Game.Q_values_history">
+<span class="sig-name descname"><span class="pre">Q_values_history</span></span><a class="headerlink" href="#pymab.game.Game.Q_values_history" title="Link to this definition">¶</a></dt>
+<dd><p>History of Q-values over time.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>np.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="field-list simple">
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#ValueError" title="(in Python v3.13)"><strong>ValueError</strong></a> – If policies use different reward distributions or if
+    Bernoulli Q-values are outside [0,1].</p>
+</dd>
+</dl>
+<div class="admonition-example admonition">
+<p class="admonition-title">Example</p>
+<p><a href="#id1"><span class="problematic" id="id2">``</span></a><a href="#id3"><span class="problematic" id="id4">`</span></a>python
+policies = [</p>
+<blockquote>
+<div><p>EpsilonGreedyPolicy(n_bandits=5, epsilon=0.1),
+UCBPolicy(n_bandits=5)</p>
+</div></blockquote>
+<p>]</p>
+<dl class="simple">
+<dt>game = Game(</dt><dd><p>n_episodes=100,
+n_steps=1000,
+policies=policies,
+n_bandits=5,
+environment_change=EnvironmentChangeType.GRADUAL,
+change_params={“change_rate”: 0.01}</p>
+</dd>
+</dl>
+<p>)</p>
+<p>game.game_loop()
+game.plot_average_reward_by_step()
+<a href="#id5"><span class="problematic" id="id6">``</span></a><a href="#id7"><span class="problematic" id="id8">`</span></a></p>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<ul class="simple">
+<li><p>All policies must use the same reward distribution type</p></li>
+<li><p>For Bernoulli distributions, Q-values must be in [0,1]</p></li>
+<li><p>Environment changes affect all policies simultaneously</p></li>
+</ul>
+</div>
+<dl class="py method">
+<dt class="sig sig-object py" id="pymab.game.Game.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_episodes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_steps</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">policies</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_bandits</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Q_values</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Q_values_mean</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Q_values_variance</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">environment_change</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">EnvironmentChangeType.STATIONARY</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">change_params</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">results_folder</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">PosixPath('/home/runner/work/pymab/pymab/results')</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pymab/game.html#Game.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pymab.game.Game.__init__" title="Link to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>n_episodes</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><em>int</em></a>)</p></li>
+<li><p><strong>n_steps</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><em>int</em></a>)</p></li>
+<li><p><strong>policies</strong> (<em>List</em><em>[</em><a class="reference internal" href="policies.html#pymab.policies.policy.Policy" title="pymab.policies.policy.Policy"><em>Policy</em></a><em>]</em>)</p></li>
+<li><p><strong>n_bandits</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><em>int</em></a>)</p></li>
+<li><p><strong>Q_values</strong> (<em>List</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><em>float</em></a><em>]</em>)</p></li>
+<li><p><strong>Q_values_mean</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><em>float</em></a>)</p></li>
+<li><p><strong>Q_values_variance</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><em>float</em></a>)</p></li>
+<li><p><strong>environment_change</strong> (<em>Union</em><em>[</em><a class="reference internal" href="#pymab.game.EnvironmentChangeType" title="pymab.game.EnvironmentChangeType"><em>EnvironmentChangeType</em></a><em>, </em><em>Type</em><em>[</em><a class="reference internal" href="#pymab.game.EnvironmentChangeMixin" title="pymab.game.EnvironmentChangeMixin"><em>EnvironmentChangeMixin</em></a><em>]</em><em>]</em>)</p></li>
+<li><p><strong>change_params</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.13)"><em>dict</em></a>)</p></li>
+<li><p><strong>results_folder</strong> (<em>Path</em>)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><em>None</em></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="pymab.game.Game.average_rewards_by_step">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">average_rewards_by_step</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.1)"><span class="pre">ndarray</span></a></em><a class="headerlink" href="#pymab.game.Game.average_rewards_by_step" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="pymab.game.Game.average_rewards_by_episode">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">average_rewards_by_episode</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.1)"><span class="pre">ndarray</span></a></em><a class="headerlink" href="#pymab.game.Game.average_rewards_by_episode" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="pymab.game.Game.cumulative_regret_by_step">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">cumulative_regret_by_step</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.1)"><span class="pre">ndarray</span></a></em><a class="headerlink" href="#pymab.game.Game.cumulative_regret_by_step" title="Link to this definition">¶</a></dt>
+<dd><p>Calculate the cumulative regret for each policy. The regret measures how much worse a chosen strategy performs
+compared to the optimal strategy. It quantifies the difference between the reward obtained by the policy and
+the reward that would have been obtained by always selecting the best possible action</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Array of shape (n_steps, n_policies) containing cumulative regret.</p>
+</dd>
+</dl>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Regret measures the difference between:
+- Reward obtained by the policy
+- Reward that would have been obtained by always selecting the best action</p>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pymab.game.Game.game_loop">
+<span class="sig-name descname"><span class="pre">game_loop</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/pymab/game.html#Game.game_loop"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pymab.game.Game.game_loop" title="Link to this definition">¶</a></dt>
+<dd><p>Run the main simulation loop.</p>
+<p>This method:
+1. Runs all episodes
+2. For each episode:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>Initializes/updates Q-values</p></li>
+<li><p>Tracks optimal actions</p></li>
+<li><p>For each step:
+- Updates environment
+- Has each policy select actions
+- Records rewards and regret</p></li>
+</ul>
+</div></blockquote>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This is the core simulation method that should be called
+after initializing the Game instance.</p>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><em>None</em></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pymab.game.Game.new_episode">
+<span class="sig-name descname"><span class="pre">new_episode</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">episode_idx</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pymab/game.html#Game.new_episode"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pymab.game.Game.new_episode" title="Link to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>episode_idx</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><em>int</em></a>)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><em>None</em></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pymab.game.Game.plot_average_reward_by_step">
+<span class="sig-name descname"><span class="pre">plot_average_reward_by_step</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">save</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plot_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plot_config</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pymab/game.html#Game.plot_average_reward_by_step"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pymab.game.Game.plot_average_reward_by_step" title="Link to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>save</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.13)"><em>bool</em></a>)</p></li>
+<li><p><strong>plot_name</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a>)</p></li>
+<li><p><strong>plot_config</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.13)"><em>dict</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a><em>, </em><em>Any</em><em>]</em>)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><em>None</em></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pymab.game.Game.plot_average_reward_by_episode">
+<span class="sig-name descname"><span class="pre">plot_average_reward_by_episode</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">save</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plot_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plot_config</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pymab/game.html#Game.plot_average_reward_by_episode"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pymab.game.Game.plot_average_reward_by_episode" title="Link to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>save</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.13)"><em>bool</em></a>)</p></li>
+<li><p><strong>plot_name</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a>)</p></li>
+<li><p><strong>plot_config</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.13)"><em>dict</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a><em>, </em><em>Any</em><em>]</em>)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><em>None</em></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pymab.game.Game.plot_average_reward_by_step_smoothed">
+<span class="sig-name descname"><span class="pre">plot_average_reward_by_step_smoothed</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">smooth_factor</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">50</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plot_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plot_config</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pymab/game.html#Game.plot_average_reward_by_step_smoothed"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pymab.game.Game.plot_average_reward_by_step_smoothed" title="Link to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>smooth_factor</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><em>int</em></a>)</p></li>
+<li><p><strong>save</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.13)"><em>bool</em></a>)</p></li>
+<li><p><strong>plot_name</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a>)</p></li>
+<li><p><strong>plot_config</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.13)"><em>dict</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a><em>, </em><em>Any</em><em>]</em>)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><em>None</em></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pymab.game.Game.plot_bandit_selection_evolution">
+<span class="sig-name descname"><span class="pre">plot_bandit_selection_evolution</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">save</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plot_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plot_config</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pymab/game.html#Game.plot_bandit_selection_evolution"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pymab.game.Game.plot_bandit_selection_evolution" title="Link to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>save</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.13)"><em>bool</em></a>)</p></li>
+<li><p><strong>plot_name</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a>)</p></li>
+<li><p><strong>plot_config</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.13)"><em>dict</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a><em>, </em><em>Any</em><em>]</em>)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><em>None</em></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pymab.game.Game.plot_cumulative_regret_by_step">
+<span class="sig-name descname"><span class="pre">plot_cumulative_regret_by_step</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">save</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plot_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plot_config</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pymab/game.html#Game.plot_cumulative_regret_by_step"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pymab.game.Game.plot_cumulative_regret_by_step" title="Link to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>save</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.13)"><em>bool</em></a>)</p></li>
+<li><p><strong>plot_name</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a>)</p></li>
+<li><p><strong>plot_config</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.13)"><em>dict</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a><em>, </em><em>Any</em><em>]</em>)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><em>None</em></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pymab.game.Game.plot_Q_values">
+<span class="sig-name descname"><span class="pre">plot_Q_values</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">save</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plot_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plot_config</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pymab/game.html#Game.plot_Q_values"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pymab.game.Game.plot_Q_values" title="Link to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>save</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.13)"><em>bool</em></a>)</p></li>
+<li><p><strong>plot_name</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a>)</p></li>
+<li><p><strong>plot_config</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.13)"><em>dict</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a><em>, </em><em>Any</em><em>]</em>)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><em>None</em></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pymab.game.Game.plot_Q_values_evolution_by_bandit_first_episode">
+<span class="sig-name descname"><span class="pre">plot_Q_values_evolution_by_bandit_first_episode</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">save</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plot_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plot_config</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pymab/game.html#Game.plot_Q_values_evolution_by_bandit_first_episode"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pymab.game.Game.plot_Q_values_evolution_by_bandit_first_episode" title="Link to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>save</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.13)"><em>bool</em></a>)</p></li>
+<li><p><strong>plot_name</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a>)</p></li>
+<li><p><strong>plot_config</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.13)"><em>dict</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a><em>, </em><em>Any</em><em>]</em>)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><em>None</em></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pymab.game.Game.plot_total_reward_by_step">
+<span class="sig-name descname"><span class="pre">plot_total_reward_by_step</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">save</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plot_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plot_config</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pymab/game.html#Game.plot_total_reward_by_step"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pymab.game.Game.plot_total_reward_by_step" title="Link to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>save</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.13)"><em>bool</em></a>)</p></li>
+<li><p><strong>plot_name</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a>)</p></li>
+<li><p><strong>plot_config</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.13)"><em>dict</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a><em>, </em><em>Any</em><em>]</em>)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><em>None</em></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pymab.game.Game.plot_rate_optimal_actions_by_step">
+<span class="sig-name descname"><span class="pre">plot_rate_optimal_actions_by_step</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">save</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plot_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plot_config</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pymab/game.html#Game.plot_rate_optimal_actions_by_step"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pymab.game.Game.plot_rate_optimal_actions_by_step" title="Link to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>save</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.13)"><em>bool</em></a>)</p></li>
+<li><p><strong>plot_name</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a>)</p></li>
+<li><p><strong>plot_config</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.13)"><em>dict</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a><em>, </em><em>Any</em><em>]</em>)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><em>None</em></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="pymab.game.Game.total_rewards_by_step">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">total_rewards_by_step</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.1)"><span class="pre">ndarray</span></a></em><a class="headerlink" href="#pymab.game.Game.total_rewards_by_step" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="example-usage">
+<h2>Example Usage<a class="headerlink" href="#example-usage" title="Link to this heading">¶</a></h2>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">pymab.policies.greedy</span> <span class="kn">import</span> <span class="n">GreedyPolicy</span>
+<span class="kn">from</span> <span class="nn">pymab.game</span> <span class="kn">import</span> <span class="n">Game</span>
+
+<span class="n">n_bandits</span> <span class="o">=</span> <span class="mi">10</span>
+
+<span class="n">policy</span> <span class="o">=</span> <span class="n">GreedyPolicy</span><span class="p">(</span><span class="n">optimistic_initialization</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">n_bandits</span><span class="o">=</span><span class="n">n_bandits</span><span class="p">)</span>
+
+<span class="n">game</span> <span class="o">=</span> <span class="n">Game</span><span class="p">(</span><span class="n">n_episodes</span><span class="o">=</span><span class="mi">2000</span><span class="p">,</span>
+         <span class="n">n_steps</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span>
+         <span class="n">policies</span><span class="o">=</span><span class="p">[</span><span class="n">policy</span><span class="p">],</span>
+         <span class="n">n_bandits</span><span class="o">=</span><span class="n">n_bandits</span><span class="p">)</span>
+
+<span class="n">game</span><span class="o">.</span><span class="n">game_loop</span><span class="p">()</span>
+
+<span class="n">game</span><span class="o">.</span><span class="n">plot_average_reward_by_step</span><span class="p">()</span>
+</pre></div>
+</div>
+</section>
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+    
+        <div id="show_right_sidebar">
+            <p><a class="toggle_right_sidebar" href="#"><span class="icon">&lt;</span><span>Page contents</span></a></p>
+        </div>
+
+        <div id="right_sidebar">
+            <p><a class="toggle_right_sidebar" href="#"><span class="icon">&gt;</span><span>Page contents:</span></a></p>
+            <div class="page_toc">
+                <ul>
+<li><a class="reference internal" href="#">Game documentation</a><ul>
+<li><a class="reference internal" href="#game-game-py">Game (game.py)</a><ul>
+<li><a class="reference internal" href="#pymab.game.EnvironmentChangeType"><code class="docutils literal notranslate"><span class="pre">EnvironmentChangeType</span></code></a><ul>
+<li><a class="reference internal" href="#pymab.game.EnvironmentChangeType.STATIONARY"><code class="docutils literal notranslate"><span class="pre">EnvironmentChangeType.STATIONARY</span></code></a></li>
+<li><a class="reference internal" href="#pymab.game.EnvironmentChangeType.GRADUAL"><code class="docutils literal notranslate"><span class="pre">EnvironmentChangeType.GRADUAL</span></code></a></li>
+<li><a class="reference internal" href="#pymab.game.EnvironmentChangeType.ABRUPT"><code class="docutils literal notranslate"><span class="pre">EnvironmentChangeType.ABRUPT</span></code></a></li>
+<li><a class="reference internal" href="#pymab.game.EnvironmentChangeType.RANDOM_ARM_SWAPPING"><code class="docutils literal notranslate"><span class="pre">EnvironmentChangeType.RANDOM_ARM_SWAPPING</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#pymab.game.EnvironmentChangeMixin"><code class="docutils literal notranslate"><span class="pre">EnvironmentChangeMixin</span></code></a><ul>
+<li><a class="reference internal" href="#pymab.game.EnvironmentChangeMixin.apply_change"><code class="docutils literal notranslate"><span class="pre">EnvironmentChangeMixin.apply_change()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#pymab.game.StationaryEnvironmentMixin"><code class="docutils literal notranslate"><span class="pre">StationaryEnvironmentMixin</span></code></a><ul>
+<li><a class="reference internal" href="#pymab.game.StationaryEnvironmentMixin.apply_change"><code class="docutils literal notranslate"><span class="pre">StationaryEnvironmentMixin.apply_change()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#pymab.game.GradualChangeEnvironmentMixin"><code class="docutils literal notranslate"><span class="pre">GradualChangeEnvironmentMixin</span></code></a><ul>
+<li><a class="reference internal" href="#pymab.game.GradualChangeEnvironmentMixin.__init__"><code class="docutils literal notranslate"><span class="pre">GradualChangeEnvironmentMixin.__init__()</span></code></a></li>
+<li><a class="reference internal" href="#pymab.game.GradualChangeEnvironmentMixin.apply_change"><code class="docutils literal notranslate"><span class="pre">GradualChangeEnvironmentMixin.apply_change()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#pymab.game.AbruptChangeEnvironmentMixin"><code class="docutils literal notranslate"><span class="pre">AbruptChangeEnvironmentMixin</span></code></a><ul>
+<li><a class="reference internal" href="#pymab.game.AbruptChangeEnvironmentMixin.__init__"><code class="docutils literal notranslate"><span class="pre">AbruptChangeEnvironmentMixin.__init__()</span></code></a></li>
+<li><a class="reference internal" href="#pymab.game.AbruptChangeEnvironmentMixin.apply_change"><code class="docutils literal notranslate"><span class="pre">AbruptChangeEnvironmentMixin.apply_change()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#pymab.game.RandomArmSwappingEnvironmentMixin"><code class="docutils literal notranslate"><span class="pre">RandomArmSwappingEnvironmentMixin</span></code></a><ul>
+<li><a class="reference internal" href="#pymab.game.RandomArmSwappingEnvironmentMixin.__init__"><code class="docutils literal notranslate"><span class="pre">RandomArmSwappingEnvironmentMixin.__init__()</span></code></a></li>
+<li><a class="reference internal" href="#pymab.game.RandomArmSwappingEnvironmentMixin.apply_change"><code class="docutils literal notranslate"><span class="pre">RandomArmSwappingEnvironmentMixin.apply_change()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#pymab.game.Game"><code class="docutils literal notranslate"><span class="pre">Game</span></code></a><ul>
+<li><a class="reference internal" href="#pymab.game.Game.n_episodes"><code class="docutils literal notranslate"><span class="pre">Game.n_episodes</span></code></a></li>
+<li><a class="reference internal" href="#pymab.game.Game.n_steps"><code class="docutils literal notranslate"><span class="pre">Game.n_steps</span></code></a></li>
+<li><a class="reference internal" href="#pymab.game.Game.Q_values"><code class="docutils literal notranslate"><span class="pre">Game.Q_values</span></code></a></li>
+<li><a class="reference internal" href="#pymab.game.Game.reward_distribution"><code class="docutils literal notranslate"><span class="pre">Game.reward_distribution</span></code></a></li>
+<li><a class="reference internal" href="#pymab.game.Game.policies"><code class="docutils literal notranslate"><span class="pre">Game.policies</span></code></a></li>
+<li><a class="reference internal" href="#pymab.game.Game.rewards_by_policy"><code class="docutils literal notranslate"><span class="pre">Game.rewards_by_policy</span></code></a></li>
+<li><a class="reference internal" href="#pymab.game.Game.actions_selected_by_policy"><code class="docutils literal notranslate"><span class="pre">Game.actions_selected_by_policy</span></code></a></li>
+<li><a class="reference internal" href="#pymab.game.Game.optimal_actions"><code class="docutils literal notranslate"><span class="pre">Game.optimal_actions</span></code></a></li>
+<li><a class="reference internal" href="#pymab.game.Game.regret_by_policy"><code class="docutils literal notranslate"><span class="pre">Game.regret_by_policy</span></code></a></li>
+<li><a class="reference internal" href="#pymab.game.Game.Q_values_history"><code class="docutils literal notranslate"><span class="pre">Game.Q_values_history</span></code></a></li>
+<li><a class="reference internal" href="#pymab.game.Game.__init__"><code class="docutils literal notranslate"><span class="pre">Game.__init__()</span></code></a></li>
+<li><a class="reference internal" href="#pymab.game.Game.average_rewards_by_step"><code class="docutils literal notranslate"><span class="pre">Game.average_rewards_by_step</span></code></a></li>
+<li><a class="reference internal" href="#pymab.game.Game.average_rewards_by_episode"><code class="docutils literal notranslate"><span class="pre">Game.average_rewards_by_episode</span></code></a></li>
+<li><a class="reference internal" href="#pymab.game.Game.cumulative_regret_by_step"><code class="docutils literal notranslate"><span class="pre">Game.cumulative_regret_by_step</span></code></a></li>
+<li><a class="reference internal" href="#pymab.game.Game.game_loop"><code class="docutils literal notranslate"><span class="pre">Game.game_loop()</span></code></a></li>
+<li><a class="reference internal" href="#pymab.game.Game.new_episode"><code class="docutils literal notranslate"><span class="pre">Game.new_episode()</span></code></a></li>
+<li><a class="reference internal" href="#pymab.game.Game.plot_average_reward_by_step"><code class="docutils literal notranslate"><span class="pre">Game.plot_average_reward_by_step()</span></code></a></li>
+<li><a class="reference internal" href="#pymab.game.Game.plot_average_reward_by_episode"><code class="docutils literal notranslate"><span class="pre">Game.plot_average_reward_by_episode()</span></code></a></li>
+<li><a class="reference internal" href="#pymab.game.Game.plot_average_reward_by_step_smoothed"><code class="docutils literal notranslate"><span class="pre">Game.plot_average_reward_by_step_smoothed()</span></code></a></li>
+<li><a class="reference internal" href="#pymab.game.Game.plot_bandit_selection_evolution"><code class="docutils literal notranslate"><span class="pre">Game.plot_bandit_selection_evolution()</span></code></a></li>
+<li><a class="reference internal" href="#pymab.game.Game.plot_cumulative_regret_by_step"><code class="docutils literal notranslate"><span class="pre">Game.plot_cumulative_regret_by_step()</span></code></a></li>
+<li><a class="reference internal" href="#pymab.game.Game.plot_Q_values"><code class="docutils literal notranslate"><span class="pre">Game.plot_Q_values()</span></code></a></li>
+<li><a class="reference internal" href="#pymab.game.Game.plot_Q_values_evolution_by_bandit_first_episode"><code class="docutils literal notranslate"><span class="pre">Game.plot_Q_values_evolution_by_bandit_first_episode()</span></code></a></li>
+<li><a class="reference internal" href="#pymab.game.Game.plot_total_reward_by_step"><code class="docutils literal notranslate"><span class="pre">Game.plot_total_reward_by_step()</span></code></a></li>
+<li><a class="reference internal" href="#pymab.game.Game.plot_rate_optimal_actions_by_step"><code class="docutils literal notranslate"><span class="pre">Game.plot_rate_optimal_actions_by_step()</span></code></a></li>
+<li><a class="reference internal" href="#pymab.game.Game.total_rewards_by_step"><code class="docutils literal notranslate"><span class="pre">Game.total_rewards_by_step</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a class="reference internal" href="#example-usage">Example Usage</a></li>
+</ul>
+</li>
+</ul>
+
+            </div>
+        </div>
+    
+
+      <div class="clearer"></div>
+    </div>
+    <div class="button_nav_wrapper">
+        <div class="button_nav">
+            <div class="left">
+                
+                <a href="policies.html">
+                    <span class="icon">&lt;</span><span>Policies documentation</span></a>
+                
+            </div>
+
+            <div class="right">
+                
+                    <a href="reward_distribution.html"><span>Reward Distribution documentation</span><span class="icon">&gt;</span></a>
+                
+            </div>
+        </div>
+    </div>
+
+
+    <div class="footer" role="contentinfo">
+    &#169; Copyright 2024, Daniela Lopes.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.4.7.
+    </div>
+
+<p id="theme_credit">Styled using the <a href="https://github.com/piccolo-orm/piccolo_theme">Piccolo Theme</a></p>
+  </body>
+</html>

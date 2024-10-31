@@ -1,0 +1,958 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>pymab.game &#8212; PyMAB 0.1.0-alpha.1 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=fa44fd50" />
+    <link rel="stylesheet" type="text/css" href="../../_static/basic_mod.css?v=9b2032db" />
+    <script src="../../_static/documentation_options.js?v=6940f236"></script>
+    <script src="../../_static/doctools.js?v=9a2dae69"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <script src="../../_static/js/petite-vue.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+  </head><body data-dark_mode_code_blocks="true">
+
+<div id="top_nav">
+    
+
+    <nav>
+        
+            
+        
+
+        <p id="toggle_sidebar">
+            <a href="#" title="Toggle sidebar">|||</a>
+        </p>
+        <h1><a href="../../index.html" title="Go to homepage">PyMAB 0.1.0-alpha.1 documentation</a></h1>
+
+        <a id="mode_toggle" href="#" @click.prevent="handleClick" :title="mode">
+    <template v-if="mode == 'light'">
+        <svg width="100%" height="100%" viewBox="0 0 79 80" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xml:space="preserve" style="fill-rule:evenodd;clip-rule:evenodd;stroke-linejoin:round;stroke-miterlimit:2;"><g id="mode_light"><rect id="Bounds" x="0" y="-0" width="78.623" height="79.049" style="fill:none;"/><circle cx="39.311" cy="39.524" r="15.734" style="fill:#fff;"/><g id="beams"><g id="beam"><path id="beam1" serif:id="beam" d="M44.212,4.901c0,-2.705 -2.196,-4.901 -4.901,-4.901c-2.704,-0 -4.9,2.196 -4.9,4.901l-0,9.614c-0,2.705 2.196,4.901 4.9,4.901c2.705,0 4.901,-2.196 4.901,-4.901l0,-9.614Z" style="fill:#fff;"/></g><g id="beam2" serif:id="beam"><path id="beam3" serif:id="beam" d="M67.48,18.073c1.913,-1.912 1.913,-5.018 0,-6.931c-1.912,-1.912 -5.018,-1.912 -6.931,0l-6.798,6.799c-1.912,1.912 -1.912,5.018 0,6.931c1.913,1.912 5.018,1.912 6.931,-0l6.798,-6.799Z" style="fill:#fff;"/></g><g id="beam4" serif:id="beam"><path id="beam5" serif:id="beam" d="M25.728,61.108c1.912,-1.913 1.912,-5.018 -0,-6.931c-1.913,-1.913 -5.019,-1.913 -6.931,-0l-6.799,6.798c-1.912,1.913 -1.912,5.019 0,6.931c1.913,1.913 5.019,1.913 6.931,0l6.799,-6.798Z" style="fill:#fff;"/></g><g id="beam6" serif:id="beam"><path id="beam7" serif:id="beam" d="M60.682,54.177c-1.913,-1.913 -5.018,-1.913 -6.931,-0c-1.912,1.913 -1.912,5.018 0,6.931l6.798,6.798c1.913,1.913 5.019,1.913 6.931,0c1.913,-1.912 1.913,-5.018 0,-6.931l-6.798,-6.798Z" style="fill:#fff;"/></g><g id="beam8" serif:id="beam"><path id="beam9" serif:id="beam" d="M4.901,34.623c-2.705,0 -4.901,2.196 -4.901,4.901c0,2.705 2.196,4.901 4.901,4.901l9.614,0c2.705,0 4.901,-2.196 4.901,-4.901c0,-2.705 -2.196,-4.901 -4.901,-4.901l-9.614,0Z" style="fill:#fff;"/></g><g id="beam10" serif:id="beam"><path id="beam11" serif:id="beam" d="M44.212,64.534c0,-2.705 -2.196,-4.901 -4.901,-4.901c-2.704,-0 -4.9,2.196 -4.9,4.901l-0,9.614c-0,2.705 2.196,4.901 4.9,4.901c2.705,-0 4.901,-2.196 4.901,-4.901l0,-9.614Z" style="fill:#fff;"/></g><g id="beam12" serif:id="beam"><path id="beam13" serif:id="beam" d="M18.929,11.142c-1.912,-1.912 -5.018,-1.912 -6.931,0c-1.912,1.913 -1.912,5.019 0,6.931l6.799,6.799c1.912,1.912 5.018,1.912 6.931,-0c1.912,-1.913 1.912,-5.019 -0,-6.931l-6.799,-6.799Z" style="fill:#fff;"/></g><g id="beam14" serif:id="beam"><path id="beam15" serif:id="beam" d="M64.108,34.623c-2.705,0 -4.901,2.196 -4.901,4.901c-0,2.705 2.196,4.901 4.901,4.901l9.614,0c2.705,0 4.901,-2.196 4.901,-4.901c-0,-2.705 -2.196,-4.901 -4.901,-4.901l-9.614,0Z" style="fill:#fff;"/></g></g></g></svg>
+    </template>
+
+    <template v-if="mode == 'dark'">
+        <svg width="100%" height="100%" viewBox="0 0 79 80" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xml:space="preserve" style="fill-rule:evenodd;clip-rule:evenodd;stroke-linejoin:round;stroke-miterlimit:2;"><g id="mode_dark"><rect id="Bounds" x="0" y="-0" width="78.623" height="79.049" style="fill:none;"/><circle cx="39.311" cy="39.524" r="15.734" style="fill:#fff;"/><g id="beams"><g id="beam"><path id="beam1" serif:id="beam" d="M44.212,14.515c0,-2.705 -2.196,-4.901 -4.901,-4.901c-2.704,0 -4.901,2.196 -4.901,4.901c0,2.705 2.197,4.901 4.901,4.901c2.705,0 4.901,-2.196 4.901,-4.901Z" style="fill:#fff;"/></g><g id="beam2" serif:id="beam"><path id="beam3" serif:id="beam" d="M60.662,24.892c1.902,-1.902 1.902,-4.99 0,-6.892l-0.04,-0.039c-1.901,-1.902 -4.989,-1.902 -6.891,-0c-1.901,1.901 -1.901,4.989 0,6.891l0.04,0.04c1.902,1.901 4.989,1.901 6.891,-0Z" style="fill:#fff;"/></g><g id="beam4" serif:id="beam"><path id="beam5" serif:id="beam" d="M25.732,61.103c1.91,-1.91 1.91,-5.011 0,-6.921l-0.009,-0.01c-1.91,-1.91 -5.012,-1.91 -6.921,-0c-1.91,1.91 -1.91,5.011 -0,6.921l0.01,0.01c1.909,1.91 5.011,1.91 6.92,-0Z" style="fill:#fff;"/></g><g id="beam6" serif:id="beam"><path id="beam7" serif:id="beam" d="M60.672,54.167c-1.907,-1.907 -5.004,-1.907 -6.911,0l-0.02,0.02c-1.907,1.907 -1.907,5.004 0,6.911c1.907,1.907 5.004,1.907 6.911,-0l0.02,-0.02c1.907,-1.907 1.907,-5.004 0,-6.911Z" style="fill:#fff;"/></g><g id="beam8" serif:id="beam"><path id="beam9" serif:id="beam" d="M14.52,34.623c-2.702,0 -4.896,2.194 -4.896,4.896l0,0.01c0,2.702 2.194,4.896 4.896,4.896c2.702,0 4.896,-2.194 4.896,-4.896l-0,-0.01c-0,-2.702 -2.194,-4.896 -4.896,-4.896Z" style="fill:#fff;"/></g><g id="beam10" serif:id="beam"><path id="beam11" serif:id="beam" d="M44.212,64.534c0,-2.705 -2.196,-4.901 -4.901,-4.901c-2.704,-0 -4.901,2.196 -4.901,4.901c0,2.704 2.197,4.9 4.901,4.9c2.705,0 4.901,-2.196 4.901,-4.9Z" style="fill:#fff;"/></g><g id="beam12" serif:id="beam"><path id="beam13" serif:id="beam" d="M25.73,17.943c-1.911,-1.911 -5.015,-1.911 -6.926,0l-0.005,0.005c-1.911,1.911 -1.911,5.015 0,6.926c1.911,1.911 5.015,1.911 6.926,0l0.005,-0.005c1.911,-1.911 1.911,-5.014 -0,-6.926Z" style="fill:#fff;"/></g><g id="beam14" serif:id="beam"><path id="beam15" serif:id="beam" d="M64.098,34.623c-2.699,0 -4.891,2.192 -4.891,4.892l-0,0.019c-0,2.699 2.192,4.891 4.891,4.891c2.7,0 4.892,-2.192 4.892,-4.891l0,-0.019c0,-2.7 -2.192,-4.892 -4.892,-4.892Z" style="fill:#fff;"/></g></g></g></svg>
+    </template>
+
+    <template v-if="mode == 'darkest'">
+        <svg width="100%" height="100%" viewBox="0 0 79 80" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xml:space="preserve" style="fill-rule:evenodd;clip-rule:evenodd;stroke-linejoin:round;stroke-miterlimit:2;"><g id="mode_darkest"><rect id="Bounds" x="0" y="-0" width="78.623" height="79.049" style="fill:none;"/><path d="M39.315,23.791c8.684,-0 15.734,7.05 15.734,15.733c0,8.684 -7.05,15.734 -15.734,15.734c-8.683,0 -15.733,-7.05 -15.733,-15.734c-0,-8.683 7.05,-15.733 15.733,-15.733Zm0,4.737c6.069,0 10.997,4.927 10.997,10.996c-0,6.069 -4.928,10.996 -10.997,10.996c-6.068,0 -10.996,-4.927 -10.996,-10.996c0,-6.069 4.928,-10.996 10.996,-10.996Z" style="fill:#fff;"/><g id="beams"><g id="beam"><path id="beam1" serif:id="beam" d="M44.216,14.515c0,-2.705 -2.196,-4.901 -4.901,-4.901c-2.704,0 -4.9,2.196 -4.9,4.901c-0,2.705 2.196,4.901 4.9,4.901c2.705,0 4.901,-2.196 4.901,-4.901Z" style="fill:#fff;"/></g><g id="beam2" serif:id="beam"><path id="beam3" serif:id="beam" d="M60.666,24.892c1.902,-1.902 1.902,-4.99 0,-6.892l-0.04,-0.039c-1.901,-1.902 -4.989,-1.902 -6.891,-0c-1.901,1.901 -1.901,4.989 0,6.891l0.04,0.04c1.902,1.901 4.99,1.901 6.891,-0Z" style="fill:#fff;"/></g><g id="beam4" serif:id="beam"><path id="beam5" serif:id="beam" d="M25.737,61.103c1.909,-1.91 1.909,-5.011 -0,-6.921l-0.01,-0.01c-1.91,-1.91 -5.011,-1.91 -6.921,-0c-1.91,1.91 -1.91,5.011 -0,6.921l0.01,0.01c1.91,1.91 5.011,1.91 6.921,-0Z" style="fill:#fff;"/></g><g id="beam6" serif:id="beam"><path id="beam7" serif:id="beam" d="M60.676,54.167c-1.907,-1.907 -5.004,-1.907 -6.911,0l-0.02,0.02c-1.907,1.907 -1.907,5.004 0,6.911c1.907,1.907 5.004,1.907 6.911,-0l0.02,-0.02c1.907,-1.907 1.907,-5.004 0,-6.911Z" style="fill:#fff;"/></g><g id="beam8" serif:id="beam"><path id="beam9" serif:id="beam" d="M14.524,34.623c-2.702,0 -4.896,2.194 -4.896,4.896l0,0.01c0,2.702 2.194,4.896 4.896,4.896c2.702,0 4.896,-2.194 4.896,-4.896l0,-0.01c0,-2.702 -2.194,-4.896 -4.896,-4.896Z" style="fill:#fff;"/></g><g id="beam10" serif:id="beam"><path id="beam11" serif:id="beam" d="M44.216,64.534c0,-2.705 -2.196,-4.901 -4.901,-4.901c-2.704,-0 -4.9,2.196 -4.9,4.901c-0,2.704 2.196,4.9 4.9,4.9c2.705,0 4.901,-2.196 4.901,-4.9Z" style="fill:#fff;"/></g><g id="beam12" serif:id="beam"><path id="beam13" serif:id="beam" d="M25.734,17.943c-1.911,-1.911 -5.015,-1.911 -6.926,0l-0.005,0.005c-1.911,1.911 -1.911,5.015 0,6.926c1.911,1.911 5.015,1.911 6.926,0l0.005,-0.005c1.911,-1.911 1.911,-5.014 0,-6.926Z" style="fill:#fff;"/></g><g id="beam14" serif:id="beam"><path id="beam15" serif:id="beam" d="M64.103,34.623c-2.7,0 -4.892,2.192 -4.892,4.892l-0,0.019c-0,2.699 2.192,4.891 4.892,4.891c2.699,0 4.891,-2.192 4.891,-4.891l0,-0.019c0,-2.7 -2.192,-4.892 -4.891,-4.892Z" style="fill:#fff;"/></g></g></g></svg>
+    </template>
+</a>
+
+<script>
+(function() {
+    const LOCAL_STORAGE_KEY = 'piccoloThemeMode'
+
+    var initialMode = localStorage.getItem(LOCAL_STORAGE_KEY)
+
+    if (initialMode) {
+        // Make sure the value in local storage is valid
+        if (['light', 'dark', 'darkest'].indexOf(initialMode) == -1) {
+            initialMode = 'light'
+            localStorage.setItem(LOCAL_STORAGE_KEY, initialMode)
+        }
+    } else {
+        // Check if the client prefers dark mode
+        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            initialMode = 'dark'
+        } else {
+            initialMode = 'light'
+        }
+        localStorage.setItem(LOCAL_STORAGE_KEY, initialMode)
+    }
+
+    document.documentElement.dataset.mode = initialMode
+
+    PetiteVue.createApp({
+        'mode': initialMode,
+        handleClick() {
+            let currentMode = this.mode
+
+            if (currentMode == 'light') {
+                this.mode = 'dark'
+            } else if (currentMode == 'dark') {
+                this.mode = 'darkest'
+            } else if (currentMode == 'darkest') {
+                this.mode = 'light'
+            }
+
+            document.documentElement.dataset.mode = this.mode
+            localStorage.setItem(LOCAL_STORAGE_KEY, this.mode)
+
+            console.log(this.mode)
+        }
+    }).mount('#mode_toggle')
+})()
+</script>
+            <p class="mobile_search_link">
+                <a href="../../search.html" title="Search">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 65 64" fill-rule="evenodd" stroke-linejoin="round" stroke-miterlimit="2">
+                        <path d="M14.873 40.009c-2.315-3.943-3.642-8.532-3.642-13.429C11.231 11.91 23.141 0 37.811 0s26.58 11.91 26.58 26.58-11.91 26.58-26.58 26.58a26.44 26.44 0 0 1-14.277-4.161L9.739 62.794a3.12 3.12 0 0 1-4.413 0L.913 58.382c-1.217-1.218-1.217-3.196 0-4.413l13.96-13.96zM37.811 8.054c10.225 0 18.526 8.301 18.526 18.526s-8.301 18.526-18.526 18.526-18.526-8.301-18.526-18.526S27.586 8.054 37.811 8.054z" fill="#fff" />
+                    </svg>
+                </a>
+            </p>
+        
+
+        <div class="searchbox_wrapper">
+            
+<search id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+    </nav>
+</div>
+
+    
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper"><p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../policies.html">Policies documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../game.html">Game documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../reward_distribution.html">Reward Distribution documentation</a></li>
+</ul>
+
+        </div>
+      </div>
+
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for pymab.game</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">annotations</span>
+
+<span class="kn">from</span> <span class="nn">abc</span> <span class="kn">import</span> <span class="n">abstractmethod</span><span class="p">,</span> <span class="n">ABC</span>
+<span class="kn">from</span> <span class="nn">enum</span> <span class="kn">import</span> <span class="n">Enum</span>
+<span class="kn">from</span> <span class="nn">functools</span> <span class="kn">import</span> <span class="n">lru_cache</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">from</span> <span class="nn">pathlib</span> <span class="kn">import</span> <span class="n">Path</span>
+
+<span class="kn">from</span> <span class="nn">tqdm</span> <span class="kn">import</span> <span class="n">tqdm</span>
+<span class="kn">import</span> <span class="nn">typing</span>
+
+<span class="kn">from</span> <span class="nn">joblib</span> <span class="kn">import</span> <span class="n">Parallel</span><span class="p">,</span> <span class="n">delayed</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">plotly.graph_objs</span> <span class="k">as</span> <span class="nn">go</span>
+
+<span class="kn">from</span> <span class="nn">pymab.plot_config</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">get_line_style</span><span class="p">,</span>
+    <span class="n">get_default_layout</span><span class="p">,</span>
+    <span class="n">get_marker_style</span><span class="p">,</span>
+    <span class="n">get_color_sequence</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span> <span class="nn">pymab.policies.policy</span> <span class="kn">import</span> <span class="n">Policy</span>
+<span class="kn">from</span> <span class="nn">pymab.reward_distribution</span> <span class="kn">import</span> <span class="n">RewardDistribution</span>
+<span class="kn">from</span> <span class="nn">pymab.static</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">DEFAULT_ENVIRONMENT_CHANGE_FREQUENCY</span><span class="p">,</span>
+    <span class="n">DEFAULT_ENVIRONMENT_CHANGE_RATE</span><span class="p">,</span>
+    <span class="n">DEFAULT_ENVIRONMENT_CHANGE_MAGNITUDE</span><span class="p">,</span>
+    <span class="n">DEFAULT_ENVIRONMENT_SHIFT_PROBABILITY</span><span class="p">,</span>
+    <span class="n">DEFAULT_RESULTS_FOLDER</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="k">if</span> <span class="n">typing</span><span class="o">.</span><span class="n">TYPE_CHECKING</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="o">*</span>
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="EnvironmentChangeType">
+<a class="viewcode-back" href="../../game.html#pymab.game.EnvironmentChangeType">[docs]</a>
+<span class="k">class</span> <span class="nc">EnvironmentChangeType</span><span class="p">(</span><span class="n">Enum</span><span class="p">):</span>
+    <span class="n">STATIONARY</span> <span class="o">=</span> <span class="s2">&quot;stationary&quot;</span>
+    <span class="n">GRADUAL</span> <span class="o">=</span> <span class="s2">&quot;gradual&quot;</span>
+    <span class="n">ABRUPT</span> <span class="o">=</span> <span class="s2">&quot;abrupt&quot;</span>
+    <span class="n">RANDOM_ARM_SWAPPING</span> <span class="o">=</span> <span class="s2">&quot;random_arm_swapping&quot;</span></div>
+
+
+
+<div class="viewcode-block" id="EnvironmentChangeMixin">
+<a class="viewcode-back" href="../../game.html#pymab.game.EnvironmentChangeMixin">[docs]</a>
+<span class="k">class</span> <span class="nc">EnvironmentChangeMixin</span><span class="p">(</span><span class="n">ABC</span><span class="p">):</span>
+<div class="viewcode-block" id="EnvironmentChangeMixin.apply_change">
+<a class="viewcode-back" href="../../game.html#pymab.game.EnvironmentChangeMixin.apply_change">[docs]</a>
+    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span> <span class="nf">apply_change</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">Q_values</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">step</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+        <span class="k">pass</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="StationaryEnvironmentMixin">
+<a class="viewcode-back" href="../../game.html#pymab.game.StationaryEnvironmentMixin">[docs]</a>
+<span class="k">class</span> <span class="nc">StationaryEnvironmentMixin</span><span class="p">(</span><span class="n">EnvironmentChangeMixin</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Stationary environment&#39;s rewards distributions never change, so the Q-values are returned as sampled for each step.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="StationaryEnvironmentMixin.apply_change">
+<a class="viewcode-back" href="../../game.html#pymab.game.StationaryEnvironmentMixin.apply_change">[docs]</a>
+    <span class="k">def</span> <span class="nf">apply_change</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">Q_values</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">step</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">Q_values</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="GradualChangeEnvironmentMixin">
+<a class="viewcode-back" href="../../game.html#pymab.game.GradualChangeEnvironmentMixin">[docs]</a>
+<span class="k">class</span> <span class="nc">GradualChangeEnvironmentMixin</span><span class="p">(</span><span class="n">EnvironmentChangeMixin</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Non-stationary environment where the rewards distributions change gradually over time. The change is applied by</span>
+<span class="sd">    adding a different random value drawn from a normal distribution with 0 mean and self.change_rate standard</span>
+<span class="sd">    deviation to each of the Q-values at each step.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="GradualChangeEnvironmentMixin.__init__">
+<a class="viewcode-back" href="../../game.html#pymab.game.GradualChangeEnvironmentMixin.__init__">[docs]</a>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">change_rate</span><span class="p">:</span> <span class="nb">float</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">change_rate</span> <span class="o">=</span> <span class="n">change_rate</span></div>
+
+
+<div class="viewcode-block" id="GradualChangeEnvironmentMixin.apply_change">
+<a class="viewcode-back" href="../../game.html#pymab.game.GradualChangeEnvironmentMixin.apply_change">[docs]</a>
+    <span class="k">def</span> <span class="nf">apply_change</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">Q_values</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">step</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">Q_values</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">change_rate</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="n">Q_values</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="AbruptChangeEnvironmentMixin">
+<a class="viewcode-back" href="../../game.html#pymab.game.AbruptChangeEnvironmentMixin">[docs]</a>
+<span class="k">class</span> <span class="nc">AbruptChangeEnvironmentMixin</span><span class="p">(</span><span class="n">EnvironmentChangeMixin</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Non-stationary environment where the rewards distributions change abruptly and periodically. The change is applied</span>
+<span class="sd">    by adding a different random value drawn from a normal distribution with 0 mean and self.change_magnitude standard</span>
+<span class="sd">    deviation to each of the Q-values every self.change_frequency steps.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="AbruptChangeEnvironmentMixin.__init__">
+<a class="viewcode-back" href="../../game.html#pymab.game.AbruptChangeEnvironmentMixin.__init__">[docs]</a>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">change_frequency</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">change_magnitude</span><span class="p">:</span> <span class="nb">float</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">change_frequency</span> <span class="o">=</span> <span class="n">change_frequency</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">change_magnitude</span> <span class="o">=</span> <span class="n">change_magnitude</span></div>
+
+
+<div class="viewcode-block" id="AbruptChangeEnvironmentMixin.apply_change">
+<a class="viewcode-back" href="../../game.html#pymab.game.AbruptChangeEnvironmentMixin.apply_change">[docs]</a>
+    <span class="k">def</span> <span class="nf">apply_change</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">Q_values</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">step</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">step</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">change_frequency</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">Q_values</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span>
+                <span class="mi">0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">change_magnitude</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="n">Q_values</span><span class="o">.</span><span class="n">shape</span>
+            <span class="p">)</span>
+        <span class="k">return</span> <span class="n">Q_values</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="RandomArmSwappingEnvironmentMixin">
+<a class="viewcode-back" href="../../game.html#pymab.game.RandomArmSwappingEnvironmentMixin">[docs]</a>
+<span class="k">class</span> <span class="nc">RandomArmSwappingEnvironmentMixin</span><span class="p">(</span><span class="n">EnvironmentChangeMixin</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Non-stationary environment where the rewards distributions between arms get swapped abruptly and at random steps.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="RandomArmSwappingEnvironmentMixin.__init__">
+<a class="viewcode-back" href="../../game.html#pymab.game.RandomArmSwappingEnvironmentMixin.__init__">[docs]</a>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">shift_probability</span><span class="p">:</span> <span class="nb">float</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">shift_probability</span> <span class="o">=</span> <span class="n">shift_probability</span></div>
+
+
+<div class="viewcode-block" id="RandomArmSwappingEnvironmentMixin.apply_change">
+<a class="viewcode-back" href="../../game.html#pymab.game.RandomArmSwappingEnvironmentMixin.apply_change">[docs]</a>
+    <span class="k">def</span> <span class="nf">apply_change</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">Q_values</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">step</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">random</span><span class="p">()</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">shift_probability</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">permutation</span><span class="p">(</span><span class="n">Q_values</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">Q_values</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="Game">
+<a class="viewcode-back" href="../../game.html#pymab.game.Game">[docs]</a>
+<span class="k">class</span> <span class="nc">Game</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Multi-armed bandit simulation environment with support for various reward distributions.</span>
+
+<span class="sd">    This class provides a comprehensive framework for running multi-armed bandit experiments</span>
+<span class="sd">    with different policies and environment types. It supports stationary and non-stationary</span>
+<span class="sd">    environments, multiple reward distributions, and various visualization options.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        n_episodes: Number of episodes to run.</span>
+<span class="sd">        n_steps: Number of steps per episode.</span>
+<span class="sd">        policies: List of policies to evaluate.</span>
+<span class="sd">        n_bandits: Number of bandit arms.</span>
+<span class="sd">        Q_values: Optional initial Q-values for arms. If None, generated randomly.</span>
+<span class="sd">            Defaults to None.</span>
+<span class="sd">        Q_values_mean: Mean for random Q-value generation. Defaults to 0.0.</span>
+<span class="sd">        Q_values_variance: Variance for random Q-value generation. Defaults to 1.0.</span>
+<span class="sd">        environment_change: Type of environment dynamics. Can be EnvironmentChangeType</span>
+<span class="sd">            or custom EnvironmentChangeMixin. Defaults to STATIONARY.</span>
+<span class="sd">        change_params: Parameters for non-stationary environments. Defaults to None.</span>
+<span class="sd">        results_folder: Path to save visualization results. Defaults to DEFAULT_RESULTS_FOLDER.</span>
+
+<span class="sd">    Attributes:</span>
+<span class="sd">        n_episodes (int): Number of episodes.</span>
+<span class="sd">        n_steps (int): Steps per episode.</span>
+<span class="sd">        Q_values (np.ndarray): True Q-values for each arm.</span>
+<span class="sd">        reward_distribution (Type[RewardDistribution]): Reward distribution type.</span>
+<span class="sd">        policies (List[Policy]): Bandit policies being evaluated.</span>
+<span class="sd">        rewards_by_policy (np.ndarray): Rewards obtained by each policy.</span>
+<span class="sd">        actions_selected_by_policy (np.ndarray): Actions chosen by each policy.</span>
+<span class="sd">        optimal_actions (np.ndarray): Optimal action at each step.</span>
+<span class="sd">        regret_by_policy (np.ndarray): Regret incurred by each policy.</span>
+<span class="sd">        Q_values_history (np.ndarray): History of Q-values over time.</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">        ValueError: If policies use different reward distributions or if</span>
+<span class="sd">            Bernoulli Q-values are outside [0,1].</span>
+
+<span class="sd">    Example:</span>
+<span class="sd">        ```python</span>
+<span class="sd">        policies = [</span>
+<span class="sd">            EpsilonGreedyPolicy(n_bandits=5, epsilon=0.1),</span>
+<span class="sd">            UCBPolicy(n_bandits=5)</span>
+<span class="sd">        ]</span>
+<span class="sd">        </span>
+<span class="sd">        game = Game(</span>
+<span class="sd">            n_episodes=100,</span>
+<span class="sd">            n_steps=1000,</span>
+<span class="sd">            policies=policies,</span>
+<span class="sd">            n_bandits=5,</span>
+<span class="sd">            environment_change=EnvironmentChangeType.GRADUAL,</span>
+<span class="sd">            change_params={&quot;change_rate&quot;: 0.01}</span>
+<span class="sd">        )</span>
+<span class="sd">        </span>
+<span class="sd">        game.game_loop()</span>
+<span class="sd">        game.plot_average_reward_by_step()</span>
+<span class="sd">        ```</span>
+
+<span class="sd">    Note:</span>
+<span class="sd">        - All policies must use the same reward distribution type</span>
+<span class="sd">        - For Bernoulli distributions, Q-values must be in [0,1]</span>
+<span class="sd">        - Environment changes affect all policies simultaneously</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+<div class="viewcode-block" id="Game.__init__">
+<a class="viewcode-back" href="../../game.html#pymab.game.Game.__init__">[docs]</a>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">n_episodes</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">n_steps</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">policies</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Policy</span><span class="p">],</span>
+        <span class="n">n_bandits</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">Q_values</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">Q_values_mean</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">,</span>
+        <span class="n">Q_values_variance</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">,</span>
+        <span class="n">environment_change</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span>
+            <span class="n">EnvironmentChangeType</span><span class="p">,</span> <span class="n">Type</span><span class="p">[</span><span class="n">EnvironmentChangeMixin</span><span class="p">]</span>
+        <span class="p">]</span> <span class="o">=</span> <span class="n">EnvironmentChangeType</span><span class="o">.</span><span class="n">STATIONARY</span><span class="p">,</span>
+        <span class="n">change_params</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">results_folder</span><span class="p">:</span> <span class="n">Path</span> <span class="o">=</span> <span class="n">DEFAULT_RESULTS_FOLDER</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">Q_values</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">Q_values</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">n_episodes</span> <span class="o">=</span> <span class="n">n_episodes</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">n_steps</span> <span class="o">=</span> <span class="n">n_steps</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">policies</span> <span class="o">=</span> <span class="n">policies</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">n_bandits</span> <span class="o">=</span> <span class="n">n_bandits</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">Q_values</span> <span class="o">=</span> <span class="n">Q_values</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">set_Q_values_flag</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Q_values</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">Q_values_mean</span> <span class="o">=</span> <span class="n">Q_values_mean</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">Q_values_variance</span> <span class="o">=</span> <span class="n">Q_values_variance</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">Q_values_history</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span>
+            <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_episodes</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_steps</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_bandits</span><span class="p">)</span>
+        <span class="p">)</span>
+
+        <span class="n">reward_distributions</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">policy</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">policies</span><span class="p">:</span>
+            <span class="n">reward_distributions</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">policy</span><span class="o">.</span><span class="n">reward_distribution</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">reward_distributions</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;All the policies used in a single game should have the same reward distribution&quot;</span>
+            <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">reward_distribution</span> <span class="o">=</span> <span class="n">reward_distributions</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
+
+        <span class="c1"># TODO: Make unit test for this:</span>
+        <span class="k">if</span> <span class="p">(</span>
+            <span class="nb">any</span><span class="p">(</span><span class="n">x</span> <span class="o">&lt;</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">x</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">Q_values</span><span class="p">)</span>
+            <span class="ow">and</span> <span class="s2">&quot;bernoulli&quot;</span> <span class="ow">in</span> <span class="n">reward_distributions</span>
+        <span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;Q-values for Bernoulli distribution should be between 0 and 1&quot;</span>
+            <span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">rewards_by_policy</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span>
+            <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_episodes</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_steps</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">policies</span><span class="p">)),</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">actions_selected_by_policy</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span>
+            <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_episodes</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_steps</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">policies</span><span class="p">))</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">optimal_actions</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">n_episodes</span><span class="p">,))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">regret_by_policy</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span>
+            <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_episodes</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_steps</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">policies</span><span class="p">))</span>
+        <span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">environment_change</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_create_environment_change</span><span class="p">(</span>
+            <span class="n">environment_change</span><span class="p">,</span> <span class="n">change_params</span>
+        <span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">colors</span> <span class="o">=</span> <span class="n">get_color_sequence</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">results_folder</span> <span class="o">=</span> <span class="n">results_folder</span></div>
+
+
+    <span class="nd">@property</span>
+    <span class="nd">@lru_cache</span><span class="p">(</span><span class="n">maxsize</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">average_rewards_by_step</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">rewards_by_policy</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="nd">@lru_cache</span><span class="p">(</span><span class="n">maxsize</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">average_rewards_by_episode</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">rewards_by_policy</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_create_environment_change</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">change_type</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">EnvironmentChangeType</span><span class="p">,</span> <span class="n">Type</span><span class="p">[</span><span class="n">EnvironmentChangeMixin</span><span class="p">]],</span>
+        <span class="n">params</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">EnvironmentChangeMixin</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">change_type</span><span class="p">,</span> <span class="nb">type</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">issubclass</span><span class="p">(</span>
+            <span class="n">change_type</span><span class="p">,</span> <span class="n">EnvironmentChangeMixin</span>
+        <span class="p">):</span>
+            <span class="k">return</span> <span class="n">change_type</span><span class="p">(</span><span class="o">**</span><span class="n">params</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">change_type</span> <span class="o">==</span> <span class="n">EnvironmentChangeType</span><span class="o">.</span><span class="n">STATIONARY</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Using `stationary` mode.&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">StationaryEnvironmentMixin</span><span class="p">()</span>
+
+        <span class="k">elif</span> <span class="n">change_type</span> <span class="o">==</span> <span class="n">EnvironmentChangeType</span><span class="o">.</span><span class="n">GRADUAL</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Using `gradual` mode for environment change.&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="s2">&quot;change_rate&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">params</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;&quot;&quot;Specifying `change_rate` is recommended when using `gradual` mode. Defaulting to </span>
+<span class="s2">                </span><span class="si">{</span><span class="n">DEFAULT_ENVIRONMENT_CHANGE_FREQUENCY</span><span class="si">}</span><span class="s2">.&quot;&quot;&quot;</span>
+                <span class="p">)</span>
+            <span class="n">change_rate</span> <span class="o">=</span> <span class="n">params</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;change_rate&quot;</span><span class="p">,</span> <span class="n">DEFAULT_ENVIRONMENT_CHANGE_RATE</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">GradualChangeEnvironmentMixin</span><span class="p">(</span><span class="n">change_rate</span><span class="p">)</span>
+
+        <span class="k">elif</span> <span class="n">change_type</span> <span class="o">==</span> <span class="n">EnvironmentChangeType</span><span class="o">.</span><span class="n">ABRUPT</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Using `abrupt` mode for environment change.&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="s2">&quot;change_frequency&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">params</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;&quot;&quot;Specifying `change_frequency` is recommended when using `abrupt` mode. Defaulting to </span>
+<span class="s2">                </span><span class="si">{</span><span class="n">DEFAULT_ENVIRONMENT_CHANGE_FREQUENCY</span><span class="si">}</span><span class="s2">.&quot;&quot;&quot;</span>
+                <span class="p">)</span>
+            <span class="k">if</span> <span class="s2">&quot;change_magnitude&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">params</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;&quot;&quot;Specifying `change_magnitude` is recommended when using `abrupt` mode. Defaulting to </span>
+<span class="s2">                    </span><span class="si">{</span><span class="n">DEFAULT_ENVIRONMENT_CHANGE_MAGNITUDE</span><span class="si">}</span><span class="s2">.&quot;&quot;&quot;</span>
+                <span class="p">)</span>
+            <span class="n">change_frequency</span> <span class="o">=</span> <span class="n">params</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+                <span class="s2">&quot;change_frequency&quot;</span><span class="p">,</span> <span class="n">DEFAULT_ENVIRONMENT_CHANGE_FREQUENCY</span>
+            <span class="p">)</span>
+            <span class="n">change_magnitude</span> <span class="o">=</span> <span class="n">params</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+                <span class="s2">&quot;change_magnitude&quot;</span><span class="p">,</span> <span class="n">DEFAULT_ENVIRONMENT_CHANGE_MAGNITUDE</span>
+            <span class="p">)</span>
+            <span class="k">return</span> <span class="n">AbruptChangeEnvironmentMixin</span><span class="p">(</span><span class="n">change_frequency</span><span class="p">,</span> <span class="n">change_magnitude</span><span class="p">)</span>
+
+        <span class="k">elif</span> <span class="n">change_type</span> <span class="o">==</span> <span class="n">EnvironmentChangeType</span><span class="o">.</span><span class="n">RANDOM_ARM_SWAPPING</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Using `random arm swapping` mode for environment change.&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="s2">&quot;shift_probability&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">params</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;&quot;&quot;Specifying `shift_probability` is recommended when using `random arm swapping` mode. Defaulting to </span>
+<span class="s2">                </span><span class="si">{</span><span class="n">DEFAULT_ENVIRONMENT_SHIFT_PROBABILITY</span><span class="si">}</span><span class="s2">.&quot;&quot;&quot;</span>
+                <span class="p">)</span>
+            <span class="n">shift_probability</span> <span class="o">=</span> <span class="n">params</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+                <span class="s2">&quot;shift_probability&quot;</span><span class="p">,</span> <span class="n">DEFAULT_ENVIRONMENT_SHIFT_PROBABILITY</span>
+            <span class="p">)</span>
+            <span class="k">return</span> <span class="n">RandomArmSwappingEnvironmentMixin</span><span class="p">(</span><span class="n">shift_probability</span><span class="p">)</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unknown environment change type: </span><span class="si">{</span><span class="n">change_type</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="nd">@lru_cache</span><span class="p">(</span><span class="n">maxsize</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">cumulative_regret_by_step</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Calculate the cumulative regret for each policy. The regret measures how much worse a chosen strategy performs</span>
+<span class="sd">        compared to the optimal strategy. It quantifies the difference between the reward obtained by the policy and</span>
+<span class="sd">        the reward that would have been obtained by always selecting the best possible action</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Array of shape (n_steps, n_policies) containing cumulative regret.</span>
+
+<span class="sd">        Note:</span>
+<span class="sd">            Regret measures the difference between:</span>
+<span class="sd">            - Reward obtained by the policy</span>
+<span class="sd">            - Reward that would have been obtained by always selecting the best action</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">cumsum</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">regret_by_policy</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Game.game_loop">
+<a class="viewcode-back" href="../../game.html#pymab.game.Game.game_loop">[docs]</a>
+    <span class="k">def</span> <span class="nf">game_loop</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Run the main simulation loop.</span>
+
+<span class="sd">        This method:</span>
+<span class="sd">        1. Runs all episodes</span>
+<span class="sd">        2. For each episode:</span>
+<span class="sd">           - Initializes/updates Q-values</span>
+<span class="sd">           - Tracks optimal actions</span>
+<span class="sd">           - For each step:</span>
+<span class="sd">             - Updates environment</span>
+<span class="sd">             - Has each policy select actions</span>
+<span class="sd">             - Records rewards and regret</span>
+
+<span class="sd">        Note:</span>
+<span class="sd">            This is the core simulation method that should be called</span>
+<span class="sd">            after initializing the Game instance.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;Starting game loop for </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">n_episodes</span><span class="si">}</span><span class="s2"> episodes, </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">n_steps</span><span class="si">}</span><span class="s2"> in each episode, and analysing </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">policies</span><span class="p">)</span><span class="si">}</span><span class="s2"> policies ...&quot;</span>
+        <span class="p">)</span>
+        <span class="k">for</span> <span class="n">episode</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_episodes</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">new_episode</span><span class="p">(</span><span class="n">episode</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">optimal_actions</span><span class="p">[</span><span class="n">episode</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Q_values</span><span class="p">)</span>
+            <span class="n">optimal_reward</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">Q_values</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">optimal_actions</span><span class="p">[</span><span class="n">episode</span><span class="p">])]</span>
+            <span class="c1"># for step in tqdm(range(self.n_steps), desc=&quot;Running steps...&quot;, total=self.n_steps):</span>
+            <span class="k">for</span> <span class="n">step</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_steps</span><span class="p">):</span>
+                <span class="c1"># print(&quot;\n\n========= Episode: &quot;, episode, &quot;Step: &quot;, step)</span>
+                <span class="n">current_step</span> <span class="o">=</span> <span class="n">episode</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_steps</span> <span class="o">+</span> <span class="n">step</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">Q_values_history</span><span class="p">[</span><span class="n">current_step</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">Q_values</span>
+
+                <span class="bp">self</span><span class="o">.</span><span class="n">_update_environment</span><span class="p">(</span><span class="n">episode</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_steps</span> <span class="o">+</span> <span class="n">step</span><span class="p">)</span>
+                <span class="c1"># for policy_index, policy in tqdm(enumerate(self.policies), desc=&quot;Running game for each policy...&quot;, total=len(self.policies)):</span>
+                <span class="k">for</span> <span class="n">policy_index</span><span class="p">,</span> <span class="n">policy</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">policies</span><span class="p">):</span>
+                    <span class="n">context</span> <span class="o">=</span> <span class="n">policy</span><span class="o">.</span><span class="n">context_func</span><span class="p">()</span>
+                    <span class="n">action</span><span class="p">,</span> <span class="n">reward</span> <span class="o">=</span> <span class="n">policy</span><span class="o">.</span><span class="n">select_action</span><span class="p">(</span><span class="n">context</span><span class="o">=</span><span class="n">context</span><span class="p">)</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">rewards_by_policy</span><span class="p">[</span><span class="n">episode</span><span class="p">,</span> <span class="n">step</span><span class="p">,</span> <span class="n">policy_index</span><span class="p">]</span> <span class="o">=</span> <span class="n">reward</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">actions_selected_by_policy</span><span class="p">[</span><span class="n">episode</span><span class="p">,</span> <span class="n">step</span><span class="p">,</span> <span class="n">policy_index</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
+                        <span class="n">action</span>
+                    <span class="p">)</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">regret_by_policy</span><span class="p">[</span><span class="n">episode</span><span class="p">,</span> <span class="n">step</span><span class="p">,</span> <span class="n">policy_index</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
+                        <span class="n">optimal_reward</span> <span class="o">-</span> <span class="n">reward</span>
+                    <span class="p">)</span></div>
+
+
+    <span class="k">def</span> <span class="nf">_generate_initial_Q_values</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">Q_values</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">reward_distribution</span><span class="o">.</span><span class="n">generate_Q_values</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">Q_values_mean</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">Q_values_variance</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_bandits</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_moving_average</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">smooth_factor</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">convolve</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">smooth_factor</span><span class="p">)</span> <span class="o">/</span> <span class="n">smooth_factor</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;valid&quot;</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Game.new_episode">
+<a class="viewcode-back" href="../../game.html#pymab.game.Game.new_episode">[docs]</a>
+    <span class="k">def</span> <span class="nf">new_episode</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">episode_idx</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">episode_idx</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">set_Q_values_flag</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_generate_initial_Q_values</span><span class="p">()</span>
+
+        <span class="k">for</span> <span class="n">policy</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">policies</span><span class="p">:</span>
+            <span class="n">policy</span><span class="o">.</span><span class="n">Q_values</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">Q_values</span>
+            <span class="n">policy</span><span class="o">.</span><span class="n">reset</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="Game.plot_average_reward_by_step">
+<a class="viewcode-back" href="../../game.html#pymab.game.Game.plot_average_reward_by_step">[docs]</a>
+    <span class="k">def</span> <span class="nf">plot_average_reward_by_step</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">save</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">plot_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">plot_config</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">fig</span> <span class="o">=</span> <span class="n">go</span><span class="o">.</span><span class="n">Figure</span><span class="p">()</span>
+
+        <span class="k">for</span> <span class="n">policy_index</span><span class="p">,</span> <span class="n">policy</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">policies</span><span class="p">):</span>
+            <span class="n">fig</span><span class="o">.</span><span class="n">add_trace</span><span class="p">(</span>
+                <span class="n">go</span><span class="o">.</span><span class="n">Scatter</span><span class="p">(</span>
+                    <span class="n">x</span><span class="o">=</span><span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_steps</span><span class="p">)),</span>
+                    <span class="n">y</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">total_rewards_by_step</span><span class="p">[:,</span> <span class="n">policy_index</span><span class="p">],</span>
+                    <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;lines&quot;</span><span class="p">,</span>
+                    <span class="n">name</span><span class="o">=</span><span class="nb">repr</span><span class="p">(</span><span class="n">policy</span><span class="p">),</span>
+                    <span class="n">line</span><span class="o">=</span><span class="n">get_line_style</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">colors</span><span class="p">[</span><span class="n">policy_index</span> <span class="o">%</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">colors</span><span class="p">)]),</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">plot_config</span><span class="p">:</span>
+            <span class="n">fig</span><span class="o">.</span><span class="n">update_layout</span><span class="p">(</span><span class="o">**</span><span class="n">plot_config</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">fig</span><span class="o">.</span><span class="n">update_layout</span><span class="p">(</span>
+                <span class="o">**</span><span class="n">get_default_layout</span><span class="p">(</span>
+                <span class="n">title</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;Cumulative reward obtained during the </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">n_steps</span><span class="si">}</span><span class="s2"> steps for </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">n_episodes</span><span class="si">}</span><span class="s2"> episodes&quot;</span><span class="p">,</span>
+                <span class="n">xaxis_title</span><span class="o">=</span><span class="s2">&quot;Steps&quot;</span><span class="p">,</span>
+                <span class="n">yaxis_title</span><span class="o">=</span><span class="s2">&quot;Cumulative reward&quot;</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+
+        <span class="n">fig</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">save</span><span class="p">:</span>
+            <span class="n">fig</span><span class="o">.</span><span class="n">write_html</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">results_folder</span> <span class="o">/</span> <span class="sa">f</span><span class="s2">&quot;average_reward_by_step_</span><span class="si">{</span><span class="n">plot_name</span><span class="si">}</span><span class="s2">.html&quot;</span>
+            <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Game.plot_average_reward_by_episode">
+<a class="viewcode-back" href="../../game.html#pymab.game.Game.plot_average_reward_by_episode">[docs]</a>
+    <span class="k">def</span> <span class="nf">plot_average_reward_by_episode</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">save</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">plot_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">plot_config</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">fig</span> <span class="o">=</span> <span class="n">go</span><span class="o">.</span><span class="n">Figure</span><span class="p">()</span>
+
+        <span class="k">for</span> <span class="n">policy_index</span><span class="p">,</span> <span class="n">policy</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">policies</span><span class="p">):</span>
+            <span class="n">fig</span><span class="o">.</span><span class="n">add_trace</span><span class="p">(</span>
+                <span class="n">go</span><span class="o">.</span><span class="n">Scatter</span><span class="p">(</span>
+                    <span class="n">x</span><span class="o">=</span><span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_episodes</span><span class="p">)),</span>
+                    <span class="n">y</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">average_rewards_by_episode</span><span class="p">[:,</span> <span class="n">policy_index</span><span class="p">],</span>
+                    <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;lines&quot;</span><span class="p">,</span>
+                    <span class="n">name</span><span class="o">=</span><span class="nb">repr</span><span class="p">(</span><span class="n">policy</span><span class="p">),</span>
+                    <span class="n">line</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">color</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">colors</span><span class="p">[</span><span class="n">policy_index</span> <span class="o">%</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">colors</span><span class="p">)]),</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">plot_config</span><span class="p">:</span>
+            <span class="n">fig</span><span class="o">.</span><span class="n">update_layout</span><span class="p">(</span><span class="o">**</span><span class="n">plot_config</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">fig</span><span class="o">.</span><span class="n">update_layout</span><span class="p">(</span>
+                <span class="o">**</span><span class="n">get_default_layout</span><span class="p">(</span>
+                <span class="n">title</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;Average reward obtained during the </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">n_steps</span><span class="si">}</span><span class="s2"> steps for </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">n_episodes</span><span class="si">}</span><span class="s2"> episodes&quot;</span><span class="p">,</span>
+                <span class="n">xaxis_title</span><span class="o">=</span><span class="s2">&quot;Episodes&quot;</span><span class="p">,</span>
+                <span class="n">yaxis_title</span><span class="o">=</span><span class="s2">&quot;Average reward&quot;</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+
+        <span class="n">fig</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">save</span><span class="p">:</span>
+            <span class="n">fig</span><span class="o">.</span><span class="n">write_html</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">results_folder</span> <span class="o">/</span> <span class="sa">f</span><span class="s2">&quot;average_reward_by_episode_</span><span class="si">{</span><span class="n">plot_name</span><span class="si">}</span><span class="s2">.html&quot;</span>
+            <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Game.plot_average_reward_by_step_smoothed">
+<a class="viewcode-back" href="../../game.html#pymab.game.Game.plot_average_reward_by_step_smoothed">[docs]</a>
+    <span class="k">def</span> <span class="nf">plot_average_reward_by_step_smoothed</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">smooth_factor</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">50</span><span class="p">,</span> <span class="n">save</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">plot_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">plot_config</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">fig</span> <span class="o">=</span> <span class="n">go</span><span class="o">.</span><span class="n">Figure</span><span class="p">()</span>
+
+        <span class="k">for</span> <span class="n">policy_index</span><span class="p">,</span> <span class="n">policy</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">policies</span><span class="p">):</span>
+            <span class="n">smoothed_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_moving_average</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">average_rewards_by_step</span><span class="p">[:,</span> <span class="n">policy_index</span><span class="p">],</span> <span class="n">smooth_factor</span>
+            <span class="p">)</span>
+            <span class="n">fig</span><span class="o">.</span><span class="n">add_trace</span><span class="p">(</span>
+                <span class="n">go</span><span class="o">.</span><span class="n">Scatter</span><span class="p">(</span>
+                    <span class="n">x</span><span class="o">=</span><span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">smoothed_data</span><span class="p">))),</span>
+                    <span class="n">y</span><span class="o">=</span><span class="n">smoothed_data</span><span class="p">,</span>
+                    <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;lines&quot;</span><span class="p">,</span>
+                    <span class="n">name</span><span class="o">=</span><span class="nb">repr</span><span class="p">(</span><span class="n">policy</span><span class="p">),</span>
+                    <span class="n">line</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">color</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">colors</span><span class="p">[</span><span class="n">policy_index</span> <span class="o">%</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">colors</span><span class="p">)]),</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">plot_config</span><span class="p">:</span>
+            <span class="n">fig</span><span class="o">.</span><span class="n">update_layout</span><span class="p">(</span><span class="o">**</span><span class="n">plot_config</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">fig</span><span class="o">.</span><span class="n">update_layout</span><span class="p">(</span>
+                <span class="o">**</span><span class="n">get_default_layout</span><span class="p">(</span>
+                <span class="n">title</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;Smoothed average reward (factor: </span><span class="si">{</span><span class="n">smooth_factor</span><span class="si">}</span><span class="s2">) during the </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">n_steps</span><span class="si">}</span><span class="s2"> steps for </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">n_episodes</span><span class="si">}</span><span class="s2"> episodes&quot;</span><span class="p">,</span>
+                <span class="n">xaxis_title</span><span class="o">=</span><span class="s2">&quot;Steps&quot;</span><span class="p">,</span>
+                <span class="n">yaxis_title</span><span class="o">=</span><span class="s2">&quot;Average reward&quot;</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+
+        <span class="n">fig</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">save</span><span class="p">:</span>
+            <span class="n">fig</span><span class="o">.</span><span class="n">write_html</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">results_folder</span>
+                <span class="o">/</span> <span class="sa">f</span><span class="s2">&quot;average_reward_by_step_smoothed_</span><span class="si">{</span><span class="n">plot_name</span><span class="si">}</span><span class="s2">.html&quot;</span>
+            <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Game.plot_bandit_selection_evolution">
+<a class="viewcode-back" href="../../game.html#pymab.game.Game.plot_bandit_selection_evolution">[docs]</a>
+    <span class="k">def</span> <span class="nf">plot_bandit_selection_evolution</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">save</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">plot_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">plot_config</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">fig</span> <span class="o">=</span> <span class="n">go</span><span class="o">.</span><span class="n">Figure</span><span class="p">()</span>
+
+        <span class="n">colorscale</span> <span class="o">=</span> <span class="n">get_color_sequence</span><span class="p">()[:</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_bandits</span><span class="p">]</span>
+
+        <span class="k">for</span> <span class="n">policy_index</span><span class="p">,</span> <span class="n">policy</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">policies</span><span class="p">):</span>
+            <span class="n">arm_selections</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">actions_selected_by_policy</span><span class="p">[</span>
+                <span class="p">:,</span> <span class="p">:,</span> <span class="n">policy_index</span>
+            <span class="p">]</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span>
+
+            <span class="k">for</span> <span class="n">arm</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_bandits</span><span class="p">):</span>
+                <span class="n">arm_mask</span> <span class="o">=</span> <span class="n">arm_selections</span> <span class="o">==</span> <span class="n">arm</span>
+                <span class="n">fig</span><span class="o">.</span><span class="n">add_trace</span><span class="p">(</span>
+                    <span class="n">go</span><span class="o">.</span><span class="n">Scatter</span><span class="p">(</span>
+                        <span class="n">x</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_episodes</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_steps</span><span class="p">)[</span><span class="n">arm_mask</span><span class="p">],</span>
+                        <span class="n">y</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">arm_mask</span><span class="p">),</span> <span class="n">policy_index</span><span class="p">),</span>
+                        <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;markers&quot;</span><span class="p">,</span>
+                        <span class="n">marker</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span>
+                            <span class="n">size</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span>
+                            <span class="n">color</span><span class="o">=</span><span class="n">colorscale</span><span class="p">[</span><span class="n">arm</span><span class="p">],</span>
+                        <span class="p">),</span>
+                        <span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="nb">repr</span><span class="p">(</span><span class="n">policy</span><span class="p">)</span><span class="si">}</span><span class="s2"> - Arm </span><span class="si">{</span><span class="n">arm</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+                        <span class="n">showlegend</span><span class="o">=</span><span class="n">policy_index</span> <span class="o">==</span> <span class="mi">0</span><span class="p">,</span>
+                    <span class="p">)</span>
+                <span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">plot_config</span><span class="p">:</span>
+            <span class="n">fig</span><span class="o">.</span><span class="n">update_layout</span><span class="p">(</span><span class="o">**</span><span class="n">plot_config</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">fig</span><span class="o">.</span><span class="n">update_layout</span><span class="p">(</span>
+                <span class="o">**</span><span class="n">get_default_layout</span><span class="p">(</span>
+                <span class="n">title</span><span class="o">=</span><span class="s2">&quot;Arm Selections by Policy Over Time&quot;</span><span class="p">,</span>
+                <span class="n">xaxis_title</span><span class="o">=</span><span class="s2">&quot;Steps&quot;</span><span class="p">,</span>
+                <span class="n">yaxis_title</span><span class="o">=</span><span class="s2">&quot;Policy&quot;</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+
+        <span class="n">fig</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">save</span><span class="p">:</span>
+            <span class="n">fig</span><span class="o">.</span><span class="n">write_html</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">results_folder</span> <span class="o">/</span> <span class="sa">f</span><span class="s2">&quot;bandit_selection_evolution_</span><span class="si">{</span><span class="n">plot_name</span><span class="si">}</span><span class="s2">.html&quot;</span>
+            <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Game.plot_cumulative_regret_by_step">
+<a class="viewcode-back" href="../../game.html#pymab.game.Game.plot_cumulative_regret_by_step">[docs]</a>
+    <span class="k">def</span> <span class="nf">plot_cumulative_regret_by_step</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">save</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">plot_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">plot_config</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">fig</span> <span class="o">=</span> <span class="n">go</span><span class="o">.</span><span class="n">Figure</span><span class="p">()</span>
+
+        <span class="k">for</span> <span class="n">policy_index</span><span class="p">,</span> <span class="n">policy</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">policies</span><span class="p">):</span>
+            <span class="n">fig</span><span class="o">.</span><span class="n">add_trace</span><span class="p">(</span>
+                <span class="n">go</span><span class="o">.</span><span class="n">Scatter</span><span class="p">(</span>
+                    <span class="n">x</span><span class="o">=</span><span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_steps</span><span class="p">)),</span>
+                    <span class="n">y</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">cumulative_regret_by_step</span><span class="p">[:,</span> <span class="n">policy_index</span><span class="p">],</span>
+                    <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;lines&quot;</span><span class="p">,</span>
+                    <span class="n">name</span><span class="o">=</span><span class="nb">repr</span><span class="p">(</span><span class="n">policy</span><span class="p">),</span>
+                    <span class="n">line</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">color</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">colors</span><span class="p">[</span><span class="n">policy_index</span> <span class="o">%</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">colors</span><span class="p">)]),</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">plot_config</span><span class="p">:</span>
+            <span class="n">fig</span><span class="o">.</span><span class="n">update_layout</span><span class="p">(</span><span class="o">**</span><span class="n">plot_config</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">fig</span><span class="o">.</span><span class="n">update_layout</span><span class="p">(</span>
+                <span class="o">**</span><span class="n">get_default_layout</span><span class="p">(</span>
+                <span class="n">title</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;Cumulative regret during the </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">n_steps</span><span class="si">}</span><span class="s2"> steps for </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">n_episodes</span><span class="si">}</span><span class="s2"> episodes&quot;</span><span class="p">,</span>
+                <span class="n">xaxis_title</span><span class="o">=</span><span class="s2">&quot;Steps&quot;</span><span class="p">,</span>
+                <span class="n">yaxis_title</span><span class="o">=</span><span class="s2">&quot;Cumulative Regret&quot;</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+
+        <span class="n">fig</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">save</span><span class="p">:</span>
+            <span class="n">fig</span><span class="o">.</span><span class="n">write_html</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">results_folder</span> <span class="o">/</span> <span class="sa">f</span><span class="s2">&quot;cumulative_regret_by_step_</span><span class="si">{</span><span class="n">plot_name</span><span class="si">}</span><span class="s2">.html&quot;</span>
+            <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Game.plot_Q_values">
+<a class="viewcode-back" href="../../game.html#pymab.game.Game.plot_Q_values">[docs]</a>
+    <span class="k">def</span> <span class="nf">plot_Q_values</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">save</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">plot_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">plot_config</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{})</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">fig</span> <span class="o">=</span> <span class="n">go</span><span class="o">.</span><span class="n">Figure</span><span class="p">()</span>
+
+        <span class="n">fig</span><span class="o">.</span><span class="n">add_trace</span><span class="p">(</span>
+            <span class="n">go</span><span class="o">.</span><span class="n">Scatter</span><span class="p">(</span>
+                <span class="n">x</span><span class="o">=</span><span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Q_values</span><span class="p">))),</span>
+                <span class="n">y</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">Q_values</span><span class="p">,</span>
+                <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;markers&quot;</span><span class="p">,</span>
+                <span class="n">marker</span><span class="o">=</span><span class="n">get_marker_style</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">colors</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">plot_config</span><span class="p">:</span>
+            <span class="n">fig</span><span class="o">.</span><span class="n">update_layout</span><span class="p">(</span><span class="o">**</span><span class="n">plot_config</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">fig</span><span class="o">.</span><span class="n">update_layout</span><span class="p">(</span>
+                <span class="o">**</span><span class="n">get_default_layout</span><span class="p">(</span>
+                <span class="n">title</span><span class="o">=</span><span class="s2">&quot;Q values for each action&quot;</span><span class="p">,</span>
+                <span class="n">xaxis_title</span><span class="o">=</span><span class="s2">&quot;Actions&quot;</span><span class="p">,</span>
+                <span class="n">yaxis_title</span><span class="o">=</span><span class="s2">&quot;Q value&quot;</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+
+        <span class="n">fig</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">save</span><span class="p">:</span>
+            <span class="n">fig</span><span class="o">.</span><span class="n">write_html</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">results_folder</span> <span class="o">/</span> <span class="sa">f</span><span class="s2">&quot;Q_values_</span><span class="si">{</span><span class="n">plot_name</span><span class="si">}</span><span class="s2">.html&quot;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Game.plot_Q_values_evolution_by_bandit_first_episode">
+<a class="viewcode-back" href="../../game.html#pymab.game.Game.plot_Q_values_evolution_by_bandit_first_episode">[docs]</a>
+    <span class="k">def</span> <span class="nf">plot_Q_values_evolution_by_bandit_first_episode</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">save</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">plot_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">plot_config</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">fig</span> <span class="o">=</span> <span class="n">go</span><span class="o">.</span><span class="n">Figure</span><span class="p">()</span>
+
+        <span class="k">for</span> <span class="n">bandit_index</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_bandits</span><span class="p">):</span>
+            <span class="n">bandit_Q_values</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">Q_values_history</span><span class="p">[:</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_steps</span><span class="p">,</span> <span class="n">bandit_index</span><span class="p">]</span>
+
+            <span class="n">fig</span><span class="o">.</span><span class="n">add_trace</span><span class="p">(</span>
+                <span class="n">go</span><span class="o">.</span><span class="n">Scatter</span><span class="p">(</span>
+                    <span class="n">x</span><span class="o">=</span><span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_steps</span><span class="p">)),</span>
+                    <span class="n">y</span><span class="o">=</span><span class="n">bandit_Q_values</span><span class="p">,</span>
+                    <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;lines&quot;</span><span class="p">,</span>
+                    <span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;Bandit </span><span class="si">{</span><span class="n">bandit_index</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+                    <span class="n">line</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">color</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">colors</span><span class="p">[</span><span class="n">bandit_index</span><span class="p">]),</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">plot_config</span><span class="p">:</span>
+            <span class="n">fig</span><span class="o">.</span><span class="n">update_layout</span><span class="p">(</span><span class="o">**</span><span class="n">plot_config</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">fig</span><span class="o">.</span><span class="n">update_layout</span><span class="p">(</span>
+                <span class="o">**</span><span class="n">get_default_layout</span><span class="p">(</span>
+                <span class="n">title</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;Q-values evolution for Bandits during the first episode (</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">n_steps</span><span class="si">}</span><span class="s2"> steps)&quot;</span><span class="p">,</span>
+                <span class="n">xaxis_title</span><span class="o">=</span><span class="s2">&quot;Steps&quot;</span><span class="p">,</span>
+                <span class="n">yaxis_title</span><span class="o">=</span><span class="s2">&quot;Q-value&quot;</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+
+        <span class="n">fig</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">save</span><span class="p">:</span>
+            <span class="n">fig</span><span class="o">.</span><span class="n">write_html</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">results_folder</span>
+                <span class="o">/</span> <span class="sa">f</span><span class="s2">&quot;Q_values_evolution_by_bandwidth_first_episode_</span><span class="si">{</span><span class="n">plot_name</span><span class="si">}</span><span class="s2">.html&quot;</span>
+            <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Game.plot_total_reward_by_step">
+<a class="viewcode-back" href="../../game.html#pymab.game.Game.plot_total_reward_by_step">[docs]</a>
+    <span class="k">def</span> <span class="nf">plot_total_reward_by_step</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">save</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">plot_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">plot_config</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{})</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">fig</span> <span class="o">=</span> <span class="n">go</span><span class="o">.</span><span class="n">Figure</span><span class="p">()</span>
+
+        <span class="k">for</span> <span class="n">policy_index</span><span class="p">,</span> <span class="n">policy</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">policies</span><span class="p">):</span>
+            <span class="n">fig</span><span class="o">.</span><span class="n">add_trace</span><span class="p">(</span>
+                <span class="n">go</span><span class="o">.</span><span class="n">Scatter</span><span class="p">(</span>
+                    <span class="n">x</span><span class="o">=</span><span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_steps</span><span class="p">)),</span>
+                    <span class="n">y</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">total_rewards_by_step</span><span class="p">[:,</span> <span class="n">policy_index</span><span class="p">],</span>
+                    <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;lines&quot;</span><span class="p">,</span>
+                    <span class="n">name</span><span class="o">=</span><span class="nb">repr</span><span class="p">(</span><span class="n">policy</span><span class="p">),</span>
+                    <span class="n">line</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">color</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">colors</span><span class="p">[</span><span class="n">policy_index</span> <span class="o">%</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">colors</span><span class="p">)]),</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">plot_config</span><span class="p">:</span>
+            <span class="n">fig</span><span class="o">.</span><span class="n">update_layout</span><span class="p">(</span><span class="o">**</span><span class="n">plot_config</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">fig</span><span class="o">.</span><span class="n">update_layout</span><span class="p">(</span>
+                <span class="o">**</span><span class="n">get_default_layout</span><span class="p">(</span>
+                <span class="n">title</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;Cumulative reward obtained during the </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">n_steps</span><span class="si">}</span><span class="s2"> steps for </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">n_episodes</span><span class="si">}</span><span class="s2"> episodes&quot;</span><span class="p">,</span>
+                <span class="n">xaxis_title</span><span class="o">=</span><span class="s2">&quot;Steps&quot;</span><span class="p">,</span>
+                <span class="n">yaxis_title</span><span class="o">=</span><span class="s2">&quot;Cumulative reward&quot;</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+
+        <span class="n">fig</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">save</span><span class="p">:</span>
+            <span class="n">fig</span><span class="o">.</span><span class="n">write_html</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">results_folder</span> <span class="o">/</span> <span class="sa">f</span><span class="s2">&quot;total_reward_by_step_</span><span class="si">{</span><span class="n">plot_name</span><span class="si">}</span><span class="s2">.html&quot;</span>
+            <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Game.plot_rate_optimal_actions_by_step">
+<a class="viewcode-back" href="../../game.html#pymab.game.Game.plot_rate_optimal_actions_by_step">[docs]</a>
+    <span class="k">def</span> <span class="nf">plot_rate_optimal_actions_by_step</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">save</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">plot_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">plot_config</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">fig</span> <span class="o">=</span> <span class="n">go</span><span class="o">.</span><span class="n">Figure</span><span class="p">()</span>
+
+        <span class="n">optimal_actions_expanded</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">repeat</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">optimal_actions</span><span class="p">[:,</span> <span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_steps</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span>
+        <span class="p">)</span>
+        <span class="n">optimal_action_selections</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">actions_selected_by_policy</span>
+            <span class="o">==</span> <span class="n">optimal_actions_expanded</span><span class="p">[:,</span> <span class="p">:,</span> <span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">]</span>
+        <span class="p">)</span>
+        <span class="n">percentage_optimal_by_step</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">optimal_action_selections</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span> <span class="o">*</span> <span class="mi">100</span>
+
+        <span class="k">for</span> <span class="n">policy_index</span><span class="p">,</span> <span class="n">policy</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">policies</span><span class="p">):</span>
+            <span class="n">fig</span><span class="o">.</span><span class="n">add_trace</span><span class="p">(</span>
+                <span class="n">go</span><span class="o">.</span><span class="n">Scatter</span><span class="p">(</span>
+                    <span class="n">x</span><span class="o">=</span><span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_steps</span><span class="p">)),</span>
+                    <span class="n">y</span><span class="o">=</span><span class="n">percentage_optimal_by_step</span><span class="p">[:,</span> <span class="n">policy_index</span><span class="p">],</span>
+                    <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;lines&quot;</span><span class="p">,</span>
+                    <span class="n">name</span><span class="o">=</span><span class="nb">repr</span><span class="p">(</span><span class="n">policy</span><span class="p">),</span>
+                    <span class="n">line</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">color</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">colors</span><span class="p">[</span><span class="n">policy_index</span> <span class="o">%</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">colors</span><span class="p">)]),</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">plot_config</span><span class="p">:</span>
+            <span class="n">fig</span><span class="o">.</span><span class="n">update_layout</span><span class="p">(</span><span class="o">**</span><span class="n">plot_config</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">fig</span><span class="o">.</span><span class="n">update_layout</span><span class="p">(</span>
+                <span class="o">**</span><span class="n">get_default_layout</span><span class="p">(</span>
+                <span class="n">title</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;Percentage of optimal actions chosen during the </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">n_steps</span><span class="si">}</span><span class="s2"> steps for </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">n_episodes</span><span class="si">}</span><span class="s2"> episodes&quot;</span><span class="p">,</span>
+                <span class="n">xaxis_title</span><span class="o">=</span><span class="s2">&quot;Steps&quot;</span><span class="p">,</span>
+                <span class="n">yaxis_title</span><span class="o">=</span><span class="s2">&quot;% Optimal actions&quot;</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+
+        <span class="n">fig</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">save</span><span class="p">:</span>
+            <span class="n">fig</span><span class="o">.</span><span class="n">write_html</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">results_folder</span> <span class="o">/</span> <span class="sa">f</span><span class="s2">&quot;rate_optimal_actions_by_step_</span><span class="si">{</span><span class="n">plot_name</span><span class="si">}</span><span class="s2">.html&quot;</span>
+            <span class="p">)</span></div>
+
+
+    <span class="nd">@property</span>
+    <span class="nd">@lru_cache</span><span class="p">(</span><span class="n">maxsize</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">total_rewards_by_step</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">cumsum</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">rewards_by_policy</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_update_non_stationary_Q_values</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">episode_idx</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">change_frequency</span> <span class="ow">and</span> <span class="n">episode_idx</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">change_frequency</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">Q_values</span> <span class="o">+=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">change_magnitude</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_bandits</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Q_values updated&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">Q_values</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_update_environment</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">step</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">Q_values</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">environment_change</span><span class="o">.</span><span class="n">apply_change</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Q_values</span><span class="p">,</span> <span class="n">step</span><span class="p">)</span></div>
+
+</pre></div>
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+    
+
+      <div class="clearer"></div>
+    </div>
+    <div class="button_nav_wrapper">
+        <div class="button_nav">
+            <div class="left">
+                
+            </div>
+
+            <div class="right">
+                
+            </div>
+        </div>
+    </div>
+
+
+    <div class="footer" role="contentinfo">
+    &#169; Copyright 2024, Daniela Lopes.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.4.7.
+    </div>
+
+<p id="theme_credit">Styled using the <a href="https://github.com/piccolo-orm/piccolo_theme">Piccolo Theme</a></p>
+  </body>
+</html>

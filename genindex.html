@@ -1,0 +1,1094 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="./">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Index &#8212; PyMAB 0.1.0-alpha.1 documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=fa44fd50" />
+    <link rel="stylesheet" type="text/css" href="_static/basic_mod.css?v=9b2032db" />
+    <script src="_static/documentation_options.js?v=6940f236"></script>
+    <script src="_static/doctools.js?v=9a2dae69"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/js/theme.js"></script>
+    <script src="_static/js/petite-vue.js"></script>
+    <link rel="index" title="Index" href="#" />
+    <link rel="search" title="Search" href="search.html" /> 
+  </head><body data-dark_mode_code_blocks="true">
+
+<div id="top_nav">
+    
+
+    <nav>
+        
+            
+        
+
+        <p id="toggle_sidebar">
+            <a href="#" title="Toggle sidebar">|||</a>
+        </p>
+        <h1><a href="index.html" title="Go to homepage">PyMAB 0.1.0-alpha.1 documentation</a></h1>
+
+        <a id="mode_toggle" href="#" @click.prevent="handleClick" :title="mode">
+    <template v-if="mode == 'light'">
+        <svg width="100%" height="100%" viewBox="0 0 79 80" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xml:space="preserve" style="fill-rule:evenodd;clip-rule:evenodd;stroke-linejoin:round;stroke-miterlimit:2;"><g id="mode_light"><rect id="Bounds" x="0" y="-0" width="78.623" height="79.049" style="fill:none;"/><circle cx="39.311" cy="39.524" r="15.734" style="fill:#fff;"/><g id="beams"><g id="beam"><path id="beam1" serif:id="beam" d="M44.212,4.901c0,-2.705 -2.196,-4.901 -4.901,-4.901c-2.704,-0 -4.9,2.196 -4.9,4.901l-0,9.614c-0,2.705 2.196,4.901 4.9,4.901c2.705,0 4.901,-2.196 4.901,-4.901l0,-9.614Z" style="fill:#fff;"/></g><g id="beam2" serif:id="beam"><path id="beam3" serif:id="beam" d="M67.48,18.073c1.913,-1.912 1.913,-5.018 0,-6.931c-1.912,-1.912 -5.018,-1.912 -6.931,0l-6.798,6.799c-1.912,1.912 -1.912,5.018 0,6.931c1.913,1.912 5.018,1.912 6.931,-0l6.798,-6.799Z" style="fill:#fff;"/></g><g id="beam4" serif:id="beam"><path id="beam5" serif:id="beam" d="M25.728,61.108c1.912,-1.913 1.912,-5.018 -0,-6.931c-1.913,-1.913 -5.019,-1.913 -6.931,-0l-6.799,6.798c-1.912,1.913 -1.912,5.019 0,6.931c1.913,1.913 5.019,1.913 6.931,0l6.799,-6.798Z" style="fill:#fff;"/></g><g id="beam6" serif:id="beam"><path id="beam7" serif:id="beam" d="M60.682,54.177c-1.913,-1.913 -5.018,-1.913 -6.931,-0c-1.912,1.913 -1.912,5.018 0,6.931l6.798,6.798c1.913,1.913 5.019,1.913 6.931,0c1.913,-1.912 1.913,-5.018 0,-6.931l-6.798,-6.798Z" style="fill:#fff;"/></g><g id="beam8" serif:id="beam"><path id="beam9" serif:id="beam" d="M4.901,34.623c-2.705,0 -4.901,2.196 -4.901,4.901c0,2.705 2.196,4.901 4.901,4.901l9.614,0c2.705,0 4.901,-2.196 4.901,-4.901c0,-2.705 -2.196,-4.901 -4.901,-4.901l-9.614,0Z" style="fill:#fff;"/></g><g id="beam10" serif:id="beam"><path id="beam11" serif:id="beam" d="M44.212,64.534c0,-2.705 -2.196,-4.901 -4.901,-4.901c-2.704,-0 -4.9,2.196 -4.9,4.901l-0,9.614c-0,2.705 2.196,4.901 4.9,4.901c2.705,-0 4.901,-2.196 4.901,-4.901l0,-9.614Z" style="fill:#fff;"/></g><g id="beam12" serif:id="beam"><path id="beam13" serif:id="beam" d="M18.929,11.142c-1.912,-1.912 -5.018,-1.912 -6.931,0c-1.912,1.913 -1.912,5.019 0,6.931l6.799,6.799c1.912,1.912 5.018,1.912 6.931,-0c1.912,-1.913 1.912,-5.019 -0,-6.931l-6.799,-6.799Z" style="fill:#fff;"/></g><g id="beam14" serif:id="beam"><path id="beam15" serif:id="beam" d="M64.108,34.623c-2.705,0 -4.901,2.196 -4.901,4.901c-0,2.705 2.196,4.901 4.901,4.901l9.614,0c2.705,0 4.901,-2.196 4.901,-4.901c-0,-2.705 -2.196,-4.901 -4.901,-4.901l-9.614,0Z" style="fill:#fff;"/></g></g></g></svg>
+    </template>
+
+    <template v-if="mode == 'dark'">
+        <svg width="100%" height="100%" viewBox="0 0 79 80" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xml:space="preserve" style="fill-rule:evenodd;clip-rule:evenodd;stroke-linejoin:round;stroke-miterlimit:2;"><g id="mode_dark"><rect id="Bounds" x="0" y="-0" width="78.623" height="79.049" style="fill:none;"/><circle cx="39.311" cy="39.524" r="15.734" style="fill:#fff;"/><g id="beams"><g id="beam"><path id="beam1" serif:id="beam" d="M44.212,14.515c0,-2.705 -2.196,-4.901 -4.901,-4.901c-2.704,0 -4.901,2.196 -4.901,4.901c0,2.705 2.197,4.901 4.901,4.901c2.705,0 4.901,-2.196 4.901,-4.901Z" style="fill:#fff;"/></g><g id="beam2" serif:id="beam"><path id="beam3" serif:id="beam" d="M60.662,24.892c1.902,-1.902 1.902,-4.99 0,-6.892l-0.04,-0.039c-1.901,-1.902 -4.989,-1.902 -6.891,-0c-1.901,1.901 -1.901,4.989 0,6.891l0.04,0.04c1.902,1.901 4.989,1.901 6.891,-0Z" style="fill:#fff;"/></g><g id="beam4" serif:id="beam"><path id="beam5" serif:id="beam" d="M25.732,61.103c1.91,-1.91 1.91,-5.011 0,-6.921l-0.009,-0.01c-1.91,-1.91 -5.012,-1.91 -6.921,-0c-1.91,1.91 -1.91,5.011 -0,6.921l0.01,0.01c1.909,1.91 5.011,1.91 6.92,-0Z" style="fill:#fff;"/></g><g id="beam6" serif:id="beam"><path id="beam7" serif:id="beam" d="M60.672,54.167c-1.907,-1.907 -5.004,-1.907 -6.911,0l-0.02,0.02c-1.907,1.907 -1.907,5.004 0,6.911c1.907,1.907 5.004,1.907 6.911,-0l0.02,-0.02c1.907,-1.907 1.907,-5.004 0,-6.911Z" style="fill:#fff;"/></g><g id="beam8" serif:id="beam"><path id="beam9" serif:id="beam" d="M14.52,34.623c-2.702,0 -4.896,2.194 -4.896,4.896l0,0.01c0,2.702 2.194,4.896 4.896,4.896c2.702,0 4.896,-2.194 4.896,-4.896l-0,-0.01c-0,-2.702 -2.194,-4.896 -4.896,-4.896Z" style="fill:#fff;"/></g><g id="beam10" serif:id="beam"><path id="beam11" serif:id="beam" d="M44.212,64.534c0,-2.705 -2.196,-4.901 -4.901,-4.901c-2.704,-0 -4.901,2.196 -4.901,4.901c0,2.704 2.197,4.9 4.901,4.9c2.705,0 4.901,-2.196 4.901,-4.9Z" style="fill:#fff;"/></g><g id="beam12" serif:id="beam"><path id="beam13" serif:id="beam" d="M25.73,17.943c-1.911,-1.911 -5.015,-1.911 -6.926,0l-0.005,0.005c-1.911,1.911 -1.911,5.015 0,6.926c1.911,1.911 5.015,1.911 6.926,0l0.005,-0.005c1.911,-1.911 1.911,-5.014 -0,-6.926Z" style="fill:#fff;"/></g><g id="beam14" serif:id="beam"><path id="beam15" serif:id="beam" d="M64.098,34.623c-2.699,0 -4.891,2.192 -4.891,4.892l-0,0.019c-0,2.699 2.192,4.891 4.891,4.891c2.7,0 4.892,-2.192 4.892,-4.891l0,-0.019c0,-2.7 -2.192,-4.892 -4.892,-4.892Z" style="fill:#fff;"/></g></g></g></svg>
+    </template>
+
+    <template v-if="mode == 'darkest'">
+        <svg width="100%" height="100%" viewBox="0 0 79 80" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xml:space="preserve" style="fill-rule:evenodd;clip-rule:evenodd;stroke-linejoin:round;stroke-miterlimit:2;"><g id="mode_darkest"><rect id="Bounds" x="0" y="-0" width="78.623" height="79.049" style="fill:none;"/><path d="M39.315,23.791c8.684,-0 15.734,7.05 15.734,15.733c0,8.684 -7.05,15.734 -15.734,15.734c-8.683,0 -15.733,-7.05 -15.733,-15.734c-0,-8.683 7.05,-15.733 15.733,-15.733Zm0,4.737c6.069,0 10.997,4.927 10.997,10.996c-0,6.069 -4.928,10.996 -10.997,10.996c-6.068,0 -10.996,-4.927 -10.996,-10.996c0,-6.069 4.928,-10.996 10.996,-10.996Z" style="fill:#fff;"/><g id="beams"><g id="beam"><path id="beam1" serif:id="beam" d="M44.216,14.515c0,-2.705 -2.196,-4.901 -4.901,-4.901c-2.704,0 -4.9,2.196 -4.9,4.901c-0,2.705 2.196,4.901 4.9,4.901c2.705,0 4.901,-2.196 4.901,-4.901Z" style="fill:#fff;"/></g><g id="beam2" serif:id="beam"><path id="beam3" serif:id="beam" d="M60.666,24.892c1.902,-1.902 1.902,-4.99 0,-6.892l-0.04,-0.039c-1.901,-1.902 -4.989,-1.902 -6.891,-0c-1.901,1.901 -1.901,4.989 0,6.891l0.04,0.04c1.902,1.901 4.99,1.901 6.891,-0Z" style="fill:#fff;"/></g><g id="beam4" serif:id="beam"><path id="beam5" serif:id="beam" d="M25.737,61.103c1.909,-1.91 1.909,-5.011 -0,-6.921l-0.01,-0.01c-1.91,-1.91 -5.011,-1.91 -6.921,-0c-1.91,1.91 -1.91,5.011 -0,6.921l0.01,0.01c1.91,1.91 5.011,1.91 6.921,-0Z" style="fill:#fff;"/></g><g id="beam6" serif:id="beam"><path id="beam7" serif:id="beam" d="M60.676,54.167c-1.907,-1.907 -5.004,-1.907 -6.911,0l-0.02,0.02c-1.907,1.907 -1.907,5.004 0,6.911c1.907,1.907 5.004,1.907 6.911,-0l0.02,-0.02c1.907,-1.907 1.907,-5.004 0,-6.911Z" style="fill:#fff;"/></g><g id="beam8" serif:id="beam"><path id="beam9" serif:id="beam" d="M14.524,34.623c-2.702,0 -4.896,2.194 -4.896,4.896l0,0.01c0,2.702 2.194,4.896 4.896,4.896c2.702,0 4.896,-2.194 4.896,-4.896l0,-0.01c0,-2.702 -2.194,-4.896 -4.896,-4.896Z" style="fill:#fff;"/></g><g id="beam10" serif:id="beam"><path id="beam11" serif:id="beam" d="M44.216,64.534c0,-2.705 -2.196,-4.901 -4.901,-4.901c-2.704,-0 -4.9,2.196 -4.9,4.901c-0,2.704 2.196,4.9 4.9,4.9c2.705,0 4.901,-2.196 4.901,-4.9Z" style="fill:#fff;"/></g><g id="beam12" serif:id="beam"><path id="beam13" serif:id="beam" d="M25.734,17.943c-1.911,-1.911 -5.015,-1.911 -6.926,0l-0.005,0.005c-1.911,1.911 -1.911,5.015 0,6.926c1.911,1.911 5.015,1.911 6.926,0l0.005,-0.005c1.911,-1.911 1.911,-5.014 0,-6.926Z" style="fill:#fff;"/></g><g id="beam14" serif:id="beam"><path id="beam15" serif:id="beam" d="M64.103,34.623c-2.7,0 -4.892,2.192 -4.892,4.892l-0,0.019c-0,2.699 2.192,4.891 4.892,4.891c2.699,0 4.891,-2.192 4.891,-4.891l0,-0.019c0,-2.7 -2.192,-4.892 -4.891,-4.892Z" style="fill:#fff;"/></g></g></g></svg>
+    </template>
+</a>
+
+<script>
+(function() {
+    const LOCAL_STORAGE_KEY = 'piccoloThemeMode'
+
+    var initialMode = localStorage.getItem(LOCAL_STORAGE_KEY)
+
+    if (initialMode) {
+        // Make sure the value in local storage is valid
+        if (['light', 'dark', 'darkest'].indexOf(initialMode) == -1) {
+            initialMode = 'light'
+            localStorage.setItem(LOCAL_STORAGE_KEY, initialMode)
+        }
+    } else {
+        // Check if the client prefers dark mode
+        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            initialMode = 'dark'
+        } else {
+            initialMode = 'light'
+        }
+        localStorage.setItem(LOCAL_STORAGE_KEY, initialMode)
+    }
+
+    document.documentElement.dataset.mode = initialMode
+
+    PetiteVue.createApp({
+        'mode': initialMode,
+        handleClick() {
+            let currentMode = this.mode
+
+            if (currentMode == 'light') {
+                this.mode = 'dark'
+            } else if (currentMode == 'dark') {
+                this.mode = 'darkest'
+            } else if (currentMode == 'darkest') {
+                this.mode = 'light'
+            }
+
+            document.documentElement.dataset.mode = this.mode
+            localStorage.setItem(LOCAL_STORAGE_KEY, this.mode)
+
+            console.log(this.mode)
+        }
+    }).mount('#mode_toggle')
+})()
+</script>
+            <p class="mobile_search_link">
+                <a href="search.html" title="Search">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 65 64" fill-rule="evenodd" stroke-linejoin="round" stroke-miterlimit="2">
+                        <path d="M14.873 40.009c-2.315-3.943-3.642-8.532-3.642-13.429C11.231 11.91 23.141 0 37.811 0s26.58 11.91 26.58 26.58-11.91 26.58-26.58 26.58a26.44 26.44 0 0 1-14.277-4.161L9.739 62.794a3.12 3.12 0 0 1-4.413 0L.913 58.382c-1.217-1.218-1.217-3.196 0-4.413l13.96-13.96zM37.811 8.054c10.225 0 18.526 8.301 18.526 18.526s-8.301 18.526-18.526 18.526-18.526-8.301-18.526-18.526S27.586 8.054 37.811 8.054z" fill="#fff" />
+                    </svg>
+                </a>
+            </p>
+        
+
+        <div class="searchbox_wrapper">
+            
+<search id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+    </nav>
+</div>
+
+    
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper"><p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="policies.html">Policies documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="game.html">Game documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="reward_distribution.html">Reward Distribution documentation</a></li>
+</ul>
+
+        </div>
+      </div>
+
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+
+<h1 id="index">Index</h1>
+
+<div class="genindex-jumpbox">
+ <a href="#_"><strong>_</strong></a>
+ | <a href="#A"><strong>A</strong></a>
+ | <a href="#B"><strong>B</strong></a>
+ | <a href="#C"><strong>C</strong></a>
+ | <a href="#D"><strong>D</strong></a>
+ | <a href="#E"><strong>E</strong></a>
+ | <a href="#F"><strong>F</strong></a>
+ | <a href="#G"><strong>G</strong></a>
+ | <a href="#L"><strong>L</strong></a>
+ | <a href="#M"><strong>M</strong></a>
+ | <a href="#N"><strong>N</strong></a>
+ | <a href="#O"><strong>O</strong></a>
+ | <a href="#P"><strong>P</strong></a>
+ | <a href="#Q"><strong>Q</strong></a>
+ | <a href="#R"><strong>R</strong></a>
+ | <a href="#S"><strong>S</strong></a>
+ | <a href="#T"><strong>T</strong></a>
+ | <a href="#U"><strong>U</strong></a>
+ | <a href="#V"><strong>V</strong></a>
+ | <a href="#W"><strong>W</strong></a>
+ 
+</div>
+<h2 id="_">_</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="game.html#pymab.game.AbruptChangeEnvironmentMixin.__init__">__init__() (AbruptChangeEnvironmentMixin method)</a>
+
+      <ul>
+        <li><a href="policies.html#pymab.policies.bayesian_ucb.BernoulliBayesianUCBPolicy.__init__">(BernoulliBayesianUCBPolicy method)</a>
+</li>
+        <li><a href="policies.html#pymab.policies.thompson_sampling.BernoulliThompsonSamplingPolicy.__init__">(BernoulliThompsonSamplingPolicy method)</a>
+</li>
+        <li><a href="policies.html#pymab.policies.contextual_bandits.ContextualBanditPolicy.__init__">(ContextualBanditPolicy method)</a>
+</li>
+        <li><a href="policies.html#pymab.policies.ucb.DiscountedUCBPolicy.__init__">(DiscountedUCBPolicy method)</a>
+</li>
+        <li><a href="policies.html#pymab.policies.epsilon_greedy.EpsilonGreedyPolicy.__init__">(EpsilonGreedyPolicy method)</a>
+</li>
+        <li><a href="game.html#pymab.game.Game.__init__">(Game method)</a>
+</li>
+        <li><a href="policies.html#pymab.policies.bayesian_ucb.GaussianBayesianUCBPolicy.__init__">(GaussianBayesianUCBPolicy method)</a>
+</li>
+        <li><a href="policies.html#pymab.policies.thompson_sampling.GaussianThompsonSamplingPolicy.__init__">(GaussianThompsonSamplingPolicy method)</a>
+</li>
+        <li><a href="game.html#pymab.game.GradualChangeEnvironmentMixin.__init__">(GradualChangeEnvironmentMixin method)</a>
+</li>
+        <li><a href="policies.html#pymab.policies.greedy.GreedyPolicy.__init__">(GreedyPolicy method)</a>
+</li>
+        <li><a href="policies.html#pymab.policies.policy.Policy.__init__">(Policy method)</a>
+</li>
+        <li><a href="game.html#pymab.game.RandomArmSwappingEnvironmentMixin.__init__">(RandomArmSwappingEnvironmentMixin method)</a>
+</li>
+        <li><a href="policies.html#pymab.policies.ucb.SlidingWindowUCBPolicy.__init__">(SlidingWindowUCBPolicy method)</a>
+</li>
+        <li><a href="policies.html#pymab.policies.ucb.StationaryUCBPolicy.__init__">(StationaryUCBPolicy method)</a>
+</li>
+        <li><a href="policies.html#pymab.policies.ucb.UCBPolicy.__init__">(UCBPolicy method)</a>
+</li>
+      </ul></li>
+      <li><a href="policies.html#pymab.policies.bayesian_ucb.BayesianUCBPolicy.__new__">__new__() (BayesianUCBPolicy static method)</a>
+
+      <ul>
+        <li><a href="policies.html#pymab.policies.thompson_sampling.ThompsonSamplingPolicy.__new__">(ThompsonSamplingPolicy static method)</a>
+</li>
+      </ul></li>
+      <li><a href="policies.html#pymab.policies.bayesian_ucb.BernoulliBayesianUCBPolicy._calculate_confidence_interval">_calculate_confidence_interval() (BernoulliBayesianUCBPolicy method)</a>
+
+      <ul>
+        <li><a href="policies.html#pymab.policies.ucb.DiscountedUCBPolicy._calculate_confidence_interval">(DiscountedUCBPolicy method)</a>
+</li>
+        <li><a href="policies.html#pymab.policies.bayesian_ucb.GaussianBayesianUCBPolicy._calculate_confidence_interval">(GaussianBayesianUCBPolicy method)</a>
+</li>
+        <li><a href="policies.html#pymab.policies.ucb.SlidingWindowUCBPolicy._calculate_confidence_interval">(SlidingWindowUCBPolicy method)</a>
+</li>
+        <li><a href="policies.html#pymab.policies.ucb.StationaryUCBPolicy._calculate_confidence_interval">(StationaryUCBPolicy method)</a>
+</li>
+        <li><a href="policies.html#pymab.policies.ucb.UCBPolicy._calculate_confidence_interval">(UCBPolicy method)</a>
+</li>
+      </ul></li>
+      <li><a href="policies.html#pymab.policies.bayesian_ucb.BernoulliBayesianUCBPolicy._get_actual_reward">_get_actual_reward() (BernoulliBayesianUCBPolicy method)</a>
+
+      <ul>
+        <li><a href="policies.html#pymab.policies.thompson_sampling.BernoulliThompsonSamplingPolicy._get_actual_reward">(BernoulliThompsonSamplingPolicy method)</a>
+</li>
+        <li><a href="policies.html#pymab.policies.contextual_bandits.ContextualBanditPolicy._get_actual_reward">(ContextualBanditPolicy method)</a>
+</li>
+        <li><a href="policies.html#pymab.policies.ucb.DiscountedUCBPolicy._get_actual_reward">(DiscountedUCBPolicy method)</a>
+</li>
+        <li><a href="policies.html#pymab.policies.epsilon_greedy.EpsilonGreedyPolicy._get_actual_reward">(EpsilonGreedyPolicy method)</a>
+</li>
+        <li><a href="policies.html#pymab.policies.bayesian_ucb.GaussianBayesianUCBPolicy._get_actual_reward">(GaussianBayesianUCBPolicy method)</a>
+</li>
+        <li><a href="policies.html#pymab.policies.thompson_sampling.GaussianThompsonSamplingPolicy._get_actual_reward">(GaussianThompsonSamplingPolicy method)</a>
+</li>
+        <li><a href="policies.html#pymab.policies.greedy.GreedyPolicy._get_actual_reward">(GreedyPolicy method)</a>
+</li>
+        <li><a href="policies.html#pymab.policies.policy.Policy._get_actual_reward">(Policy method)</a>
+</li>
+        <li><a href="policies.html#pymab.policies.ucb.SlidingWindowUCBPolicy._get_actual_reward">(SlidingWindowUCBPolicy method)</a>
+</li>
+        <li><a href="policies.html#pymab.policies.ucb.StationaryUCBPolicy._get_actual_reward">(StationaryUCBPolicy method)</a>
+</li>
+        <li><a href="policies.html#pymab.policies.ucb.UCBPolicy._get_actual_reward">(UCBPolicy method)</a>
+</li>
+      </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="policies.html#pymab.policies.bayesian_ucb.BernoulliBayesianUCBPolicy._get_ucb_value">_get_ucb_value() (BernoulliBayesianUCBPolicy method)</a>
+
+      <ul>
+        <li><a href="policies.html#pymab.policies.ucb.DiscountedUCBPolicy._get_ucb_value">(DiscountedUCBPolicy method)</a>
+</li>
+        <li><a href="policies.html#pymab.policies.bayesian_ucb.GaussianBayesianUCBPolicy._get_ucb_value">(GaussianBayesianUCBPolicy method)</a>
+</li>
+        <li><a href="policies.html#pymab.policies.ucb.SlidingWindowUCBPolicy._get_ucb_value">(SlidingWindowUCBPolicy method)</a>
+</li>
+        <li><a href="policies.html#pymab.policies.ucb.StationaryUCBPolicy._get_ucb_value">(StationaryUCBPolicy method)</a>
+</li>
+        <li><a href="policies.html#pymab.policies.ucb.UCBPolicy._get_ucb_value">(UCBPolicy method)</a>
+</li>
+      </ul></li>
+      <li><a href="policies.html#pymab.policies.policy.Policy._Q_values">_Q_values (Policy attribute)</a>
+</li>
+      <li><a href="policies.html#pymab.policies.bayesian_ucb.BernoulliBayesianUCBPolicy._update">_update() (BernoulliBayesianUCBPolicy method)</a>
+
+      <ul>
+        <li><a href="policies.html#pymab.policies.thompson_sampling.BernoulliThompsonSamplingPolicy._update">(BernoulliThompsonSamplingPolicy method)</a>
+</li>
+        <li><a href="policies.html#pymab.policies.contextual_bandits.ContextualBanditPolicy._update">(ContextualBanditPolicy method)</a>
+</li>
+        <li><a href="policies.html#pymab.policies.ucb.DiscountedUCBPolicy._update">(DiscountedUCBPolicy method)</a>
+</li>
+        <li><a href="policies.html#pymab.policies.epsilon_greedy.EpsilonGreedyPolicy._update">(EpsilonGreedyPolicy method)</a>
+</li>
+        <li><a href="policies.html#pymab.policies.bayesian_ucb.GaussianBayesianUCBPolicy._update">(GaussianBayesianUCBPolicy method)</a>
+</li>
+        <li><a href="policies.html#pymab.policies.thompson_sampling.GaussianThompsonSamplingPolicy._update">(GaussianThompsonSamplingPolicy method)</a>
+</li>
+        <li><a href="policies.html#pymab.policies.greedy.GreedyPolicy._update">(GreedyPolicy method)</a>
+</li>
+        <li><a href="policies.html#pymab.policies.policy.Policy._update">(Policy method)</a>
+</li>
+        <li><a href="policies.html#pymab.policies.ucb.SlidingWindowUCBPolicy._update">(SlidingWindowUCBPolicy method)</a>
+</li>
+        <li><a href="policies.html#pymab.policies.ucb.StationaryUCBPolicy._update">(StationaryUCBPolicy method)</a>
+</li>
+        <li><a href="policies.html#pymab.policies.ucb.UCBPolicy._update">(UCBPolicy method)</a>
+</li>
+      </ul></li>
+      <li><a href="policies.html#pymab.policies.policy.Policy._update_estimate">_update_estimate() (Policy method)</a>
+</li>
+      <li><a href="policies.html#pymab.policies.bayesian_ucb.BernoulliBayesianUCBPolicy._update_sliding_window">_update_sliding_window() (BernoulliBayesianUCBPolicy method)</a>
+
+      <ul>
+        <li><a href="policies.html#pymab.policies.thompson_sampling.BernoulliThompsonSamplingPolicy._update_sliding_window">(BernoulliThompsonSamplingPolicy method)</a>
+</li>
+        <li><a href="policies.html#pymab.policies.contextual_bandits.ContextualBanditPolicy._update_sliding_window">(ContextualBanditPolicy method)</a>
+</li>
+        <li><a href="policies.html#pymab.policies.ucb.DiscountedUCBPolicy._update_sliding_window">(DiscountedUCBPolicy method)</a>
+</li>
+        <li><a href="policies.html#pymab.policies.epsilon_greedy.EpsilonGreedyPolicy._update_sliding_window">(EpsilonGreedyPolicy method)</a>
+</li>
+        <li><a href="policies.html#pymab.policies.bayesian_ucb.GaussianBayesianUCBPolicy._update_sliding_window">(GaussianBayesianUCBPolicy method)</a>
+</li>
+        <li><a href="policies.html#pymab.policies.thompson_sampling.GaussianThompsonSamplingPolicy._update_sliding_window">(GaussianThompsonSamplingPolicy method)</a>
+</li>
+        <li><a href="policies.html#pymab.policies.greedy.GreedyPolicy._update_sliding_window">(GreedyPolicy method)</a>
+</li>
+        <li><a href="policies.html#pymab.policies.policy.Policy._update_sliding_window">(Policy method)</a>
+</li>
+        <li><a href="policies.html#pymab.policies.ucb.SlidingWindowUCBPolicy._update_sliding_window">(SlidingWindowUCBPolicy method)</a>
+</li>
+        <li><a href="policies.html#pymab.policies.ucb.StationaryUCBPolicy._update_sliding_window">(StationaryUCBPolicy method)</a>
+</li>
+        <li><a href="policies.html#pymab.policies.ucb.UCBPolicy._update_sliding_window">(UCBPolicy method)</a>
+</li>
+      </ul></li>
+  </ul></td>
+</tr></table>
+
+<h2 id="A">A</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="game.html#pymab.game.EnvironmentChangeType.ABRUPT">ABRUPT (EnvironmentChangeType attribute)</a>
+</li>
+      <li><a href="game.html#pymab.game.AbruptChangeEnvironmentMixin">AbruptChangeEnvironmentMixin (class in pymab.game)</a>
+</li>
+      <li><a href="policies.html#pymab.policies.bayesian_ucb.BernoulliBayesianUCBPolicy.actions_estimated_reward">actions_estimated_reward (BernoulliBayesianUCBPolicy attribute)</a>
+
+      <ul>
+        <li><a href="policies.html#pymab.policies.thompson_sampling.BernoulliThompsonSamplingPolicy.actions_estimated_reward">(BernoulliThompsonSamplingPolicy attribute)</a>
+</li>
+        <li><a href="policies.html#pymab.policies.ucb.DiscountedUCBPolicy.actions_estimated_reward">(DiscountedUCBPolicy attribute)</a>
+</li>
+        <li><a href="policies.html#pymab.policies.bayesian_ucb.GaussianBayesianUCBPolicy.actions_estimated_reward">(GaussianBayesianUCBPolicy attribute)</a>
+</li>
+        <li><a href="policies.html#pymab.policies.thompson_sampling.GaussianThompsonSamplingPolicy.actions_estimated_reward">(GaussianThompsonSamplingPolicy attribute)</a>
+</li>
+        <li><a href="policies.html#pymab.policies.policy.Policy.actions_estimated_reward">(Policy attribute)</a>
+</li>
+        <li><a href="policies.html#pymab.policies.ucb.SlidingWindowUCBPolicy.actions_estimated_reward">(SlidingWindowUCBPolicy attribute)</a>
+</li>
+        <li><a href="policies.html#pymab.policies.ucb.StationaryUCBPolicy.actions_estimated_reward">(StationaryUCBPolicy attribute)</a>
+</li>
+        <li><a href="policies.html#pymab.policies.ucb.UCBPolicy.actions_estimated_reward">(UCBPolicy attribute)</a>
+</li>
+      </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="game.html#pymab.game.Game.actions_selected_by_policy">actions_selected_by_policy (Game attribute)</a>
+</li>
+      <li><a href="game.html#pymab.game.AbruptChangeEnvironmentMixin.apply_change">apply_change() (AbruptChangeEnvironmentMixin method)</a>
+
+      <ul>
+        <li><a href="game.html#pymab.game.EnvironmentChangeMixin.apply_change">(EnvironmentChangeMixin method)</a>
+</li>
+        <li><a href="game.html#pymab.game.GradualChangeEnvironmentMixin.apply_change">(GradualChangeEnvironmentMixin method)</a>
+</li>
+        <li><a href="game.html#pymab.game.RandomArmSwappingEnvironmentMixin.apply_change">(RandomArmSwappingEnvironmentMixin method)</a>
+</li>
+        <li><a href="game.html#pymab.game.StationaryEnvironmentMixin.apply_change">(StationaryEnvironmentMixin method)</a>
+</li>
+      </ul></li>
+      <li><a href="game.html#pymab.game.Game.average_rewards_by_episode">average_rewards_by_episode (Game property)</a>
+</li>
+      <li><a href="game.html#pymab.game.Game.average_rewards_by_step">average_rewards_by_step (Game property)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="B">B</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="policies.html#pymab.policies.bayesian_ucb.BayesianUCBPolicy">BayesianUCBPolicy (class in pymab.policies.bayesian_ucb)</a>
+</li>
+      <li><a href="policies.html#pymab.policies.bayesian_ucb.BernoulliBayesianUCBPolicy">BernoulliBayesianUCBPolicy (class in pymab.policies.bayesian_ucb)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="reward_distribution.html#pymab.reward_distribution.BernoulliRewardDistribution">BernoulliRewardDistribution (class in pymab.reward_distribution)</a>
+</li>
+      <li><a href="policies.html#pymab.policies.thompson_sampling.BernoulliThompsonSamplingPolicy">BernoulliThompsonSamplingPolicy (class in pymab.policies.thompson_sampling)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="C">C</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="policies.html#pymab.policies.bayesian_ucb.BernoulliBayesianUCBPolicy.c">c (BernoulliBayesianUCBPolicy attribute)</a>
+
+      <ul>
+        <li><a href="policies.html#pymab.policies.ucb.DiscountedUCBPolicy.c">(DiscountedUCBPolicy attribute)</a>
+</li>
+        <li><a href="policies.html#pymab.policies.bayesian_ucb.GaussianBayesianUCBPolicy.c">(GaussianBayesianUCBPolicy attribute)</a>
+</li>
+        <li><a href="policies.html#pymab.policies.ucb.SlidingWindowUCBPolicy.c">(SlidingWindowUCBPolicy attribute)</a>
+</li>
+        <li><a href="policies.html#pymab.policies.ucb.StationaryUCBPolicy.c">(StationaryUCBPolicy attribute)</a>
+</li>
+        <li><a href="policies.html#pymab.policies.ucb.UCBPolicy.c">(UCBPolicy attribute)</a>
+</li>
+      </ul></li>
+      <li><a href="policies.html#pymab.policies.contextual_bandits.ContextualBanditPolicy.context_dim">context_dim (ContextualBanditPolicy attribute)</a>
+</li>
+      <li><a href="policies.html#pymab.policies.policy.Policy.context_func">context_func (Policy attribute)</a>
+</li>
+      <li><a href="policies.html#pymab.policies.contextual_bandits.ContextualBanditPolicy">ContextualBanditPolicy (class in pymab.policies.contextual_bandits)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="game.html#pymab.game.Game.cumulative_regret_by_step">cumulative_regret_by_step (Game property)</a>
+</li>
+      <li><a href="policies.html#pymab.policies.bayesian_ucb.BernoulliBayesianUCBPolicy.current_step">current_step (BernoulliBayesianUCBPolicy attribute)</a>
+
+      <ul>
+        <li><a href="policies.html#pymab.policies.thompson_sampling.BernoulliThompsonSamplingPolicy.current_step">(BernoulliThompsonSamplingPolicy attribute)</a>
+</li>
+        <li><a href="policies.html#pymab.policies.ucb.DiscountedUCBPolicy.current_step">(DiscountedUCBPolicy attribute)</a>
+</li>
+        <li><a href="policies.html#pymab.policies.bayesian_ucb.GaussianBayesianUCBPolicy.current_step">(GaussianBayesianUCBPolicy attribute)</a>
+</li>
+        <li><a href="policies.html#pymab.policies.thompson_sampling.GaussianThompsonSamplingPolicy.current_step">(GaussianThompsonSamplingPolicy attribute)</a>
+</li>
+        <li><a href="policies.html#pymab.policies.policy.Policy.current_step">(Policy attribute)</a>
+</li>
+        <li><a href="policies.html#pymab.policies.ucb.SlidingWindowUCBPolicy.current_step">(SlidingWindowUCBPolicy attribute)</a>
+</li>
+        <li><a href="policies.html#pymab.policies.ucb.StationaryUCBPolicy.current_step">(StationaryUCBPolicy attribute)</a>
+</li>
+        <li><a href="policies.html#pymab.policies.ucb.UCBPolicy.current_step">(UCBPolicy attribute)</a>
+</li>
+      </ul></li>
+  </ul></td>
+</tr></table>
+
+<h2 id="D">D</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="policies.html#pymab.policies.ucb.DiscountedUCBPolicy.discount_factor">discount_factor (DiscountedUCBPolicy attribute)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="policies.html#pymab.policies.ucb.DiscountedUCBPolicy">DiscountedUCBPolicy (class in pymab.policies.ucb)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="E">E</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="policies.html#pymab.policies.ucb.DiscountedUCBPolicy.effective_n">effective_n (DiscountedUCBPolicy attribute)</a>
+</li>
+      <li><a href="game.html#pymab.game.EnvironmentChangeMixin">EnvironmentChangeMixin (class in pymab.game)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="game.html#pymab.game.EnvironmentChangeType">EnvironmentChangeType (class in pymab.game)</a>
+</li>
+      <li><a href="policies.html#pymab.policies.epsilon_greedy.EpsilonGreedyPolicy.epsilon">epsilon (EpsilonGreedyPolicy attribute)</a>
+</li>
+      <li><a href="policies.html#pymab.policies.epsilon_greedy.EpsilonGreedyPolicy">EpsilonGreedyPolicy (class in pymab.policies.epsilon_greedy)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="F">F</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="policies.html#pymab.policies.bayesian_ucb.BernoulliBayesianUCBPolicy.failures">failures (BernoulliBayesianUCBPolicy attribute)</a>
+
+      <ul>
+        <li><a href="policies.html#id29">(BernoulliThompsonSamplingPolicy attribute)</a>, <a href="policies.html#pymab.policies.thompson_sampling.BernoulliThompsonSamplingPolicy.failures">[1]</a>
+</li>
+      </ul></li>
+  </ul></td>
+</tr></table>
+
+<h2 id="G">G</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="game.html#pymab.game.Game">Game (class in pymab.game)</a>
+</li>
+      <li><a href="game.html#pymab.game.Game.game_loop">game_loop() (Game method)</a>
+</li>
+      <li><a href="policies.html#pymab.policies.bayesian_ucb.GaussianBayesianUCBPolicy">GaussianBayesianUCBPolicy (class in pymab.policies.bayesian_ucb)</a>
+</li>
+      <li><a href="reward_distribution.html#pymab.reward_distribution.GaussianRewardDistribution">GaussianRewardDistribution (class in pymab.reward_distribution)</a>
+</li>
+      <li><a href="policies.html#pymab.policies.thompson_sampling.GaussianThompsonSamplingPolicy">GaussianThompsonSamplingPolicy (class in pymab.policies.thompson_sampling)</a>
+</li>
+      <li><a href="reward_distribution.html#pymab.reward_distribution.BernoulliRewardDistribution.generate_Q_values">generate_Q_values() (BernoulliRewardDistribution static method)</a>
+
+      <ul>
+        <li><a href="reward_distribution.html#pymab.reward_distribution.GaussianRewardDistribution.generate_Q_values">(GaussianRewardDistribution static method)</a>
+</li>
+        <li><a href="reward_distribution.html#pymab.reward_distribution.RewardDistribution.generate_Q_values">(RewardDistribution static method)</a>
+</li>
+        <li><a href="reward_distribution.html#pymab.reward_distribution.UniformRewardDistribution.generate_Q_values">(UniformRewardDistribution static method)</a>
+</li>
+      </ul></li>
+      <li><a href="reward_distribution.html#pymab.reward_distribution.BernoulliRewardDistribution.get_reward">get_reward() (BernoulliRewardDistribution static method)</a>
+
+      <ul>
+        <li><a href="reward_distribution.html#pymab.reward_distribution.GaussianRewardDistribution.get_reward">(GaussianRewardDistribution static method)</a>
+</li>
+        <li><a href="reward_distribution.html#pymab.reward_distribution.RewardDistribution.get_reward">(RewardDistribution static method)</a>
+</li>
+        <li><a href="reward_distribution.html#pymab.reward_distribution.UniformRewardDistribution.get_reward">(UniformRewardDistribution static method)</a>
+</li>
+      </ul></li>
+      <li><a href="policies.html#pymab.policies.bayesian_ucb.BernoulliBayesianUCBPolicy.get_reward_distribution">get_reward_distribution() (BernoulliBayesianUCBPolicy static method)</a>
+
+      <ul>
+        <li><a href="policies.html#pymab.policies.thompson_sampling.BernoulliThompsonSamplingPolicy.get_reward_distribution">(BernoulliThompsonSamplingPolicy static method)</a>
+</li>
+        <li><a href="policies.html#pymab.policies.contextual_bandits.ContextualBanditPolicy.get_reward_distribution">(ContextualBanditPolicy static method)</a>
+</li>
+        <li><a href="policies.html#pymab.policies.ucb.DiscountedUCBPolicy.get_reward_distribution">(DiscountedUCBPolicy static method)</a>
+</li>
+        <li><a href="policies.html#pymab.policies.epsilon_greedy.EpsilonGreedyPolicy.get_reward_distribution">(EpsilonGreedyPolicy static method)</a>
+</li>
+        <li><a href="policies.html#pymab.policies.bayesian_ucb.GaussianBayesianUCBPolicy.get_reward_distribution">(GaussianBayesianUCBPolicy static method)</a>
+</li>
+        <li><a href="policies.html#pymab.policies.thompson_sampling.GaussianThompsonSamplingPolicy.get_reward_distribution">(GaussianThompsonSamplingPolicy static method)</a>
+</li>
+        <li><a href="policies.html#pymab.policies.greedy.GreedyPolicy.get_reward_distribution">(GreedyPolicy static method)</a>
+</li>
+        <li><a href="policies.html#pymab.policies.policy.Policy.get_reward_distribution">(Policy static method)</a>
+</li>
+        <li><a href="policies.html#pymab.policies.ucb.SlidingWindowUCBPolicy.get_reward_distribution">(SlidingWindowUCBPolicy static method)</a>
+</li>
+        <li><a href="policies.html#pymab.policies.ucb.StationaryUCBPolicy.get_reward_distribution">(StationaryUCBPolicy static method)</a>
+</li>
+        <li><a href="policies.html#pymab.policies.ucb.UCBPolicy.get_reward_distribution">(UCBPolicy static method)</a>
+</li>
+      </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="game.html#pymab.game.EnvironmentChangeType.GRADUAL">GRADUAL (EnvironmentChangeType attribute)</a>
+</li>
+      <li><a href="game.html#pymab.game.GradualChangeEnvironmentMixin">GradualChangeEnvironmentMixin (class in pymab.game)</a>
+</li>
+      <li><a href="policies.html#pymab.policies.greedy.GreedyPolicy">GreedyPolicy (class in pymab.policies.greedy)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="L">L</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="policies.html#pymab.policies.contextual_bandits.ContextualBanditPolicy.learning_rate">learning_rate (ContextualBanditPolicy attribute)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="M">M</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="policies.html#id38">means (GaussianThompsonSamplingPolicy attribute)</a>, <a href="policies.html#pymab.policies.thompson_sampling.GaussianThompsonSamplingPolicy.means">[1]</a>
+</li>
+      <li>
+    module
+
+      <ul>
+        <li><a href="game.html#module-pymab.game">pymab.game</a>
+</li>
+        <li><a href="policies.html#module-pymab.policies.bayesian_ucb">pymab.policies.bayesian_ucb</a>
+</li>
+        <li><a href="policies.html#module-pymab.policies.contextual_bandits">pymab.policies.contextual_bandits</a>
+</li>
+        <li><a href="policies.html#module-pymab.policies.epsilon_greedy">pymab.policies.epsilon_greedy</a>
+</li>
+        <li><a href="policies.html#module-pymab.policies.gradient">pymab.policies.gradient</a>
+</li>
+        <li><a href="policies.html#module-pymab.policies.greedy">pymab.policies.greedy</a>
+</li>
+        <li><a href="policies.html#module-pymab.policies.policy">pymab.policies.policy</a>
+</li>
+        <li><a href="policies.html#module-pymab.policies.softmax_selection">pymab.policies.softmax_selection</a>
+</li>
+        <li><a href="policies.html#module-pymab.policies.thompson_sampling">pymab.policies.thompson_sampling</a>
+</li>
+        <li><a href="policies.html#module-pymab.policies.ucb">pymab.policies.ucb</a>
+</li>
+        <li><a href="reward_distribution.html#module-pymab.reward_distribution">pymab.reward_distribution</a>
+</li>
+      </ul></li>
+  </ul></td>
+</tr></table>
+
+<h2 id="N">N</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="policies.html#pymab.policies.bayesian_ucb.BernoulliBayesianUCBPolicy.n_bandits">n_bandits (BernoulliBayesianUCBPolicy attribute)</a>
+
+      <ul>
+        <li><a href="policies.html#pymab.policies.thompson_sampling.BernoulliThompsonSamplingPolicy.n_bandits">(BernoulliThompsonSamplingPolicy attribute)</a>
+</li>
+        <li><a href="policies.html#pymab.policies.ucb.DiscountedUCBPolicy.n_bandits">(DiscountedUCBPolicy attribute)</a>
+</li>
+        <li><a href="policies.html#pymab.policies.bayesian_ucb.GaussianBayesianUCBPolicy.n_bandits">(GaussianBayesianUCBPolicy attribute)</a>
+</li>
+        <li><a href="policies.html#pymab.policies.thompson_sampling.GaussianThompsonSamplingPolicy.n_bandits">(GaussianThompsonSamplingPolicy attribute)</a>
+</li>
+        <li><a href="policies.html#pymab.policies.policy.Policy.n_bandits">(Policy attribute)</a>
+</li>
+        <li><a href="policies.html#pymab.policies.ucb.SlidingWindowUCBPolicy.n_bandits">(SlidingWindowUCBPolicy attribute)</a>
+</li>
+        <li><a href="policies.html#pymab.policies.ucb.StationaryUCBPolicy.n_bandits">(StationaryUCBPolicy attribute)</a>
+</li>
+        <li><a href="policies.html#pymab.policies.ucb.UCBPolicy.n_bandits">(UCBPolicy attribute)</a>
+</li>
+      </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="game.html#pymab.game.Game.n_episodes">n_episodes (Game attribute)</a>
+</li>
+      <li><a href="game.html#pymab.game.Game.n_steps">n_steps (Game attribute)</a>
+</li>
+      <li><a href="game.html#pymab.game.Game.new_episode">new_episode() (Game method)</a>
+</li>
+      <li><a href="policies.html#pymab.policies.policy.no_context_func">no_context_func() (in module pymab.policies.policy)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="O">O</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="game.html#pymab.game.Game.optimal_actions">optimal_actions (Game attribute)</a>
+</li>
+      <li><a href="policies.html#pymab.policies.bayesian_ucb.BernoulliBayesianUCBPolicy.optimistic_initialization">optimistic_initialization (BernoulliBayesianUCBPolicy attribute)</a>
+
+      <ul>
+        <li><a href="policies.html#pymab.policies.thompson_sampling.BernoulliThompsonSamplingPolicy.optimistic_initialization">(BernoulliThompsonSamplingPolicy attribute)</a>
+</li>
+        <li><a href="policies.html#pymab.policies.ucb.DiscountedUCBPolicy.optimistic_initialization">(DiscountedUCBPolicy attribute)</a>
+</li>
+        <li><a href="policies.html#pymab.policies.bayesian_ucb.GaussianBayesianUCBPolicy.optimistic_initialization">(GaussianBayesianUCBPolicy attribute)</a>
+</li>
+        <li><a href="policies.html#pymab.policies.thompson_sampling.GaussianThompsonSamplingPolicy.optimistic_initialization">(GaussianThompsonSamplingPolicy attribute)</a>
+</li>
+        <li><a href="policies.html#pymab.policies.policy.Policy.optimistic_initialization">(Policy attribute)</a>
+</li>
+        <li><a href="policies.html#pymab.policies.ucb.SlidingWindowUCBPolicy.optimistic_initialization">(SlidingWindowUCBPolicy attribute)</a>
+</li>
+        <li><a href="policies.html#pymab.policies.ucb.StationaryUCBPolicy.optimistic_initialization">(StationaryUCBPolicy attribute)</a>
+</li>
+        <li><a href="policies.html#pymab.policies.ucb.UCBPolicy.optimistic_initialization">(UCBPolicy attribute)</a>
+</li>
+      </ul></li>
+  </ul></td>
+</tr></table>
+
+<h2 id="P">P</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="game.html#pymab.game.Game.plot_average_reward_by_episode">plot_average_reward_by_episode() (Game method)</a>
+</li>
+      <li><a href="game.html#pymab.game.Game.plot_average_reward_by_step">plot_average_reward_by_step() (Game method)</a>
+</li>
+      <li><a href="game.html#pymab.game.Game.plot_average_reward_by_step_smoothed">plot_average_reward_by_step_smoothed() (Game method)</a>
+</li>
+      <li><a href="game.html#pymab.game.Game.plot_bandit_selection_evolution">plot_bandit_selection_evolution() (Game method)</a>
+</li>
+      <li><a href="game.html#pymab.game.Game.plot_cumulative_regret_by_step">plot_cumulative_regret_by_step() (Game method)</a>
+</li>
+      <li><a href="policies.html#pymab.policies.bayesian_ucb.BernoulliBayesianUCBPolicy.plot_distribution">plot_distribution() (BernoulliBayesianUCBPolicy method)</a>
+
+      <ul>
+        <li><a href="policies.html#pymab.policies.thompson_sampling.BernoulliThompsonSamplingPolicy.plot_distribution">(BernoulliThompsonSamplingPolicy method)</a>
+</li>
+        <li><a href="policies.html#pymab.policies.contextual_bandits.ContextualBanditPolicy.plot_distribution">(ContextualBanditPolicy method)</a>
+</li>
+        <li><a href="policies.html#pymab.policies.ucb.DiscountedUCBPolicy.plot_distribution">(DiscountedUCBPolicy method)</a>
+</li>
+        <li><a href="policies.html#pymab.policies.epsilon_greedy.EpsilonGreedyPolicy.plot_distribution">(EpsilonGreedyPolicy method)</a>
+</li>
+        <li><a href="policies.html#pymab.policies.bayesian_ucb.GaussianBayesianUCBPolicy.plot_distribution">(GaussianBayesianUCBPolicy method)</a>
+</li>
+        <li><a href="policies.html#pymab.policies.thompson_sampling.GaussianThompsonSamplingPolicy.plot_distribution">(GaussianThompsonSamplingPolicy method)</a>
+</li>
+        <li><a href="policies.html#pymab.policies.greedy.GreedyPolicy.plot_distribution">(GreedyPolicy method)</a>
+</li>
+        <li><a href="policies.html#pymab.policies.policy.Policy.plot_distribution">(Policy method)</a>
+</li>
+        <li><a href="policies.html#pymab.policies.ucb.SlidingWindowUCBPolicy.plot_distribution">(SlidingWindowUCBPolicy method)</a>
+</li>
+        <li><a href="policies.html#pymab.policies.ucb.StationaryUCBPolicy.plot_distribution">(StationaryUCBPolicy method)</a>
+</li>
+        <li><a href="policies.html#pymab.policies.ucb.UCBPolicy.plot_distribution">(UCBPolicy method)</a>
+</li>
+      </ul></li>
+      <li><a href="game.html#pymab.game.Game.plot_Q_values">plot_Q_values() (Game method)</a>
+</li>
+      <li><a href="game.html#pymab.game.Game.plot_Q_values_evolution_by_bandit_first_episode">plot_Q_values_evolution_by_bandit_first_episode() (Game method)</a>
+</li>
+      <li><a href="game.html#pymab.game.Game.plot_rate_optimal_actions_by_step">plot_rate_optimal_actions_by_step() (Game method)</a>
+</li>
+      <li><a href="game.html#pymab.game.Game.plot_total_reward_by_step">plot_total_reward_by_step() (Game method)</a>
+</li>
+      <li><a href="game.html#pymab.game.Game.policies">policies (Game attribute)</a>
+</li>
+      <li><a href="policies.html#pymab.policies.policy.Policy">Policy (class in pymab.policies.policy)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="policies.html#id39">precisions (GaussianThompsonSamplingPolicy attribute)</a>, <a href="policies.html#pymab.policies.thompson_sampling.GaussianThompsonSamplingPolicy.precisions">[1]</a>
+</li>
+      <li>
+    pymab.game
+
+      <ul>
+        <li><a href="game.html#module-pymab.game">module</a>
+</li>
+      </ul></li>
+      <li>
+    pymab.policies.bayesian_ucb
+
+      <ul>
+        <li><a href="policies.html#module-pymab.policies.bayesian_ucb">module</a>
+</li>
+      </ul></li>
+      <li>
+    pymab.policies.contextual_bandits
+
+      <ul>
+        <li><a href="policies.html#module-pymab.policies.contextual_bandits">module</a>
+</li>
+      </ul></li>
+      <li>
+    pymab.policies.epsilon_greedy
+
+      <ul>
+        <li><a href="policies.html#module-pymab.policies.epsilon_greedy">module</a>
+</li>
+      </ul></li>
+      <li>
+    pymab.policies.gradient
+
+      <ul>
+        <li><a href="policies.html#module-pymab.policies.gradient">module</a>
+</li>
+      </ul></li>
+      <li>
+    pymab.policies.greedy
+
+      <ul>
+        <li><a href="policies.html#module-pymab.policies.greedy">module</a>
+</li>
+      </ul></li>
+      <li>
+    pymab.policies.policy
+
+      <ul>
+        <li><a href="policies.html#module-pymab.policies.policy">module</a>
+</li>
+      </ul></li>
+      <li>
+    pymab.policies.softmax_selection
+
+      <ul>
+        <li><a href="policies.html#module-pymab.policies.softmax_selection">module</a>
+</li>
+      </ul></li>
+      <li>
+    pymab.policies.thompson_sampling
+
+      <ul>
+        <li><a href="policies.html#module-pymab.policies.thompson_sampling">module</a>
+</li>
+      </ul></li>
+      <li>
+    pymab.policies.ucb
+
+      <ul>
+        <li><a href="policies.html#module-pymab.policies.ucb">module</a>
+</li>
+      </ul></li>
+      <li>
+    pymab.reward_distribution
+
+      <ul>
+        <li><a href="reward_distribution.html#module-pymab.reward_distribution">module</a>
+</li>
+      </ul></li>
+  </ul></td>
+</tr></table>
+
+<h2 id="Q">Q</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="policies.html#pymab.policies.bayesian_ucb.BernoulliBayesianUCBPolicy.Q_values">Q_values (BernoulliBayesianUCBPolicy property)</a>
+
+      <ul>
+        <li><a href="policies.html#pymab.policies.thompson_sampling.BernoulliThompsonSamplingPolicy.Q_values">(BernoulliThompsonSamplingPolicy property)</a>
+</li>
+        <li><a href="policies.html#pymab.policies.contextual_bandits.ContextualBanditPolicy.Q_values">(ContextualBanditPolicy property)</a>
+</li>
+        <li><a href="policies.html#pymab.policies.ucb.DiscountedUCBPolicy.Q_values">(DiscountedUCBPolicy property)</a>
+</li>
+        <li><a href="policies.html#pymab.policies.epsilon_greedy.EpsilonGreedyPolicy.Q_values">(EpsilonGreedyPolicy property)</a>
+</li>
+        <li><a href="game.html#pymab.game.Game.Q_values">(Game attribute)</a>
+</li>
+        <li><a href="policies.html#pymab.policies.bayesian_ucb.GaussianBayesianUCBPolicy.Q_values">(GaussianBayesianUCBPolicy property)</a>
+</li>
+        <li><a href="policies.html#pymab.policies.thompson_sampling.GaussianThompsonSamplingPolicy.Q_values">(GaussianThompsonSamplingPolicy property)</a>
+</li>
+        <li><a href="policies.html#pymab.policies.greedy.GreedyPolicy.Q_values">(GreedyPolicy property)</a>
+</li>
+        <li><a href="policies.html#pymab.policies.policy.Policy.Q_values">(Policy property)</a>
+</li>
+        <li><a href="policies.html#pymab.policies.ucb.SlidingWindowUCBPolicy.Q_values">(SlidingWindowUCBPolicy property)</a>
+</li>
+        <li><a href="policies.html#pymab.policies.ucb.StationaryUCBPolicy.Q_values">(StationaryUCBPolicy property)</a>
+</li>
+        <li><a href="policies.html#pymab.policies.ucb.UCBPolicy.Q_values">(UCBPolicy property)</a>
+</li>
+      </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="game.html#pymab.game.Game.Q_values_history">Q_values_history (Game attribute)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="R">R</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="game.html#pymab.game.EnvironmentChangeType.RANDOM_ARM_SWAPPING">RANDOM_ARM_SWAPPING (EnvironmentChangeType attribute)</a>
+</li>
+      <li><a href="game.html#pymab.game.RandomArmSwappingEnvironmentMixin">RandomArmSwappingEnvironmentMixin (class in pymab.game)</a>
+</li>
+      <li><a href="game.html#pymab.game.Game.regret_by_policy">regret_by_policy (Game attribute)</a>
+</li>
+      <li><a href="policies.html#pymab.policies.bayesian_ucb.BernoulliBayesianUCBPolicy.reset">reset() (BernoulliBayesianUCBPolicy method)</a>
+
+      <ul>
+        <li><a href="policies.html#pymab.policies.thompson_sampling.BernoulliThompsonSamplingPolicy.reset">(BernoulliThompsonSamplingPolicy method)</a>
+</li>
+        <li><a href="policies.html#pymab.policies.contextual_bandits.ContextualBanditPolicy.reset">(ContextualBanditPolicy method)</a>
+</li>
+        <li><a href="policies.html#pymab.policies.ucb.DiscountedUCBPolicy.reset">(DiscountedUCBPolicy method)</a>
+</li>
+        <li><a href="policies.html#pymab.policies.epsilon_greedy.EpsilonGreedyPolicy.reset">(EpsilonGreedyPolicy method)</a>
+</li>
+        <li><a href="policies.html#pymab.policies.bayesian_ucb.GaussianBayesianUCBPolicy.reset">(GaussianBayesianUCBPolicy method)</a>
+</li>
+        <li><a href="policies.html#pymab.policies.thompson_sampling.GaussianThompsonSamplingPolicy.reset">(GaussianThompsonSamplingPolicy method)</a>
+</li>
+        <li><a href="policies.html#pymab.policies.greedy.GreedyPolicy.reset">(GreedyPolicy method)</a>
+</li>
+        <li><a href="policies.html#pymab.policies.policy.Policy.reset">(Policy method)</a>
+</li>
+        <li><a href="policies.html#pymab.policies.ucb.SlidingWindowUCBPolicy.reset">(SlidingWindowUCBPolicy method)</a>
+</li>
+        <li><a href="policies.html#pymab.policies.ucb.StationaryUCBPolicy.reset">(StationaryUCBPolicy method)</a>
+</li>
+        <li><a href="policies.html#pymab.policies.ucb.UCBPolicy.reset">(UCBPolicy method)</a>
+</li>
+      </ul></li>
+      <li><a href="policies.html#pymab.policies.bayesian_ucb.BernoulliBayesianUCBPolicy.reward_distribution">reward_distribution (BernoulliBayesianUCBPolicy attribute)</a>
+
+      <ul>
+        <li><a href="policies.html#pymab.policies.thompson_sampling.BernoulliThompsonSamplingPolicy.reward_distribution">(BernoulliThompsonSamplingPolicy attribute)</a>
+</li>
+        <li><a href="policies.html#pymab.policies.ucb.DiscountedUCBPolicy.reward_distribution">(DiscountedUCBPolicy attribute)</a>
+</li>
+        <li><a href="game.html#pymab.game.Game.reward_distribution">(Game attribute)</a>
+</li>
+        <li><a href="policies.html#pymab.policies.bayesian_ucb.GaussianBayesianUCBPolicy.reward_distribution">(GaussianBayesianUCBPolicy attribute)</a>
+</li>
+        <li><a href="policies.html#pymab.policies.thompson_sampling.GaussianThompsonSamplingPolicy.reward_distribution">(GaussianThompsonSamplingPolicy attribute)</a>
+</li>
+        <li><a href="policies.html#pymab.policies.policy.Policy.reward_distribution">(Policy attribute)</a>
+</li>
+        <li><a href="policies.html#pymab.policies.ucb.SlidingWindowUCBPolicy.reward_distribution">(SlidingWindowUCBPolicy attribute)</a>
+</li>
+        <li><a href="policies.html#pymab.policies.ucb.StationaryUCBPolicy.reward_distribution">(StationaryUCBPolicy attribute)</a>
+</li>
+        <li><a href="policies.html#pymab.policies.ucb.UCBPolicy.reward_distribution">(UCBPolicy attribute)</a>
+</li>
+      </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="reward_distribution.html#pymab.reward_distribution.RewardDistribution">RewardDistribution (class in pymab.reward_distribution)</a>
+</li>
+      <li><a href="game.html#pymab.game.Game.rewards_by_policy">rewards_by_policy (Game attribute)</a>
+</li>
+      <li><a href="policies.html#pymab.policies.bayesian_ucb.BernoulliBayesianUCBPolicy.rewards_history">rewards_history (BernoulliBayesianUCBPolicy attribute)</a>
+
+      <ul>
+        <li><a href="policies.html#pymab.policies.thompson_sampling.BernoulliThompsonSamplingPolicy.rewards_history">(BernoulliThompsonSamplingPolicy attribute)</a>
+</li>
+        <li><a href="policies.html#pymab.policies.ucb.DiscountedUCBPolicy.rewards_history">(DiscountedUCBPolicy attribute)</a>
+</li>
+        <li><a href="policies.html#pymab.policies.bayesian_ucb.GaussianBayesianUCBPolicy.rewards_history">(GaussianBayesianUCBPolicy attribute)</a>
+</li>
+        <li><a href="policies.html#pymab.policies.policy.Policy.rewards_history">(Policy attribute)</a>
+</li>
+        <li><a href="policies.html#pymab.policies.ucb.SlidingWindowUCBPolicy.rewards_history">(SlidingWindowUCBPolicy attribute)</a>
+</li>
+        <li><a href="policies.html#pymab.policies.ucb.StationaryUCBPolicy.rewards_history">(StationaryUCBPolicy attribute)</a>
+</li>
+        <li><a href="policies.html#pymab.policies.ucb.UCBPolicy.rewards_history">(UCBPolicy attribute)</a>
+</li>
+      </ul></li>
+  </ul></td>
+</tr></table>
+
+<h2 id="S">S</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="policies.html#pymab.policies.bayesian_ucb.BernoulliBayesianUCBPolicy.select_action">select_action() (BernoulliBayesianUCBPolicy method)</a>
+
+      <ul>
+        <li><a href="policies.html#pymab.policies.thompson_sampling.BernoulliThompsonSamplingPolicy.select_action">(BernoulliThompsonSamplingPolicy method)</a>
+</li>
+        <li><a href="policies.html#pymab.policies.contextual_bandits.ContextualBanditPolicy.select_action">(ContextualBanditPolicy method)</a>
+</li>
+        <li><a href="policies.html#pymab.policies.ucb.DiscountedUCBPolicy.select_action">(DiscountedUCBPolicy method)</a>
+</li>
+        <li><a href="policies.html#pymab.policies.epsilon_greedy.EpsilonGreedyPolicy.select_action">(EpsilonGreedyPolicy method)</a>
+</li>
+        <li><a href="policies.html#pymab.policies.bayesian_ucb.GaussianBayesianUCBPolicy.select_action">(GaussianBayesianUCBPolicy method)</a>
+</li>
+        <li><a href="policies.html#pymab.policies.thompson_sampling.GaussianThompsonSamplingPolicy.select_action">(GaussianThompsonSamplingPolicy method)</a>
+</li>
+        <li><a href="policies.html#pymab.policies.greedy.GreedyPolicy.select_action">(GreedyPolicy method)</a>
+</li>
+        <li><a href="policies.html#pymab.policies.policy.Policy.select_action">(Policy method)</a>
+</li>
+        <li><a href="policies.html#pymab.policies.ucb.SlidingWindowUCBPolicy.select_action">(SlidingWindowUCBPolicy method)</a>
+</li>
+        <li><a href="policies.html#pymab.policies.ucb.StationaryUCBPolicy.select_action">(StationaryUCBPolicy method)</a>
+</li>
+        <li><a href="policies.html#pymab.policies.ucb.UCBPolicy.select_action">(UCBPolicy method)</a>
+</li>
+      </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="policies.html#pymab.policies.ucb.SlidingWindowUCBPolicy">SlidingWindowUCBPolicy (class in pymab.policies.ucb)</a>
+</li>
+      <li><a href="game.html#pymab.game.EnvironmentChangeType.STATIONARY">STATIONARY (EnvironmentChangeType attribute)</a>
+</li>
+      <li><a href="game.html#pymab.game.StationaryEnvironmentMixin">StationaryEnvironmentMixin (class in pymab.game)</a>
+</li>
+      <li><a href="policies.html#pymab.policies.ucb.StationaryUCBPolicy">StationaryUCBPolicy (class in pymab.policies.ucb)</a>
+</li>
+      <li><a href="policies.html#pymab.policies.bayesian_ucb.BernoulliBayesianUCBPolicy.successes">successes (BernoulliBayesianUCBPolicy attribute)</a>
+
+      <ul>
+        <li><a href="policies.html#id0">(BernoulliThompsonSamplingPolicy attribute)</a>, <a href="policies.html#pymab.policies.thompson_sampling.BernoulliThompsonSamplingPolicy.successes">[1]</a>
+</li>
+      </ul></li>
+      <li><a href="policies.html#pymab.policies.bayesian_ucb.GaussianBayesianUCBPolicy.sum_rewards">sum_rewards (GaussianBayesianUCBPolicy attribute)</a>
+</li>
+      <li><a href="policies.html#pymab.policies.bayesian_ucb.GaussianBayesianUCBPolicy.sum_squared_rewards">sum_squared_rewards (GaussianBayesianUCBPolicy attribute)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="T">T</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="policies.html#pymab.policies.contextual_bandits.ContextualBanditPolicy.theta">theta (ContextualBanditPolicy attribute)</a>
+</li>
+      <li><a href="policies.html#pymab.policies.thompson_sampling.ThompsonSamplingPolicy">ThompsonSamplingPolicy (class in pymab.policies.thompson_sampling)</a>
+</li>
+      <li><a href="policies.html#pymab.policies.thompson_sampling.BernoulliThompsonSamplingPolicy.thomson_sampled">thomson_sampled (BernoulliThompsonSamplingPolicy attribute)</a>
+</li>
+      <li><a href="policies.html#pymab.policies.bayesian_ucb.BernoulliBayesianUCBPolicy.times_selected">times_selected (BernoulliBayesianUCBPolicy attribute)</a>
+
+      <ul>
+        <li><a href="policies.html#pymab.policies.thompson_sampling.BernoulliThompsonSamplingPolicy.times_selected">(BernoulliThompsonSamplingPolicy attribute)</a>
+</li>
+        <li><a href="policies.html#pymab.policies.ucb.DiscountedUCBPolicy.times_selected">(DiscountedUCBPolicy attribute)</a>
+</li>
+        <li><a href="policies.html#pymab.policies.bayesian_ucb.GaussianBayesianUCBPolicy.times_selected">(GaussianBayesianUCBPolicy attribute)</a>
+</li>
+        <li><a href="policies.html#pymab.policies.thompson_sampling.GaussianThompsonSamplingPolicy.times_selected">(GaussianThompsonSamplingPolicy attribute)</a>
+</li>
+        <li><a href="policies.html#pymab.policies.policy.Policy.times_selected">(Policy attribute)</a>
+</li>
+        <li><a href="policies.html#pymab.policies.ucb.SlidingWindowUCBPolicy.times_selected">(SlidingWindowUCBPolicy attribute)</a>
+</li>
+        <li><a href="policies.html#pymab.policies.ucb.StationaryUCBPolicy.times_selected">(StationaryUCBPolicy attribute)</a>
+</li>
+        <li><a href="policies.html#pymab.policies.ucb.UCBPolicy.times_selected">(UCBPolicy attribute)</a>
+</li>
+      </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="policies.html#pymab.policies.bayesian_ucb.BernoulliBayesianUCBPolicy.total_reward">total_reward (BernoulliBayesianUCBPolicy attribute)</a>
+
+      <ul>
+        <li><a href="policies.html#pymab.policies.thompson_sampling.BernoulliThompsonSamplingPolicy.total_reward">(BernoulliThompsonSamplingPolicy attribute)</a>
+</li>
+        <li><a href="policies.html#pymab.policies.ucb.DiscountedUCBPolicy.total_reward">(DiscountedUCBPolicy attribute)</a>
+</li>
+        <li><a href="policies.html#pymab.policies.bayesian_ucb.GaussianBayesianUCBPolicy.total_reward">(GaussianBayesianUCBPolicy attribute)</a>
+</li>
+        <li><a href="policies.html#pymab.policies.thompson_sampling.GaussianThompsonSamplingPolicy.total_reward">(GaussianThompsonSamplingPolicy attribute)</a>
+</li>
+        <li><a href="policies.html#pymab.policies.policy.Policy.total_reward">(Policy attribute)</a>
+</li>
+        <li><a href="policies.html#pymab.policies.ucb.SlidingWindowUCBPolicy.total_reward">(SlidingWindowUCBPolicy attribute)</a>
+</li>
+        <li><a href="policies.html#pymab.policies.ucb.StationaryUCBPolicy.total_reward">(StationaryUCBPolicy attribute)</a>
+</li>
+        <li><a href="policies.html#pymab.policies.ucb.UCBPolicy.total_reward">(UCBPolicy attribute)</a>
+</li>
+      </ul></li>
+      <li><a href="game.html#pymab.game.Game.total_rewards_by_step">total_rewards_by_step (Game property)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="U">U</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="policies.html#pymab.policies.ucb.UCBPolicy">UCBPolicy (class in pymab.policies.ucb)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="reward_distribution.html#pymab.reward_distribution.UniformRewardDistribution">UniformRewardDistribution (class in pymab.reward_distribution)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="V">V</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="policies.html#pymab.policies.bayesian_ucb.BernoulliBayesianUCBPolicy.variance">variance (BernoulliBayesianUCBPolicy attribute)</a>
+
+      <ul>
+        <li><a href="policies.html#pymab.policies.thompson_sampling.BernoulliThompsonSamplingPolicy.variance">(BernoulliThompsonSamplingPolicy attribute)</a>
+</li>
+        <li><a href="policies.html#pymab.policies.ucb.DiscountedUCBPolicy.variance">(DiscountedUCBPolicy attribute)</a>
+</li>
+        <li><a href="policies.html#pymab.policies.bayesian_ucb.GaussianBayesianUCBPolicy.variance">(GaussianBayesianUCBPolicy attribute)</a>
+</li>
+        <li><a href="policies.html#pymab.policies.thompson_sampling.GaussianThompsonSamplingPolicy.variance">(GaussianThompsonSamplingPolicy attribute)</a>
+</li>
+        <li><a href="policies.html#pymab.policies.policy.Policy.variance">(Policy attribute)</a>
+</li>
+        <li><a href="policies.html#pymab.policies.ucb.SlidingWindowUCBPolicy.variance">(SlidingWindowUCBPolicy attribute)</a>
+</li>
+        <li><a href="policies.html#pymab.policies.ucb.StationaryUCBPolicy.variance">(StationaryUCBPolicy attribute)</a>
+</li>
+        <li><a href="policies.html#pymab.policies.ucb.UCBPolicy.variance">(UCBPolicy attribute)</a>
+</li>
+      </ul></li>
+  </ul></td>
+</tr></table>
+
+<h2 id="W">W</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="policies.html#pymab.policies.ucb.SlidingWindowUCBPolicy.window_size">window_size (SlidingWindowUCBPolicy attribute)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+    
+
+      <div class="clearer"></div>
+    </div>
+    <div class="button_nav_wrapper">
+        <div class="button_nav">
+            <div class="left">
+                
+            </div>
+
+            <div class="right">
+                
+            </div>
+        </div>
+    </div>
+
+
+    <div class="footer" role="contentinfo">
+    &#169; Copyright 2024, Daniela Lopes.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.4.7.
+    </div>
+
+<p id="theme_credit">Styled using the <a href="https://github.com/piccolo-orm/piccolo_theme">Piccolo Theme</a></p>
+  </body>
+</html>

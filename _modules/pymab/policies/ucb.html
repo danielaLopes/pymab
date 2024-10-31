@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>pymab.policies.ucb &#8212; PyMAB 0.1.0-alpha.1 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=fa44fd50" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/basic_mod.css?v=9b2032db" />
+    <script src="../../../_static/documentation_options.js?v=6940f236"></script>
+    <script src="../../../_static/doctools.js?v=9a2dae69"></script>
+    <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <script src="../../../_static/js/petite-vue.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+  </head><body data-dark_mode_code_blocks="true">
+
+<div id="top_nav">
+    
+
+    <nav>
+        
+            
+        
+
+        <p id="toggle_sidebar">
+            <a href="#" title="Toggle sidebar">|||</a>
+        </p>
+        <h1><a href="../../../index.html" title="Go to homepage">PyMAB 0.1.0-alpha.1 documentation</a></h1>
+
+        <a id="mode_toggle" href="#" @click.prevent="handleClick" :title="mode">
+    <template v-if="mode == 'light'">
+        <svg width="100%" height="100%" viewBox="0 0 79 80" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xml:space="preserve" style="fill-rule:evenodd;clip-rule:evenodd;stroke-linejoin:round;stroke-miterlimit:2;"><g id="mode_light"><rect id="Bounds" x="0" y="-0" width="78.623" height="79.049" style="fill:none;"/><circle cx="39.311" cy="39.524" r="15.734" style="fill:#fff;"/><g id="beams"><g id="beam"><path id="beam1" serif:id="beam" d="M44.212,4.901c0,-2.705 -2.196,-4.901 -4.901,-4.901c-2.704,-0 -4.9,2.196 -4.9,4.901l-0,9.614c-0,2.705 2.196,4.901 4.9,4.901c2.705,0 4.901,-2.196 4.901,-4.901l0,-9.614Z" style="fill:#fff;"/></g><g id="beam2" serif:id="beam"><path id="beam3" serif:id="beam" d="M67.48,18.073c1.913,-1.912 1.913,-5.018 0,-6.931c-1.912,-1.912 -5.018,-1.912 -6.931,0l-6.798,6.799c-1.912,1.912 -1.912,5.018 0,6.931c1.913,1.912 5.018,1.912 6.931,-0l6.798,-6.799Z" style="fill:#fff;"/></g><g id="beam4" serif:id="beam"><path id="beam5" serif:id="beam" d="M25.728,61.108c1.912,-1.913 1.912,-5.018 -0,-6.931c-1.913,-1.913 -5.019,-1.913 -6.931,-0l-6.799,6.798c-1.912,1.913 -1.912,5.019 0,6.931c1.913,1.913 5.019,1.913 6.931,0l6.799,-6.798Z" style="fill:#fff;"/></g><g id="beam6" serif:id="beam"><path id="beam7" serif:id="beam" d="M60.682,54.177c-1.913,-1.913 -5.018,-1.913 -6.931,-0c-1.912,1.913 -1.912,5.018 0,6.931l6.798,6.798c1.913,1.913 5.019,1.913 6.931,0c1.913,-1.912 1.913,-5.018 0,-6.931l-6.798,-6.798Z" style="fill:#fff;"/></g><g id="beam8" serif:id="beam"><path id="beam9" serif:id="beam" d="M4.901,34.623c-2.705,0 -4.901,2.196 -4.901,4.901c0,2.705 2.196,4.901 4.901,4.901l9.614,0c2.705,0 4.901,-2.196 4.901,-4.901c0,-2.705 -2.196,-4.901 -4.901,-4.901l-9.614,0Z" style="fill:#fff;"/></g><g id="beam10" serif:id="beam"><path id="beam11" serif:id="beam" d="M44.212,64.534c0,-2.705 -2.196,-4.901 -4.901,-4.901c-2.704,-0 -4.9,2.196 -4.9,4.901l-0,9.614c-0,2.705 2.196,4.901 4.9,4.901c2.705,-0 4.901,-2.196 4.901,-4.901l0,-9.614Z" style="fill:#fff;"/></g><g id="beam12" serif:id="beam"><path id="beam13" serif:id="beam" d="M18.929,11.142c-1.912,-1.912 -5.018,-1.912 -6.931,0c-1.912,1.913 -1.912,5.019 0,6.931l6.799,6.799c1.912,1.912 5.018,1.912 6.931,-0c1.912,-1.913 1.912,-5.019 -0,-6.931l-6.799,-6.799Z" style="fill:#fff;"/></g><g id="beam14" serif:id="beam"><path id="beam15" serif:id="beam" d="M64.108,34.623c-2.705,0 -4.901,2.196 -4.901,4.901c-0,2.705 2.196,4.901 4.901,4.901l9.614,0c2.705,0 4.901,-2.196 4.901,-4.901c-0,-2.705 -2.196,-4.901 -4.901,-4.901l-9.614,0Z" style="fill:#fff;"/></g></g></g></svg>
+    </template>
+
+    <template v-if="mode == 'dark'">
+        <svg width="100%" height="100%" viewBox="0 0 79 80" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xml:space="preserve" style="fill-rule:evenodd;clip-rule:evenodd;stroke-linejoin:round;stroke-miterlimit:2;"><g id="mode_dark"><rect id="Bounds" x="0" y="-0" width="78.623" height="79.049" style="fill:none;"/><circle cx="39.311" cy="39.524" r="15.734" style="fill:#fff;"/><g id="beams"><g id="beam"><path id="beam1" serif:id="beam" d="M44.212,14.515c0,-2.705 -2.196,-4.901 -4.901,-4.901c-2.704,0 -4.901,2.196 -4.901,4.901c0,2.705 2.197,4.901 4.901,4.901c2.705,0 4.901,-2.196 4.901,-4.901Z" style="fill:#fff;"/></g><g id="beam2" serif:id="beam"><path id="beam3" serif:id="beam" d="M60.662,24.892c1.902,-1.902 1.902,-4.99 0,-6.892l-0.04,-0.039c-1.901,-1.902 -4.989,-1.902 -6.891,-0c-1.901,1.901 -1.901,4.989 0,6.891l0.04,0.04c1.902,1.901 4.989,1.901 6.891,-0Z" style="fill:#fff;"/></g><g id="beam4" serif:id="beam"><path id="beam5" serif:id="beam" d="M25.732,61.103c1.91,-1.91 1.91,-5.011 0,-6.921l-0.009,-0.01c-1.91,-1.91 -5.012,-1.91 -6.921,-0c-1.91,1.91 -1.91,5.011 -0,6.921l0.01,0.01c1.909,1.91 5.011,1.91 6.92,-0Z" style="fill:#fff;"/></g><g id="beam6" serif:id="beam"><path id="beam7" serif:id="beam" d="M60.672,54.167c-1.907,-1.907 -5.004,-1.907 -6.911,0l-0.02,0.02c-1.907,1.907 -1.907,5.004 0,6.911c1.907,1.907 5.004,1.907 6.911,-0l0.02,-0.02c1.907,-1.907 1.907,-5.004 0,-6.911Z" style="fill:#fff;"/></g><g id="beam8" serif:id="beam"><path id="beam9" serif:id="beam" d="M14.52,34.623c-2.702,0 -4.896,2.194 -4.896,4.896l0,0.01c0,2.702 2.194,4.896 4.896,4.896c2.702,0 4.896,-2.194 4.896,-4.896l-0,-0.01c-0,-2.702 -2.194,-4.896 -4.896,-4.896Z" style="fill:#fff;"/></g><g id="beam10" serif:id="beam"><path id="beam11" serif:id="beam" d="M44.212,64.534c0,-2.705 -2.196,-4.901 -4.901,-4.901c-2.704,-0 -4.901,2.196 -4.901,4.901c0,2.704 2.197,4.9 4.901,4.9c2.705,0 4.901,-2.196 4.901,-4.9Z" style="fill:#fff;"/></g><g id="beam12" serif:id="beam"><path id="beam13" serif:id="beam" d="M25.73,17.943c-1.911,-1.911 -5.015,-1.911 -6.926,0l-0.005,0.005c-1.911,1.911 -1.911,5.015 0,6.926c1.911,1.911 5.015,1.911 6.926,0l0.005,-0.005c1.911,-1.911 1.911,-5.014 -0,-6.926Z" style="fill:#fff;"/></g><g id="beam14" serif:id="beam"><path id="beam15" serif:id="beam" d="M64.098,34.623c-2.699,0 -4.891,2.192 -4.891,4.892l-0,0.019c-0,2.699 2.192,4.891 4.891,4.891c2.7,0 4.892,-2.192 4.892,-4.891l0,-0.019c0,-2.7 -2.192,-4.892 -4.892,-4.892Z" style="fill:#fff;"/></g></g></g></svg>
+    </template>
+
+    <template v-if="mode == 'darkest'">
+        <svg width="100%" height="100%" viewBox="0 0 79 80" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xml:space="preserve" style="fill-rule:evenodd;clip-rule:evenodd;stroke-linejoin:round;stroke-miterlimit:2;"><g id="mode_darkest"><rect id="Bounds" x="0" y="-0" width="78.623" height="79.049" style="fill:none;"/><path d="M39.315,23.791c8.684,-0 15.734,7.05 15.734,15.733c0,8.684 -7.05,15.734 -15.734,15.734c-8.683,0 -15.733,-7.05 -15.733,-15.734c-0,-8.683 7.05,-15.733 15.733,-15.733Zm0,4.737c6.069,0 10.997,4.927 10.997,10.996c-0,6.069 -4.928,10.996 -10.997,10.996c-6.068,0 -10.996,-4.927 -10.996,-10.996c0,-6.069 4.928,-10.996 10.996,-10.996Z" style="fill:#fff;"/><g id="beams"><g id="beam"><path id="beam1" serif:id="beam" d="M44.216,14.515c0,-2.705 -2.196,-4.901 -4.901,-4.901c-2.704,0 -4.9,2.196 -4.9,4.901c-0,2.705 2.196,4.901 4.9,4.901c2.705,0 4.901,-2.196 4.901,-4.901Z" style="fill:#fff;"/></g><g id="beam2" serif:id="beam"><path id="beam3" serif:id="beam" d="M60.666,24.892c1.902,-1.902 1.902,-4.99 0,-6.892l-0.04,-0.039c-1.901,-1.902 -4.989,-1.902 -6.891,-0c-1.901,1.901 -1.901,4.989 0,6.891l0.04,0.04c1.902,1.901 4.99,1.901 6.891,-0Z" style="fill:#fff;"/></g><g id="beam4" serif:id="beam"><path id="beam5" serif:id="beam" d="M25.737,61.103c1.909,-1.91 1.909,-5.011 -0,-6.921l-0.01,-0.01c-1.91,-1.91 -5.011,-1.91 -6.921,-0c-1.91,1.91 -1.91,5.011 -0,6.921l0.01,0.01c1.91,1.91 5.011,1.91 6.921,-0Z" style="fill:#fff;"/></g><g id="beam6" serif:id="beam"><path id="beam7" serif:id="beam" d="M60.676,54.167c-1.907,-1.907 -5.004,-1.907 -6.911,0l-0.02,0.02c-1.907,1.907 -1.907,5.004 0,6.911c1.907,1.907 5.004,1.907 6.911,-0l0.02,-0.02c1.907,-1.907 1.907,-5.004 0,-6.911Z" style="fill:#fff;"/></g><g id="beam8" serif:id="beam"><path id="beam9" serif:id="beam" d="M14.524,34.623c-2.702,0 -4.896,2.194 -4.896,4.896l0,0.01c0,2.702 2.194,4.896 4.896,4.896c2.702,0 4.896,-2.194 4.896,-4.896l0,-0.01c0,-2.702 -2.194,-4.896 -4.896,-4.896Z" style="fill:#fff;"/></g><g id="beam10" serif:id="beam"><path id="beam11" serif:id="beam" d="M44.216,64.534c0,-2.705 -2.196,-4.901 -4.901,-4.901c-2.704,-0 -4.9,2.196 -4.9,4.901c-0,2.704 2.196,4.9 4.9,4.9c2.705,0 4.901,-2.196 4.901,-4.9Z" style="fill:#fff;"/></g><g id="beam12" serif:id="beam"><path id="beam13" serif:id="beam" d="M25.734,17.943c-1.911,-1.911 -5.015,-1.911 -6.926,0l-0.005,0.005c-1.911,1.911 -1.911,5.015 0,6.926c1.911,1.911 5.015,1.911 6.926,0l0.005,-0.005c1.911,-1.911 1.911,-5.014 0,-6.926Z" style="fill:#fff;"/></g><g id="beam14" serif:id="beam"><path id="beam15" serif:id="beam" d="M64.103,34.623c-2.7,0 -4.892,2.192 -4.892,4.892l-0,0.019c-0,2.699 2.192,4.891 4.892,4.891c2.699,0 4.891,-2.192 4.891,-4.891l0,-0.019c0,-2.7 -2.192,-4.892 -4.891,-4.892Z" style="fill:#fff;"/></g></g></g></svg>
+    </template>
+</a>
+
+<script>
+(function() {
+    const LOCAL_STORAGE_KEY = 'piccoloThemeMode'
+
+    var initialMode = localStorage.getItem(LOCAL_STORAGE_KEY)
+
+    if (initialMode) {
+        // Make sure the value in local storage is valid
+        if (['light', 'dark', 'darkest'].indexOf(initialMode) == -1) {
+            initialMode = 'light'
+            localStorage.setItem(LOCAL_STORAGE_KEY, initialMode)
+        }
+    } else {
+        // Check if the client prefers dark mode
+        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            initialMode = 'dark'
+        } else {
+            initialMode = 'light'
+        }
+        localStorage.setItem(LOCAL_STORAGE_KEY, initialMode)
+    }
+
+    document.documentElement.dataset.mode = initialMode
+
+    PetiteVue.createApp({
+        'mode': initialMode,
+        handleClick() {
+            let currentMode = this.mode
+
+            if (currentMode == 'light') {
+                this.mode = 'dark'
+            } else if (currentMode == 'dark') {
+                this.mode = 'darkest'
+            } else if (currentMode == 'darkest') {
+                this.mode = 'light'
+            }
+
+            document.documentElement.dataset.mode = this.mode
+            localStorage.setItem(LOCAL_STORAGE_KEY, this.mode)
+
+            console.log(this.mode)
+        }
+    }).mount('#mode_toggle')
+})()
+</script>
+            <p class="mobile_search_link">
+                <a href="../../../search.html" title="Search">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 65 64" fill-rule="evenodd" stroke-linejoin="round" stroke-miterlimit="2">
+                        <path d="M14.873 40.009c-2.315-3.943-3.642-8.532-3.642-13.429C11.231 11.91 23.141 0 37.811 0s26.58 11.91 26.58 26.58-11.91 26.58-26.58 26.58a26.44 26.44 0 0 1-14.277-4.161L9.739 62.794a3.12 3.12 0 0 1-4.413 0L.913 58.382c-1.217-1.218-1.217-3.196 0-4.413l13.96-13.96zM37.811 8.054c10.225 0 18.526 8.301 18.526 18.526s-8.301 18.526-18.526 18.526-18.526-8.301-18.526-18.526S27.586 8.054 37.811 8.054z" fill="#fff" />
+                    </svg>
+                </a>
+            </p>
+        
+
+        <div class="searchbox_wrapper">
+            
+<search id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+    </nav>
+</div>
+
+    
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper"><p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../policies.html">Policies documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../game.html">Game documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../reward_distribution.html">Reward Distribution documentation</a></li>
+</ul>
+
+        </div>
+      </div>
+
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for pymab.policies.ucb</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">annotations</span>
+
+<span class="kn">from</span> <span class="nn">abc</span> <span class="kn">import</span> <span class="n">ABC</span><span class="p">,</span> <span class="n">abstractmethod</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">math</span>
+<span class="kn">import</span> <span class="nn">typing</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<span class="kn">from</span> <span class="nn">pymab.policies.mixins.stationarity_mixins</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">StationaryPolicyMixin</span><span class="p">,</span>
+    <span class="n">SlidingWindowMixin</span><span class="p">,</span>
+    <span class="n">DiscountedMixin</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span> <span class="nn">pymab.policies.policy</span> <span class="kn">import</span> <span class="n">Policy</span>
+<span class="kn">from</span> <span class="nn">pymab.reward_distribution</span> <span class="kn">import</span> <span class="n">RewardDistribution</span>
+
+<span class="k">if</span> <span class="n">typing</span><span class="o">.</span><span class="n">TYPE_CHECKING</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="o">*</span>
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="UCBPolicy">
+<a class="viewcode-back" href="../../../policies.html#pymab.policies.bayesian_ucb.UCBPolicy">[docs]</a>
+<span class="k">class</span> <span class="nc">UCBPolicy</span><span class="p">(</span><span class="n">StationaryPolicyMixin</span><span class="p">,</span> <span class="n">Policy</span><span class="p">,</span> <span class="n">ABC</span><span class="p">):</span>
+    <span class="n">n_bandits</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">optimistic_initialization</span><span class="p">:</span> <span class="nb">float</span>
+    <span class="n">_Q_values</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span>
+    <span class="n">current_step</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">total_reward</span><span class="p">:</span> <span class="nb">float</span>
+    <span class="n">times_selected</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span>
+    <span class="n">actions_estimated_reward</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span>
+    <span class="n">variance</span><span class="p">:</span> <span class="nb">float</span>
+    <span class="n">reward_distribution</span><span class="p">:</span> <span class="n">Type</span><span class="p">[</span><span class="n">RewardDistribution</span><span class="p">]</span>
+    <span class="n">rewards_history</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">]]</span>
+    <span class="n">c</span><span class="p">:</span> <span class="nb">float</span>
+
+<div class="viewcode-block" id="UCBPolicy.__init__">
+<a class="viewcode-back" href="../../../policies.html#pymab.policies.bayesian_ucb.UCBPolicy.__init__">[docs]</a>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">n_bandits</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">optimistic_initialization</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">,</span>
+        <span class="n">variance</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">,</span>
+        <span class="n">reward_distribution</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;gaussian&quot;</span><span class="p">,</span>
+        <span class="n">c</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
+            <span class="n">n_bandits</span><span class="o">=</span><span class="n">n_bandits</span><span class="p">,</span>
+            <span class="n">optimistic_initialization</span><span class="o">=</span><span class="n">optimistic_initialization</span><span class="p">,</span>
+            <span class="n">variance</span><span class="o">=</span><span class="n">variance</span><span class="p">,</span>
+            <span class="n">reward_distribution</span><span class="o">=</span><span class="n">reward_distribution</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">c</span> <span class="o">=</span> <span class="n">c</span></div>
+
+
+<div class="viewcode-block" id="UCBPolicy._calculate_confidence_interval">
+<a class="viewcode-back" href="../../../policies.html#pymab.policies.bayesian_ucb.UCBPolicy._calculate_confidence_interval">[docs]</a>
+    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span> <span class="nf">_calculate_confidence_interval</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">action_index</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Calculate the confidence interval for a given action.</span>
+
+<span class="sd">        This method is abstract and should be implemented by subclasses to define</span>
+<span class="sd">        the specific confidence interval calculation for each UCB variant.</span>
+
+<span class="sd">        :param action_index: The index of the action to calculate the confidence interval for.</span>
+<span class="sd">        :type action_index: int</span>
+<span class="sd">        :return: The calculated confidence interval.</span>
+<span class="sd">        :rtype: float</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">pass</span></div>
+
+
+<div class="viewcode-block" id="UCBPolicy._get_ucb_value">
+<a class="viewcode-back" href="../../../policies.html#pymab.policies.bayesian_ucb.UCBPolicy._get_ucb_value">[docs]</a>
+    <span class="k">def</span> <span class="nf">_get_ucb_value</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">action_index</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Calculate the Upper Confidence Bound (UCB) value for a given action.</span>
+
+<span class="sd">        This method implements the core UCB algorithm by combining the estimated reward</span>
+<span class="sd">        with the confidence interval. It handles the case of unselected actions by</span>
+<span class="sd">        returning infinity, ensuring exploration of all actions initially.</span>
+
+<span class="sd">        :param action_index: The index of the action to calculate the UCB value for.</span>
+<span class="sd">        :type action_index: int</span>
+<span class="sd">        :return: The calculated UCB value, or infinity for unselected actions.</span>
+<span class="sd">        :rtype: float</span>
+
+<span class="sd">        :Theory:</span>
+<span class="sd">            UCB = Q(a) + U(a), where Q(a) is the estimated reward and U(a) is the confidence interval.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">times_selected</span><span class="p">[</span><span class="n">action_index</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="s2">&quot;inf&quot;</span><span class="p">)</span>
+
+        <span class="n">mean_reward</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">actions_estimated_reward</span><span class="p">[</span><span class="n">action_index</span><span class="p">]</span>
+
+        <span class="k">return</span> <span class="n">mean_reward</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">_calculate_confidence_interval</span><span class="p">(</span><span class="n">action_index</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="UCBPolicy.select_action">
+<a class="viewcode-back" href="../../../policies.html#pymab.policies.bayesian_ucb.UCBPolicy.select_action">[docs]</a>
+    <span class="k">def</span> <span class="nf">select_action</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Select the next action based on the UCB algorithm.</span>
+
+<span class="sd">        This method implements the action selection strategy of UCB:</span>
+<span class="sd">        1. Initially, it selects each action once to gather initial estimates.</span>
+<span class="sd">        2. After that, it chooses the action with the highest UCB value.</span>
+
+<span class="sd">        :return: A tuple containing the index of the chosen action and the reward obtained from taking that action.</span>
+<span class="sd">        :rtype: Tuple[int, float]</span>
+
+<span class="sd">        Examples:</span>
+<span class="sd">        Here&#39;s how to use the `select_action` method:</span>
+
+<span class="sd">        .. code-block:: python</span>
+
+<span class="sd">            policy = UCBPolicy(n_bandits=3)</span>
+<span class="sd">            for _ in range(100):</span>
+<span class="sd">                action, reward = policy.select_action()</span>
+<span class="sd">                # Use the action and reward as needed</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">current_step</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_bandits</span><span class="p">:</span>
+            <span class="n">chosen_action_index</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">current_step</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">ucb_values</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span>
+                <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_get_ucb_value</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_bandits</span><span class="p">)]</span>
+            <span class="p">)</span>
+            <span class="n">chosen_action_index</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">ucb_values</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">chosen_action_index</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_update</span><span class="p">(</span><span class="n">chosen_action_index</span><span class="p">)</span></div>
+
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__repr__</span><span class="p">()</span><span class="si">}</span><span class="s2">(opt_init=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">optimistic_initialization</span><span class="si">}</span><span class="s2">, c=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">c</span><span class="si">}</span><span class="s2">)&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;&quot;&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">(</span>
+<span class="s2">                    n_bandits=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">n_bandits</span><span class="si">}</span><span class="se">\n</span>
+<span class="s2">                    optimistic_initialization=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">optimistic_initialization</span><span class="si">}</span><span class="s2">)</span><span class="se">\n</span>
+<span class="s2">                    Q_values=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">Q_values</span><span class="si">}</span><span class="se">\n</span>
+<span class="s2">                    total_reward=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">current_step</span><span class="si">}</span><span class="se">\n</span>
+<span class="s2">                    times_selected=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">times_selected</span><span class="si">}</span><span class="se">\n</span>
+<span class="s2">                    actions_estimated_reward=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">actions_estimated_reward</span><span class="si">}</span><span class="se">\n</span>
+<span class="s2">                    variance=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">variance</span><span class="si">}</span>
+<span class="s2">                    c=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">c</span><span class="si">}</span><span class="s2">)&quot;&quot;&quot;</span></div>
+
+
+
+<div class="viewcode-block" id="StationaryUCBPolicy">
+<a class="viewcode-back" href="../../../policies.html#pymab.policies.bayesian_ucb.StationaryUCBPolicy">[docs]</a>
+<span class="k">class</span> <span class="nc">StationaryUCBPolicy</span><span class="p">(</span><span class="n">UCBPolicy</span><span class="p">):</span>
+    <span class="n">n_bandits</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">optimistic_initialization</span><span class="p">:</span> <span class="nb">float</span>
+    <span class="n">_Q_values</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span>
+    <span class="n">current_step</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">total_reward</span><span class="p">:</span> <span class="nb">float</span>
+    <span class="n">times_selected</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span>
+    <span class="n">actions_estimated_reward</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span>
+    <span class="n">variance</span><span class="p">:</span> <span class="nb">float</span>
+    <span class="n">reward_distribution</span><span class="p">:</span> <span class="n">Type</span><span class="p">[</span><span class="n">RewardDistribution</span><span class="p">]</span>
+    <span class="n">c</span><span class="p">:</span> <span class="nb">float</span>
+
+<div class="viewcode-block" id="StationaryUCBPolicy._calculate_confidence_interval">
+<a class="viewcode-back" href="../../../policies.html#pymab.policies.bayesian_ucb.StationaryUCBPolicy._calculate_confidence_interval">[docs]</a>
+    <span class="k">def</span> <span class="nf">_calculate_confidence_interval</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">action_index</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Calculate the confidence interval for the stationary UCB algorithm.</span>
+
+<span class="sd">        This method implements the standard UCB1 confidence interval calculation,</span>
+<span class="sd">        which assumes a stationary environment (i.e., reward distributions do not change over time).</span>
+
+<span class="sd">        :param action_index: The index of the action to calculate the confidence interval for.</span>
+<span class="sd">        :type action_index: int</span>
+<span class="sd">        :return: The calculated confidence interval.</span>
+<span class="sd">        :rtype: float</span>
+
+<span class="sd">        :Theory:</span>
+<span class="sd">            The confidence interval is calculated as sqrt((c * log(t)) / n_a),</span>
+<span class="sd">            where c is the exploration parameter, t is the current time step,</span>
+<span class="sd">            and n_a is the number of times the action has been selected.</span>
+
+<span class="sd">        :Optimization:</span>
+<span class="sd">            - Uses math.sqrt and math.log for efficient calculation.</span>
+<span class="sd">            - Adds 1 to current_step to avoid log(0) in the first step.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">confidence_interval</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span>
+            <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">c</span> <span class="o">*</span> <span class="n">math</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">current_step</span> <span class="o">+</span> <span class="mi">1</span><span class="p">))</span>
+            <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">times_selected</span><span class="p">[</span><span class="n">action_index</span><span class="p">]</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">confidence_interval</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="SlidingWindowUCBPolicy">
+<a class="viewcode-back" href="../../../policies.html#pymab.policies.bayesian_ucb.SlidingWindowUCBPolicy">[docs]</a>
+<span class="k">class</span> <span class="nc">SlidingWindowUCBPolicy</span><span class="p">(</span><span class="n">SlidingWindowMixin</span><span class="p">,</span> <span class="n">UCBPolicy</span><span class="p">):</span>
+    <span class="n">n_bandits</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">optimistic_initialization</span><span class="p">:</span> <span class="nb">float</span>
+    <span class="n">_Q_values</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span>
+    <span class="n">current_step</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">total_reward</span><span class="p">:</span> <span class="nb">float</span>
+    <span class="n">times_selected</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span>
+    <span class="n">actions_estimated_reward</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span>
+    <span class="n">variance</span><span class="p">:</span> <span class="nb">float</span>
+    <span class="n">reward_distribution</span><span class="p">:</span> <span class="n">Type</span><span class="p">[</span><span class="n">RewardDistribution</span><span class="p">]</span>
+    <span class="n">c</span><span class="p">:</span> <span class="nb">float</span>
+    <span class="n">window_size</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">rewards_history</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">]]</span>
+
+<div class="viewcode-block" id="SlidingWindowUCBPolicy.__init__">
+<a class="viewcode-back" href="../../../policies.html#pymab.policies.bayesian_ucb.SlidingWindowUCBPolicy.__init__">[docs]</a>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">n_bandits</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">optimistic_initialization</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">,</span>
+        <span class="n">variance</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">,</span>
+        <span class="n">reward_distribution</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;gaussian&quot;</span><span class="p">,</span>
+        <span class="n">c</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">,</span>
+        <span class="n">window_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">100</span><span class="p">,</span>
+    <span class="p">):</span>
+        <span class="n">UCBPolicy</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
+            <span class="bp">self</span><span class="p">,</span>
+            <span class="n">n_bandits</span><span class="o">=</span><span class="n">n_bandits</span><span class="p">,</span>
+            <span class="n">optimistic_initialization</span><span class="o">=</span><span class="n">optimistic_initialization</span><span class="p">,</span>
+            <span class="n">variance</span><span class="o">=</span><span class="n">variance</span><span class="p">,</span>
+            <span class="n">reward_distribution</span><span class="o">=</span><span class="n">reward_distribution</span><span class="p">,</span>
+            <span class="n">c</span><span class="o">=</span><span class="n">c</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">SlidingWindowMixin</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">window_size</span><span class="o">=</span><span class="n">window_size</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="SlidingWindowUCBPolicy._calculate_confidence_interval">
+<a class="viewcode-back" href="../../../policies.html#pymab.policies.bayesian_ucb.SlidingWindowUCBPolicy._calculate_confidence_interval">[docs]</a>
+    <span class="k">def</span> <span class="nf">_calculate_confidence_interval</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">action_index</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Calculate the confidence interval for the Sliding Window UCB algorithm.</span>
+
+<span class="sd">        This method adapts the UCB confidence interval calculation to use a sliding window,</span>
+<span class="sd">        which allows the algorithm to adapt to non-stationary environments by focusing on</span>
+<span class="sd">        recent observations.</span>
+
+<span class="sd">        :param action_index: The index of the action to calculate the confidence interval for.</span>
+<span class="sd">        :type action_index: int</span>
+<span class="sd">        :return: The calculated confidence interval.</span>
+<span class="sd">        :rtype: float</span>
+
+<span class="sd">        :Theory:</span>
+<span class="sd">            The confidence interval is calculated similarly to UCB1, but uses the minimum of</span>
+<span class="sd">            the current step (or window size) and the number of times the action has been selected</span>
+<span class="sd">            within the window.</span>
+
+<span class="sd">        :Optimization:</span>
+<span class="sd">            - Uses min() to handle both the window size and the number of selections efficiently.</span>
+<span class="sd">            - Adds 1 to the log term to avoid log(0) in the first step.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">confidence_interval</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span>
+            <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">c</span> <span class="o">*</span> <span class="n">math</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="nb">min</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">current_step</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">window_size</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">))</span>
+            <span class="o">/</span> <span class="nb">min</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">times_selected</span><span class="p">[</span><span class="n">action_index</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">window_size</span><span class="p">)</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">confidence_interval</span></div>
+
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__repr__</span><span class="p">()</span><span class="si">}</span><span class="s2">(window=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">window_size</span><span class="si">}</span><span class="s2">)&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">description</span> <span class="o">=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__str__</span><span class="p">()</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;&quot;&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">(</span>
+<span class="s2">            </span><span class="si">{</span><span class="n">description</span><span class="si">}</span><span class="se">\n</span>
+<span class="s2">            window_size=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">window_size</span><span class="si">}</span><span class="s2">)&quot;&quot;&quot;</span></div>
+
+
+
+<div class="viewcode-block" id="DiscountedUCBPolicy">
+<a class="viewcode-back" href="../../../policies.html#pymab.policies.bayesian_ucb.DiscountedUCBPolicy">[docs]</a>
+<span class="k">class</span> <span class="nc">DiscountedUCBPolicy</span><span class="p">(</span><span class="n">DiscountedMixin</span><span class="p">,</span> <span class="n">UCBPolicy</span><span class="p">):</span>
+    <span class="n">n_bandits</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">optimistic_initialization</span><span class="p">:</span> <span class="nb">float</span>
+    <span class="n">_Q_values</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span>
+    <span class="n">current_step</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">total_reward</span><span class="p">:</span> <span class="nb">float</span>
+    <span class="n">times_selected</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span>
+    <span class="n">actions_estimated_reward</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span>
+    <span class="n">variance</span><span class="p">:</span> <span class="nb">float</span>
+    <span class="n">reward_distribution</span><span class="p">:</span> <span class="n">Type</span><span class="p">[</span><span class="n">RewardDistribution</span><span class="p">]</span>
+    <span class="n">c</span><span class="p">:</span> <span class="nb">float</span>
+    <span class="n">discount_factor</span><span class="p">:</span> <span class="nb">float</span>
+    <span class="n">effective_n</span><span class="p">:</span> <span class="nb">float</span>
+
+<div class="viewcode-block" id="DiscountedUCBPolicy.__init__">
+<a class="viewcode-back" href="../../../policies.html#pymab.policies.bayesian_ucb.DiscountedUCBPolicy.__init__">[docs]</a>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">n_bandits</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">optimistic_initialization</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
+        <span class="n">variance</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">,</span>
+        <span class="n">reward_distribution</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;gaussian&quot;</span><span class="p">,</span>
+        <span class="n">c</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">,</span>
+        <span class="n">discount_factor</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.9</span><span class="p">,</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Initialize a Discounted UCB policy.</span>
+
+<span class="sd">        :param n_bandits: Number of bandits (arms) in the problem.</span>
+<span class="sd">        :type n_bandits: int    </span>
+<span class="sd">        :param optimistic_initialization: Initial value for estimated rewards.</span>
+<span class="sd">        :type optimistic_initialization: float</span>
+<span class="sd">        :param variance: Variance of the reward distribution.</span>
+<span class="sd">        :type variance: float</span>
+<span class="sd">        :param reward_distribution: Type of reward distribution (&quot;gaussian&quot; or &quot;bernoulli&quot;).</span>
+<span class="sd">        :type reward_distribution: str</span>
+<span class="sd">        :param c: Exploration parameter controlling confidence bound width.</span>
+<span class="sd">        :type c: float</span>
+<span class="sd">        :param discount_factor: Factor for discounting past rewards (between 0 and 1).</span>
+
+<span class="sd">        The discount factor determines how much weight is given to past observations,</span>
+<span class="sd">        with values closer to 1 giving more weight to historical data.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">UCBPolicy</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
+            <span class="bp">self</span><span class="p">,</span>
+            <span class="n">n_bandits</span><span class="o">=</span><span class="n">n_bandits</span><span class="p">,</span>
+            <span class="n">optimistic_initialization</span><span class="o">=</span><span class="n">optimistic_initialization</span><span class="p">,</span>
+            <span class="n">variance</span><span class="o">=</span><span class="n">variance</span><span class="p">,</span>
+            <span class="n">reward_distribution</span><span class="o">=</span><span class="n">reward_distribution</span><span class="p">,</span>
+            <span class="n">c</span><span class="o">=</span><span class="n">c</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">DiscountedMixin</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">discount_factor</span><span class="o">=</span><span class="n">discount_factor</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">effective_n</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">/</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">discount_factor</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="DiscountedUCBPolicy._calculate_confidence_interval">
+<a class="viewcode-back" href="../../../policies.html#pymab.policies.bayesian_ucb.DiscountedUCBPolicy._calculate_confidence_interval">[docs]</a>
+    <span class="k">def</span> <span class="nf">_calculate_confidence_interval</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">action_index</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Calculate the confidence interval for the Discounted UCB algorithm.</span>
+
+<span class="sd">        This method implements the confidence interval calculation for Discounted UCB,</span>
+<span class="sd">        which uses a discount factor to give more weight to recent observations,</span>
+<span class="sd">        allowing adaptation to slowly varying non-stationary environments.</span>
+
+<span class="sd">        :param action_index: The index of the action to calculate the confidence interval for.</span>
+<span class="sd">        :type action_index: int</span>
+<span class="sd">        :return: The calculated confidence interval.</span>
+<span class="sd">        :rtype: float</span>
+
+<span class="sd">        :Theory:</span>
+<span class="sd">            The confidence interval is calculated using the effective sample size (effective_n)</span>
+<span class="sd">            instead of the current time step. The effective_n is determined by the discount factor</span>
+<span class="sd">            and represents the equivalent number of observations if all had full weight.</span>
+
+<span class="sd">        :Optimization:</span>
+<span class="sd">            - Precomputes effective_n in the constructor to avoid repeated calculations.</span>
+<span class="sd">            - Uses min() to handle both the effective_n and the number of selections efficiently.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">confidence_interval</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span>
+            <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">c</span> <span class="o">*</span> <span class="n">math</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">effective_n</span><span class="p">))</span>
+            <span class="o">/</span> <span class="nb">min</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">times_selected</span><span class="p">[</span><span class="n">action_index</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">effective_n</span><span class="p">)</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">confidence_interval</span></div>
+
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__repr__</span><span class="p">()</span><span class="si">}</span><span class="s2">(disc_f=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">discount_factor</span><span class="si">}</span><span class="s2">, effect_n=</span><span class="si">{</span><span class="nb">round</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">effective_n</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">)</span><span class="si">}</span><span class="s2">)&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">description</span> <span class="o">=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__str__</span><span class="p">()</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;&quot;&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">(</span>
+<span class="s2">            </span><span class="si">{</span><span class="n">description</span><span class="si">}</span><span class="se">\n</span>
+<span class="s2">            discount_factor=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">discount_factor</span><span class="si">}</span><span class="se">\n</span>
+<span class="s2">            effective_n=</span><span class="si">{</span><span class="nb">round</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">effective_n</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">)</span><span class="si">}</span><span class="s2">)&quot;&quot;&quot;</span></div>
+
+</pre></div>
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+    
+
+      <div class="clearer"></div>
+    </div>
+    <div class="button_nav_wrapper">
+        <div class="button_nav">
+            <div class="left">
+                
+            </div>
+
+            <div class="right">
+                
+            </div>
+        </div>
+    </div>
+
+
+    <div class="footer" role="contentinfo">
+    &#169; Copyright 2024, Daniela Lopes.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.4.7.
+    </div>
+
+<p id="theme_credit">Styled using the <a href="https://github.com/piccolo-orm/piccolo_theme">Piccolo Theme</a></p>
+  </body>
+</html>
