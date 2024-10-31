@@ -4,6 +4,12 @@
   <img src="assets/icon.png" alt="Icon description" style="width:200px; height:auto;">
 </p>
 
+
+[![PyPI version](https://badge.fury.io/py/pymab.svg)](https://badge.fury.io/py/pymab)
+[![GitHub license](https://img.shields.io/github/license/danielaLopes/pymab)](https://github.com/yourusername/pymab/blob/main/LICENSE)
+[![GitHub issues](https://img.shields.io/github/issues/danielaLopes/pymab)](https://github.com/yourusername/pymab/issues)
+
+
 Python Multi-Armed Bandit Library
 Tame the randomness, pull the right levers!
 PyMab: Your trusty sidekick in the wild world of exploration and exploitation.
