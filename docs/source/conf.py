@@ -9,29 +9,29 @@
 import os
 import sys
 
-sys.path.insert(0, os.path.abspath('../..'))
+sys.path.insert(0, os.path.abspath("../.."))
 
 
 project = "PyMAB"
 copyright = "2024, Daniela Lopes"
 author = "Daniela Lopes"
-release = "0.1.0-alpha.1"
+release = "1.0.0"
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
 
 extensions = [
-    "sphinx.ext.autodoc",        # API documentation generation
-    "sphinx.ext.doctest",        # Test code snippets in documentation
-    "sphinx.ext.viewcode",       # Add links to highlighted source code
-    "sphinx.ext.intersphinx",    # Link to other projects' documentation
-    "sphinx.ext.napoleon",       # Support for Google and NumPy style docstrings
-    "sphinx.ext.coverage",       # Documentation coverage checking
-    "sphinx.ext.githubpages",    # Generate .nojekyll file for GitHub Pages
-    "sphinx.ext.mathjax",        # Render math via MathJax
-    "sphinx.ext.todo",           # Support for TODO items
-    "sphinx.ext.autosummary",    # Generate summary tables
-    "piccolo_theme",             # Theme
+    "sphinx.ext.autodoc",  # API documentation generation
+    "sphinx.ext.doctest",  # Test code snippets in documentation
+    "sphinx.ext.viewcode",  # Add links to highlighted source code
+    "sphinx.ext.intersphinx",  # Link to other projects' documentation
+    "sphinx.ext.napoleon",  # Support for Google and NumPy style docstrings
+    "sphinx.ext.coverage",  # Documentation coverage checking
+    "sphinx.ext.githubpages",  # Generate .nojekyll file for GitHub Pages
+    "sphinx.ext.mathjax",  # Render math via MathJax
+    "sphinx.ext.todo",  # Support for TODO items
+    "sphinx.ext.autosummary",  # Generate summary tables
+    "sphinx_rtd_theme",  # Theme
 ]
 
 napoleon_google_docstring = True
@@ -63,37 +63,35 @@ autodoc_class_signature = "separated"
 autodoc_typehints_format = "short"
 
 intersphinx_mapping = {
-    'python': ('https://docs.python.org/3', None),
-    'numpy': ('https://numpy.org/doc/stable/', None),
-    'scipy': ('https://docs.scipy.org/doc/scipy/', None),
-    'matplotlib': ('https://matplotlib.org/stable/', None),
+    "python": ("https://docs.python.org/3", None),
+    "numpy": ("https://numpy.org/doc/stable/", None),
 }
 
 source_suffix = {
-    '.rst': 'restructuredtext',
-    '.md': 'markdown',
+    ".rst": "restructuredtext",
+    ".md": "markdown",
 }
 source_encoding = "utf-8-sig"
 
 templates_path = ["_templates"]
-exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
+exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
 
 
 # -- Options for HTML output -------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
 
-html_theme = "piccolo_theme"
+html_theme = "sphinx_rtd_theme"
 html_theme_options = {
-    'logo_only': False,
-    'display_version': True,
+    "logo_only": False,
+    "display_version": True,
     "globaltoc_collapse": False,
     "globaltoc_maxdepth": 4,
     "navigation_with_keys": True,
 }
 html_static_path = ["_static"]
-html_favicon = '_static/icon.png'
+html_favicon = "_static/icon.png"
 
-html_logo = '_static/icon.png'
+html_logo = "_static/icon.png"
 
 add_module_names = False
 python_use_unqualified_type_names = True

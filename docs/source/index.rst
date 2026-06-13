@@ -1,65 +1,41 @@
-.. PyMAB documentation master file, created by
-   sphinx-quickstart on Fri Aug  2 17:05:35 2024.
-   You can adapt this file completely to your liking, but it should at least
-   contain the root `toctree` directive.
-
 PyMAB documentation
-============================
+===================
 
-.. image:: _build/_static/icon.png
-   :alt: PyMAB icon
-   :width: 200px
-   :align: left
+PyMAB provides reproducible multi-armed bandit experiments for Python 3.11+.
+The v1 API separates environments, policies, simulations, metrics, and plotting.
 
-Python Multi-Armed Bandit Library
-Tame the randomness, pull the right levers!
-PyMab: Your trusty sidekick in the wild world of exploration and exploitation.
+Quick start
+-----------
 
-PyMAB offers an exploratory framework to compare the performance of multiple Multi Armed Bandit algorithms in a variety of scenarios. The library is designed to be flexible and easy to use, allowing users to quickly set up and run experiments with different configurations.
-
---------------------------------------------
-Simple Example
---------------------------------------------
 .. code-block:: python
 
-    from pymab.policies.greedy import GreedyPolicy
-    from pymab.policies.thompson_sampling import ThompsonSamplingPolicy
-    from pymab.game import Game
+   import numpy as np
 
-    n_bandits = 5
+   from pymab.environments import BanditEnvironment
+   from pymab.policies import EpsilonGreedyPolicy, UCBPolicy
+   from pymab.simulation import Experiment, ExperimentConfig
 
-    # Define the policies
-    greedy_policy = GreedyPolicy(
-                        optimistic_initialization=1,
-                        n_bandits=n_bandits
-                    )
-    ts_policy = ThompsonSamplingPolicy(n_bandits=n_bandits)
+   environment = BanditEnvironment(q_values=np.array([0.1, 0.4, 0.8]))
+   result = Experiment(
+       environment=environment,
+       policies=[
+           EpsilonGreedyPolicy(n_arms=3, epsilon=0.1),
+           UCBPolicy(n_arms=3),
+       ],
+       config=ExperimentConfig(n_episodes=200, n_steps=500, seed=42),
+   ).run()
 
-    # Define the game
-    game = Game(
-         n_episodes=2000,
-         n_steps=1000,
-         policies=[greedy_policy, ts_policy],
-         n_bandits=n_bandits
-    )
-
-    # Run the game
-    game.game_loop()
-
-    # Plot the results
-    game.plot_average_reward_by_step()
-
-
+   print(result.average_reward_by_step[-1])
+   print(result.cumulative_regret[-1])
 
 .. toctree::
    :maxdepth: 2
    :caption: Contents:
 
+   simulation
+   environments
    policies
-   game
-   reward_distribution
-
-
+   distributions
 
 Indices and tables
 ==================

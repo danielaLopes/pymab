@@ -1,160 +1,163 @@
 # PyMAB
 
-<p align="center">
-  <img src="assets/icon.png" alt="Icon description" style="width:200px; height:auto;">
-</p>
+PyMAB is a small Python library for reproducible multi-armed bandit experiments.
+It separates environments, policies, simulations, metrics, and plotting so
+experiments are easier to test, compare, and extend.
 
+## What changed in v1
 
-[![PyPI version](https://badge.fury.io/py/pymab.svg)](https://badge.fury.io/py/pymab)
-[![GitHub license](https://img.shields.io/github/license/danielaLopes/pymab)](https://github.com/yourusername/pymab/blob/main/LICENSE)
-[![GitHub issues](https://img.shields.io/github/issues/danielaLopes/pymab)](https://github.com/yourusername/pymab/issues)
+- Python 3.11+ and a clean typed API.
+- Explicit random seeds through `numpy.random.Generator`.
+- Environments own true arm values and reward sampling.
+- Policies only select actions and update from observed rewards.
+- Regret is computed from expected rewards, with realized rewards kept separate.
+- Plotting dependencies are optional via `pymab[plot]`.
 
+## Install
 
-Python Multi-Armed Bandit Library
-Tame the randomness, pull the right levers!
-PyMab: Your trusty sidekick in the wild world of exploration and exploitation.
-
-PyMAB offers an exploratory framework to compare the performance of multiple Multi Armed Bandit algorithms in a variety of scenarios. The library is designed to be flexible and easy to use, allowing users to quickly set up and run experiments with different configurations.
-
-
-## Simple Example
-```python
-from pymab.policies.greedy import GreedyPolicy
-  from pymab.policies.thompson_sampling import ThompsonSamplingPolicy
-  from pymab.game import Game
-
-  n_bandits = 5
-  
-  # Define the policies
-  greedy_policy = GreedyPolicy(
-                      optimistic_initialization=1,
-                      n_bandits=n_bandits
-                  )
-  ts_policy = ThompsonSamplingPolicy(n_bandits=n_bandits)
-
-  # Define the game
-  game = Game(
-       n_episodes=2000,
-       n_steps=1000,
-       policies=[greedy_policy, ts_policy],
-       n_bandits=n_bandits
-  )
-
-  # Run the game
-  game.game_loop()
-
-  # Plot the results
-  game.plot_average_reward_by_step()
+```bash
+pip install pymab
 ```
 
-### Other examples
-In ./examples/ you can find detailed examples of how to use the library:
-* [Basic Usage](examples/basic_usage.ipynb): A simple example of how to use the library with the Greedy Policy.
-* [Bayesian UCB Bernoulli](examples/bayesian_ucb_bernoulli.ipynb): An example comparing the multiple configurations of the UCB and the Bayesian UCB policies with a Bernoulli reward distribution.
-* [Comparing Policies Gaussian](examples/comparing_policies_gaussian.ipynb): An example comparing the multiple configurations of the Greedy, the Epsilon Greedy, the Bayesian UCB, and the Thompson Sampling policies with a Gaussian reward distribution.
-* [Contextual Bandits Proxies](examples/contextual_bandits_proxies.ipynb): An example comparing the multiple configurations of the Greedy abd the Contextual Bandits for **proxy server selection** based on latency, bandwidth, downtime rate, success rate, proximity and load.
-* [Non-Stationary Policies](examples/non_stationary_policies.ipynb): An example comparing the multiple configurations of the UCB, the Sliding Window UCB, and the Discounted UCB policies in a stationary environment, non-stationary with gradual changes, non-stationary with abrupt changes, and non-stationary with random arm swapping.
-* [Thompson Sampling Bernoulli](examples/thompson_sampling_bernoulli.ipynb): An example comparing the multiple configurations of the Greedy, and the Thompson Sampling policies with a Bernoulli reward distribution, showing the evolution of the reward distribution estimations.
-* [Thompson Sampling Gaussian](examples/thompson_sampling_gaussian.ipynb): An example comparing the multiple configurations of the Greedy, and the Thompson Sampling policies with a Gaussian reward distribution, showing the evolution of the reward distribution estimations.
+For local development:
+
+```bash
+python -m venv .venv
+source .venv/bin/activate
+pip install -e ".[dev,plot]"
+python -m unittest discover -v
+```
+
+With uv, use the Makefile targets used by CI:
+
+```bash
+make sync
+make format
+make lint
+make security
+make test
+```
+
+`make format` checks formatting. Use `make format-fix` to rewrite formatting
+locally.
+
+The Makefile tries `uv run ...` first. If your local uv binary fails before it
+can run a tool, the targets fall back to executables installed in `.venv`; run
+`make sync` once to create/populate that environment.
+
+## Basic Example
+
+```python
+import numpy as np
+
+from pymab.environments import BanditEnvironment
+from pymab.policies import EpsilonGreedyPolicy, UCBPolicy
+from pymab.simulation import Experiment, ExperimentConfig
+
+environment = BanditEnvironment(q_values=np.array([0.1, 0.4, 0.8]))
+policies = [
+    EpsilonGreedyPolicy(n_arms=3, epsilon=0.1),
+    UCBPolicy(n_arms=3, c=2.0),
+]
+
+result = Experiment(
+    environment=environment,
+    policies=policies,
+    config=ExperimentConfig(n_episodes=200, n_steps=500, seed=42),
+).run()
+
+print(result.average_reward_by_step[-1])
+print(result.cumulative_regret[-1])
+```
+
+## Non-Stationary Environments
+
+```python
+import numpy as np
+
+from pymab.environments import BanditEnvironment, GradualDrift
+
+environment = BanditEnvironment(
+    q_values=np.array([0.2, 0.5, 0.7]),
+    dynamics=GradualDrift(change_rate=0.01),
+)
+```
+
+Built-in dynamics:
+
+- `StationaryDynamics`
+- `GradualDrift`
+- `AbruptShift`
+- `RandomArmSwap`
+
+## Policies
+
+Classic bandits:
+
+- `GreedyPolicy`
+- `EpsilonGreedyPolicy`
+- `SoftmaxPolicy`
+- `GradientBanditPolicy`
+- `UCBPolicy`
+- `SlidingWindowUCBPolicy`
+- `DiscountedUCBPolicy`
+- `BernoulliThompsonSamplingPolicy`
+- `GaussianThompsonSamplingPolicy`
+- `BernoulliBayesianUCBPolicy`
+- `GaussianBayesianUCBPolicy`
+
+Contextual bandits:
+
+- `LinearEpsilonGreedyPolicy`
+- `LinUCBPolicy`
+- `LinearThompsonSamplingPolicy`
+
+## Contextual Example
+
+```python
+import numpy as np
+
+from pymab.environments import LinearContextualEnvironment
+from pymab.policies import LinUCBPolicy
+from pymab.simulation import Experiment, ExperimentConfig
 
 
-## Features
-* Design to compare different algorithms in the same environment.
-* Built-in plotting functions to visualize the results.
-* Support for several Multi-Armed Bandit algorithms.
-* Support for different types of reward distributions (Gaussian, Bernoulli).
-* Support for different types of environments (Stationary, Non-Stationary).
+def context_provider(rng: np.random.Generator) -> np.ndarray:
+    return np.array([[1.0, 0.0], [0.0, 1.0]])
 
 
-### Environments
-### Stationary
-* The reward distribution remains the same during the whole execution.
+environment = LinearContextualEnvironment(
+    theta=np.array([[1.0, 0.0], [0.0, 1.0]]),
+    context_provider=context_provider,
+)
 
-### Non-Stationary
-* The reward distribution changes during the execution. This library contains a mixin to create non-stationary environments that change the reward distribution in multiple ways, and easily extensible.
+result = Experiment(
+    environment=environment,
+    policies=[LinUCBPolicy(n_arms=2, n_features=2)],
+    config=ExperimentConfig(n_episodes=100, n_steps=200, seed=7),
+).run()
+```
 
-* **Gradual Change:** The reward distribution will change slightly each step.
+## Plotting
 
-* **Abrupt Change:** The reward distribution will change more, periodically.
+```python
+from pathlib import Path
 
-* **Random Arm Swapping:** The reward distribution will change by swapping the rewards between arms and at random steps.
+from pymab.plotting import plot_average_reward, plot_cumulative_regret
 
+plot_average_reward(result, output_path=Path("results/average_reward.html"))
+plot_cumulative_regret(result, output_path=Path("results/regret.html"))
+```
 
-### Policies
-#### Multi-Armed Bandit algorithms and reward distributions
-##### Basic Exploration-Exploitation Algorithms
-* **Greedy:**
-  * Always selects the arm with the highest estimated reward.
-  * Very simple but can get stuck on suboptimal arms if initial estimates are inaccurate.
-  * No exploration, all exploitation.
+Install plotting extras first:
 
-* **Epsilon-Greedy:**
-  * Most of the time (1-ε), selects the best arm like Greedy.
-  * Sometimes (ε), randomly selects an arm to explore.
-  * Balances exploration and exploitation, but exploration doesn't decrease over time.
+```bash
+pip install "pymab[plot]"
+```
 
+## Migration Notes
 
-##### Upper Confidence Bound (UCB) Algorithms
-* **UCB:** 
-  * Selects the arm with the highest upper confidence bound.
-  * Automatically balances exploration and exploitation.
-  * Explores less-pulled arms more, but focuses on promising arms over time.
-  * Has adaptations for non-stationary environments.
-    * **SlidingWindowUCB:** 
-      * Like UCB, but only considers recent observations.
-      * Adapts better to abrupt changes in reward distributions.
-    * **DiscountedUCB:** 
-      * Like UCB, but gives more weight to recent observations.
-      * Adapts better to gradual changes in reward distributions.
-  
-* **Bayesian UCB:** 
-  * Can incorporate prior knowledge about reward distributions.
-  * Has adaptations for Bernoulli and Gaussian reward distributions.
-  
-
-##### Bayesian Methods
-* **Thompson Sampling:** 
-  * Samples from estimated reward distributions and picks the highest sample.
-  * Naturally balances exploration and exploitation.
-  * Often performs very well in practice, especially with enough samples.
-  * Has adaptations for Bernoulli and Gaussian reward distributions.
-
-##### Softmax and Gradient-Based Methods
-* **Softmax Selection:** 
-  * To be implemented
-  * Selects arms probabilistically based on their estimated values.
-  * Higher estimated values have higher probability of being selected.
-  * Temperature parameter controls exploration-exploitation trade-off.
-
-* **Gradient:** 
-  * To be implemented
-  * Updates a preference for each arm based on the reward received.
-  * Doesn't maintain estimates of actual reward values.
-  * Can work well in relative reward scenarios.
-
-##### Contextual Bandits
-* **Contextual Bandits:**
-  * Takes into account additional information (context) when making decisions.
-  * Can learn to select different arms in different contexts.
-  * More powerful but also more complex than standard bandits.
-
-
-## Roadmap
-* [ ] Add implementation for otimised Greedy policies for non-stationary environments.
-* [ ] Add more complex policy adaptions for non-stationary environments.
-  * [ ] https://towardsdatascience.com/reinforcement-learning-basics-stationary-and-non-stationary-multi-armed-bandit-problem-cfe06d33b815
-  * [ ] https://gdmarmerola.github.io/non-stationary-bandits/
-    * [ ] Exponentially weighted means
-    * [ ] Weighted block means
-    * [ ] Fitting a time series model to find an indicator of when a distribution changes and tune the exploration rate accordingly
-* [ ] Add more complex non-stationary environments, like changing the variance, mean, random abrupt changes, machine learning, ...
-* [ ] Add unit tests for non-stationary environments and policies.
-* [ ] Make mixin for optimistic initialisation, since not all policies use it.
-* [ ] Add implementation for softmax_selection policy.
-* [ ] Add implementation for gradient policy. 
-
-
-* [Github Project Board](examples/basic_usage.ipynb):
-
-**This is an ongoing project, and we are always looking for suggestions and contributions. If you have any ideas or want to help, please reach out to us!**
-  
+The old `Game` API remains as a deprecated compatibility wrapper. New code
+should use `BanditEnvironment`, `ExperimentConfig`, and `Experiment` directly.
+The old `pymab.reward_distribution` import path also remains available, but the
+new module is `pymab.distributions`.
