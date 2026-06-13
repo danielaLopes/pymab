@@ -27,6 +27,16 @@ Classic Policies
    :undoc-members:
    :show-inheritance:
 
+.. automodule:: pymab.policies.adversarial
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+.. automodule:: pymab.policies.pure_exploration
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 .. automodule:: pymab.policies.softmax_selection
    :members:
    :undoc-members:

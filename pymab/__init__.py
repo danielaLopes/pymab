@@ -11,6 +11,7 @@ from pymab.environments import (
     RandomArmSwap,
     StationaryDynamics,
 )
+from pymab.offline import OfflineReplayResult, replay_evaluate
 from pymab.simulation import Experiment, ExperimentConfig, SimulationResult
 
 __version__ = "1.0.0"
@@ -27,9 +28,11 @@ __all__ = [
     "GaussianReward",
     "GradualDrift",
     "LinearContextualEnvironment",
+    "OfflineReplayResult",
     "RandomArmSwap",
     "SimulationResult",
     "StationaryDynamics",
     "UniformReward",
     "compare",
+    "replay_evaluate",
 ]

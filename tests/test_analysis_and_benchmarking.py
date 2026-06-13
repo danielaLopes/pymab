@@ -6,7 +6,8 @@ import numpy as np
 
 from pymab.benchmarking import compare, confidence_interval_margin
 from pymab.environments import BanditEnvironment
-from pymab.policies import RandomPolicy, UCBPolicy
+from pymab.offline import replay_evaluate
+from pymab.policies import LogisticContextualBanditPolicy, RandomPolicy, UCBPolicy
 from pymab.simulation import Experiment, ExperimentConfig, SimulationResult
 
 
@@ -84,6 +85,48 @@ class BenchmarkingTests(unittest.TestCase):
             confidence_interval_margin(np.array([1.0, 2.0, 3.0])),
             0.0,
         )
+
+
+class OfflineReplayTests(unittest.TestCase):
+    def test_replay_evaluate_accepts_matching_logged_events(self) -> None:
+        policy = RandomPolicy(n_arms=1)
+        result = replay_evaluate(
+            policy,
+            logged_actions=np.array([0, 0, 0]),
+            logged_rewards=np.array([1.0, 0.0, 1.0]),
+            propensities=np.array([1.0, 1.0, 1.0]),
+            seed=1,
+        )
+
+        self.assertEqual(result.n_accepted_events, 3)
+        self.assertEqual(result.acceptance_rate, 1.0)
+        self.assertEqual(result.average_reward, 2.0 / 3.0)
+        self.assertEqual(result.ips_estimate, 2.0 / 3.0)
+        np.testing.assert_allclose(result.cumulative_rewards, np.array([1.0, 1.0, 2.0]))
+
+    def test_replay_evaluate_contextual_requires_contexts(self) -> None:
+        policy = LogisticContextualBanditPolicy(n_arms=1, n_features=2)
+        with self.assertRaises(ValueError):
+            replay_evaluate(
+                policy,
+                logged_actions=np.array([0]),
+                logged_rewards=np.array([1.0]),
+            )
+
+    def test_replay_evaluate_updates_contextual_policy_with_contexts(self) -> None:
+        policy = LogisticContextualBanditPolicy(n_arms=1, n_features=2)
+        contexts = np.array([[[1.0, 0.0]], [[0.0, 1.0]]])
+        result = replay_evaluate(
+            policy,
+            logged_actions=np.array([0, 0]),
+            logged_rewards=np.array([1.0, 0.0]),
+            contexts=contexts,
+            seed=2,
+            clone_policy=False,
+        )
+
+        self.assertEqual(result.n_accepted_events, 2)
+        self.assertFalse(np.allclose(policy.theta, np.zeros((1, 2))))
 
 
 if __name__ == "__main__":
