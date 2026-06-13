@@ -1,177 +1,180 @@
+"""Linear contextual bandit policies."""
+
 from __future__ import annotations
 
-import logging
+from typing import cast
 
 import numpy as np
-import typing
 
-from pymab.policies.mixins.stationarity_mixins import StationaryPolicyMixin
-from pymab.policies.policy import Policy
-
-if typing.TYPE_CHECKING:
-    from typing import *
-
-logger = logging.getLogger(__name__)
+from pymab.policies.policy import (
+    ContextualPolicy,
+    FloatArray,
+    choose_argmax,
+    validate_probability,
+)
 
 
-class ContextualBanditPolicy(StationaryPolicyMixin, Policy):
-    """
-    Implements a Contextual Bandit policy for multi-armed bandit problems.
-
-    This policy introduces the notion that the reward obtained at each step depends on the current context,
-    such as the time of the day, or whether it's raining or not. When deciding which action to take, the agent leverages
-    its context to make a more informed decision. This potentially reduces the need for exploration, unlike other
-    policies.
-
-    Contextual Bandits implements a linear model to predict rewards based on the context, where the weights are updated.
-
-    Args:
-        n_bandits: Number of bandits (actions) available.
-        context_dim: Dimension of the context vector.
-        context_func: Function that generates context vectors.
-        optimistic_initialization: Initial Q-value for all actions. Defaults to 0.
-        variance: Variance of the reward distribution. Defaults to 1.0.
-        reward_distribution: Type of reward distribution. Defaults to "gaussian".
-        learning_rate: Rate at which linear coefficients are updated. Defaults to 0.1.
-
-    Attributes:
-        context_dim (int): Dimension of the context vector.
-        theta (np.ndarray): Matrix of shape (n_bandits, context_dim) storing linear 
-            coefficients for each bandit.
-        learning_rate (float): Learning rate for updating coefficients.
-
-    Note:
-        Theory:
-        Contextual Bandits extend traditional multi-armed bandits by incorporating
-        contextual information. The policy learns a linear mapping from context to
-        expected rewards for each action, enabling more informed decisions based on
-        the current state or environment.
-
-        The linear model updates follow the rule:
-        θ_i = θ_i + α × (r - θ_i · c) × c
-        where:
-        - θ_i is the coefficient vector for action i
-        - α is the learning rate
-        - r is the observed reward
-        - c is the context vector
-
-    Example:
-        A typical use case might be a recommendation system where the context
-        includes user features:
-        ```python
-        def get_user_context():
-            return np.array([
-                [user.age, user.location, user.interests],  # features for action 1
-                [user.age, user.location, user.interests],  # features for action 2
-            ]).T
-
-        policy = ContextualBanditPolicy(
-            n_bandits=2,
-            context_dim=3,
-            context_func=get_user_context,
-            learning_rate=0.1
-        )
-        ```
-    """
+class LinearEpsilonGreedyPolicy(ContextualPolicy):
+    """Linear contextual policy with epsilon-greedy exploration."""
 
     def __init__(
         self,
         *,
-        n_bandits: int,
-        context_dim: int,
-        context_func: Callable,
-        optimistic_initialization: float = 0,
-        variance: float = 1.0,
-        reward_distribution: str = "gaussian",
+        n_arms: int | None = None,
+        n_bandits: int | None = None,
+        n_features: int | None = None,
+        context_dim: int | None = None,
+        epsilon: float = 0.1,
         learning_rate: float = 0.1,
+        **_: object,
     ) -> None:
-        super().__init__(
-            n_bandits=n_bandits,
-            optimistic_initialization=optimistic_initialization,
-            variance=variance,
-            reward_distribution=reward_distribution,
-            context_func=context_func,
-        )
-        self.context_dim = context_dim
-        self.theta = np.zeros(
-            (n_bandits, context_dim)
-        )
-        self.learning_rate = learning_rate
-
-    def _update(
-        self, chosen_action_index: int, context_chosen_action: np.array
-    ) -> float:
-        """
-        Updates the linear coefficients for the chosen action.
-        The coefficients are updated using the following formula:
-        θ_i = θ_i + α × (r - θ_i · c) × c, where c is the context and α is the learning rate.
-
-        Args:
-            chosen_action_index: Index of the chosen action.
-            context_chosen_action: Context vector when the action was chosen.
-
-        Returns:
-            The reward obtained from the chosen action.
-        """
-        reward = super()._update(chosen_action_index)
-        self.theta[chosen_action_index] += (
-            self.learning_rate
-            * (reward - self.theta[chosen_action_index] @ context_chosen_action)
-            * context_chosen_action
-        )
-
-        return reward
+        validate_probability(epsilon, name="epsilon")
+        if learning_rate <= 0:
+            raise ValueError("learning_rate must be positive")
+        arms = n_arms if n_arms is not None else n_bandits
+        features = n_features if n_features is not None else context_dim
+        if arms is None or features is None:
+            raise TypeError("n_arms and n_features are required")
+        self.epsilon = float(epsilon)
+        self.learning_rate = float(learning_rate)
+        self.theta: FloatArray
+        super().__init__(n_arms=int(arms), n_features=int(features))
+        self.reset()
 
     def reset(self) -> None:
-        """
-        Reset the policy to its initial state.
+        self.theta = np.zeros((self.n_arms, self.n_features), dtype=float)
 
-        This method resets the base policy and reinitializes the theta matrix.
-        """
-        super().reset()
-        self.theta = np.zeros((self.n_bandits, self.context_dim))
+    def select_action(self, *, context: FloatArray, rng: np.random.Generator) -> int:
+        self._validate_context(context)
+        if rng.random() < self.epsilon:
+            return int(rng.integers(self.n_arms))
+        return choose_argmax(self.scores(context), rng)
 
-    def select_action(self, context: np.array) -> Tuple[int, float]:
-        """
-        Selects the action based on the current context using a linear model, leveraging the dot product between thetas
-        and the current context, which represents the weighted sum of the features in the current context, and used to
-        estimate rewards.
+    def update(self, *, action: int, reward: float, context: FloatArray) -> None:
+        self._validate_action(action)
+        self._validate_context(context)
+        x = context[action]
+        error = float(reward) - float(self.theta[action] @ x)
+        self.theta[action] += self.learning_rate * error * x
 
-        Args:
-            context: Current context matrix of shape (context_dim, n_bandits).
-
-        Returns:
-            A tuple containing:
-                - Index of the chosen action (int)
-                - Reward received (float)
-
-        Raises:
-            ValueError: If context dimensions don't match expected dimensions.
-        """
-        if context.shape[0] != self.context_dim:
-            raise ValueError(
-                "Context dimension does not match the expected context_dim."
-            )
-        if context.shape[1] != self.n_bandits:
-            raise ValueError("Context dimension does not match the expected n_bandits.")
-
-        expected_rewards = np.array(
-            [self.theta[i] @ context[:, i] for i in range(self.n_bandits)]
-        )
-        chosen_action_index = np.argmax(expected_rewards)
-
-        return chosen_action_index, self._update(
-            chosen_action_index, context_chosen_action=context[:, chosen_action_index]
+    def scores(self, context: FloatArray) -> FloatArray:
+        self._validate_context(context)
+        return cast(
+            FloatArray, np.einsum("ij,ij->i", context, self.theta).astype(float)
         )
 
     def __repr__(self) -> str:
-        return f"{super().__repr__()}(learning_rate={self.learning_rate})"
+        return (
+            "LinearEpsilonGreedyPolicy("
+            f"epsilon={self.epsilon}, learning_rate={self.learning_rate})"
+        )
 
-    def __str__(self):
-        return f"""{super().__repr__()}(
-                    n_bandits={self.n_bandits}\n
-                    Q_values={self.Q_values}\n
-                    variance={self.variance}\n
-                    context_dim={self.context_dim}\n,
-                    theta={self.theta}\n,
-                    learning_rate={self.learning_rate})"""
+
+class LinUCBPolicy(ContextualPolicy):
+    """Disjoint linear UCB for contextual bandits."""
+
+    def __init__(
+        self,
+        *,
+        n_arms: int,
+        n_features: int,
+        alpha: float = 1.0,
+        l2: float = 1.0,
+        **_: object,
+    ) -> None:
+        if alpha <= 0:
+            raise ValueError("alpha must be positive")
+        if l2 <= 0:
+            raise ValueError("l2 must be positive")
+        self.alpha = float(alpha)
+        self.l2 = float(l2)
+        self.a: FloatArray
+        self.b: FloatArray
+        super().__init__(n_arms=n_arms, n_features=n_features)
+        self.reset()
+
+    def reset(self) -> None:
+        eye = np.eye(self.n_features, dtype=float)
+        self.a = np.repeat((self.l2 * eye)[np.newaxis, :, :], self.n_arms, axis=0)
+        self.b = np.zeros((self.n_arms, self.n_features), dtype=float)
+
+    def select_action(self, *, context: FloatArray, rng: np.random.Generator) -> int:
+        self._validate_context(context)
+        return choose_argmax(self.upper_confidence_bounds(context), rng)
+
+    def update(self, *, action: int, reward: float, context: FloatArray) -> None:
+        self._validate_action(action)
+        self._validate_context(context)
+        x = context[action]
+        self.a[action] += np.outer(x, x)
+        self.b[action] += float(reward) * x
+
+    def upper_confidence_bounds(self, context: FloatArray) -> FloatArray:
+        self._validate_context(context)
+        values = np.zeros(self.n_arms, dtype=float)
+        for arm in range(self.n_arms):
+            a_inv = np.linalg.inv(self.a[arm])
+            theta = a_inv @ self.b[arm]
+            x = context[arm]
+            uncertainty = np.sqrt(float(x @ a_inv @ x))
+            values[arm] = float(theta @ x) + self.alpha * uncertainty
+        return values
+
+    def __repr__(self) -> str:
+        return f"LinUCBPolicy(alpha={self.alpha}, l2={self.l2})"
+
+
+class LinearThompsonSamplingPolicy(ContextualPolicy):
+    """Bayesian linear Thompson Sampling for contextual bandits."""
+
+    def __init__(
+        self,
+        *,
+        n_arms: int,
+        n_features: int,
+        exploration_scale: float = 1.0,
+        l2: float = 1.0,
+        **_: object,
+    ) -> None:
+        if exploration_scale <= 0:
+            raise ValueError("exploration_scale must be positive")
+        if l2 <= 0:
+            raise ValueError("l2 must be positive")
+        self.exploration_scale = float(exploration_scale)
+        self.l2 = float(l2)
+        self.a: FloatArray
+        self.b: FloatArray
+        super().__init__(n_arms=n_arms, n_features=n_features)
+        self.reset()
+
+    def reset(self) -> None:
+        eye = np.eye(self.n_features, dtype=float)
+        self.a = np.repeat((self.l2 * eye)[np.newaxis, :, :], self.n_arms, axis=0)
+        self.b = np.zeros((self.n_arms, self.n_features), dtype=float)
+
+    def select_action(self, *, context: FloatArray, rng: np.random.Generator) -> int:
+        self._validate_context(context)
+        samples = np.zeros(self.n_arms, dtype=float)
+        for arm in range(self.n_arms):
+            a_inv = np.linalg.inv(self.a[arm])
+            mean = a_inv @ self.b[arm]
+            cov = (self.exploration_scale**2) * a_inv
+            theta_sample = rng.multivariate_normal(mean, cov)
+            samples[arm] = float(theta_sample @ context[arm])
+        return int(np.argmax(samples))
+
+    def update(self, *, action: int, reward: float, context: FloatArray) -> None:
+        self._validate_action(action)
+        self._validate_context(context)
+        x = context[action]
+        self.a[action] += np.outer(x, x)
+        self.b[action] += float(reward) * x
+
+    def __repr__(self) -> str:
+        return (
+            "LinearThompsonSamplingPolicy("
+            f"exploration_scale={self.exploration_scale}, l2={self.l2})"
+        )
+
+
+ContextualBanditPolicy = LinearEpsilonGreedyPolicy

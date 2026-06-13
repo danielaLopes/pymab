@@ -1,337 +1,164 @@
+"""Upper-confidence-bound policies."""
+
 from __future__ import annotations
 
-from abc import ABC, abstractmethod
-import logging
-import math
-import typing
+from collections import deque
+from dataclasses import dataclass
+from typing import cast
 
 import numpy as np
 
-from pymab.policies.mixins.stationarity_mixins import (
-    StationaryPolicyMixin,
-    SlidingWindowMixin,
-    DiscountedMixin,
-)
-from pymab.policies.policy import Policy
-from pymab.reward_distribution import RewardDistribution
-
-if typing.TYPE_CHECKING:
-    from typing import *
-
-logger = logging.getLogger(__name__)
+from pymab.policies.policy import ActionValuePolicy, FloatArray, choose_argmax
 
 
-class UCBPolicy(StationaryPolicyMixin, Policy, ABC):
-    n_bandits: int
-    optimistic_initialization: float
-    _Q_values: np.array
-    current_step: int
-    total_reward: float
-    times_selected: np.array
-    actions_estimated_reward: np.array
-    variance: float
-    reward_distribution: Type[RewardDistribution]
-    rewards_history: List[List[float]]
-    c: float
+class UCBPolicy(ActionValuePolicy):
+    """UCB1 policy for stationary rewards."""
 
     def __init__(
         self,
         *,
-        n_bandits: int,
+        n_arms: int | None = None,
+        n_bandits: int | None = None,
+        initial_value: float | None = None,
         optimistic_initialization: float = 0.0,
-        variance: float = 1.0,
-        reward_distribution: str = "gaussian",
-        c: float = 1.0,
+        c: float = 2.0,
+        **_: object,
     ) -> None:
-        super().__init__(
-            n_bandits=n_bandits,
-            optimistic_initialization=optimistic_initialization,
-            variance=variance,
-            reward_distribution=reward_distribution,
-        )
-        self.c = c
+        if c <= 0:
+            raise ValueError("c must be positive")
+        arms = n_arms if n_arms is not None else n_bandits
+        if arms is None:
+            raise TypeError("n_arms is required")
+        init = optimistic_initialization if initial_value is None else initial_value
+        super().__init__(n_arms=int(arms), initial_value=float(init))
+        self.c = float(c)
 
-    @abstractmethod
-    def _calculate_confidence_interval(self, action_index: int) -> float:
-        """
-        Calculate the confidence interval for a given action.
+    def select_action(self, *, rng: np.random.Generator) -> int:
+        unseen = np.flatnonzero(self.counts == 0)
+        if unseen.size:
+            return int(unseen[0])
+        values = self.estimates + self._confidence_bonus()
+        return choose_argmax(values, rng)
 
-        This method is abstract and should be implemented by subclasses to define
-        the specific confidence interval calculation for each UCB variant.
-
-        :param action_index: The index of the action to calculate the confidence interval for.
-        :type action_index: int
-        :return: The calculated confidence interval.
-        :rtype: float
-        """
-        pass
-
-    def _get_ucb_value(self, action_index: int) -> float:
-        """
-        Calculate the Upper Confidence Bound (UCB) value for a given action.
-
-        This method implements the core UCB algorithm by combining the estimated reward
-        with the confidence interval. It handles the case of unselected actions by
-        returning infinity, ensuring exploration of all actions initially.
-
-        :param action_index: The index of the action to calculate the UCB value for.
-        :type action_index: int
-        :return: The calculated UCB value, or infinity for unselected actions.
-        :rtype: float
-
-        :Theory:
-            UCB = Q(a) + U(a), where Q(a) is the estimated reward and U(a) is the confidence interval.
-        """
-        if self.times_selected[action_index] == 0:
-            return float("inf")
-
-        mean_reward = self.actions_estimated_reward[action_index]
-
-        return mean_reward + self._calculate_confidence_interval(action_index)
-
-    def select_action(self, *args, **kwargs) -> Tuple[int, float]:
-        """
-        Select the next action based on the UCB algorithm.
-
-        This method implements the action selection strategy of UCB:
-        1. Initially, it selects each action once to gather initial estimates.
-        2. After that, it chooses the action with the highest UCB value.
-
-        :return: A tuple containing the index of the chosen action and the reward obtained from taking that action.
-        :rtype: Tuple[int, float]
-
-        Examples:
-        Here's how to use the `select_action` method:
-
-        .. code-block:: python
-
-            policy = UCBPolicy(n_bandits=3)
-            for _ in range(100):
-                action, reward = policy.select_action()
-                # Use the action and reward as needed
-        """
-        if self.current_step < self.n_bandits:
-            chosen_action_index = self.current_step
-        else:
-            ucb_values = np.array(
-                [self._get_ucb_value(i) for i in range(self.n_bandits)]
-            )
-            chosen_action_index = np.argmax(ucb_values)
-
-        return chosen_action_index, self._update(chosen_action_index)
+    def _confidence_bonus(self) -> FloatArray:
+        return cast(FloatArray, np.sqrt(self.c * np.log(self.step + 1) / self.counts))
 
     def __repr__(self) -> str:
-        return f"{super().__repr__()}(opt_init={self.optimistic_initialization}, c={self.c})"
-
-    def __str__(self):
-        return f"""{self.__class__.__name__}(
-                    n_bandits={self.n_bandits}\n
-                    optimistic_initialization={self.optimistic_initialization})\n
-                    Q_values={self.Q_values}\n
-                    total_reward={self.current_step}\n
-                    times_selected={self.times_selected}\n
-                    actions_estimated_reward={self.actions_estimated_reward}\n
-                    variance={self.variance}
-                    c={self.c})"""
+        return f"UCBPolicy(c={self.c}, initial_value={self.initial_value})"
 
 
 class StationaryUCBPolicy(UCBPolicy):
-    n_bandits: int
-    optimistic_initialization: float
-    _Q_values: np.array
-    current_step: int
-    total_reward: float
-    times_selected: np.array
-    actions_estimated_reward: np.array
-    variance: float
-    reward_distribution: Type[RewardDistribution]
-    c: float
-
-    def _calculate_confidence_interval(self, action_index: int) -> float:
-        """
-        Calculate the confidence interval for the stationary UCB algorithm.
-
-        This method implements the standard UCB1 confidence interval calculation,
-        which assumes a stationary environment (i.e., reward distributions do not change over time).
-
-        :param action_index: The index of the action to calculate the confidence interval for.
-        :type action_index: int
-        :return: The calculated confidence interval.
-        :rtype: float
-
-        :Theory:
-            The confidence interval is calculated as sqrt((c * log(t)) / n_a),
-            where c is the exploration parameter, t is the current time step,
-            and n_a is the number of times the action has been selected.
-
-        :Optimization:
-            - Uses math.sqrt and math.log for efficient calculation.
-            - Adds 1 to current_step to avoid log(0) in the first step.
-        """
-        confidence_interval = math.sqrt(
-            (self.c * math.log(self.current_step + 1))
-            / self.times_selected[action_index]
-        )
-        return confidence_interval
+    """Backward-compatible name for :class:`UCBPolicy`."""
 
 
-class SlidingWindowUCBPolicy(SlidingWindowMixin, UCBPolicy):
-    n_bandits: int
-    optimistic_initialization: float
-    _Q_values: np.array
-    current_step: int
-    total_reward: float
-    times_selected: np.array
-    actions_estimated_reward: np.array
-    variance: float
-    reward_distribution: Type[RewardDistribution]
-    c: float
-    window_size: int
-    rewards_history: List[List[float]]
+class SlidingWindowUCBPolicy(UCBPolicy):
+    """UCB with per-arm sliding-window value estimates."""
 
     def __init__(
         self,
-        n_bandits: int,
+        *,
+        n_arms: int | None = None,
+        n_bandits: int | None = None,
+        initial_value: float | None = None,
         optimistic_initialization: float = 0.0,
-        variance: float = 1.0,
-        reward_distribution: str = "gaussian",
-        c: float = 1.0,
+        c: float = 2.0,
         window_size: int = 100,
-    ):
-        UCBPolicy.__init__(
-            self,
+        **kwargs: object,
+    ) -> None:
+        if window_size <= 0:
+            raise ValueError("window_size must be positive")
+        self.window_size = int(window_size)
+        self._windows: list[deque[float]]
+        super().__init__(
+            n_arms=n_arms,
             n_bandits=n_bandits,
+            initial_value=initial_value,
             optimistic_initialization=optimistic_initialization,
-            variance=variance,
-            reward_distribution=reward_distribution,
             c=c,
+            **kwargs,
         )
-        SlidingWindowMixin.__init__(self, window_size=window_size)
 
-    def _calculate_confidence_interval(self, action_index: int) -> float:
-        """
-        Calculate the confidence interval for the Sliding Window UCB algorithm.
+    def reset(self) -> None:
+        super().reset()
+        self._windows = [deque(maxlen=self.window_size) for _ in range(self.n_arms)]
 
-        This method adapts the UCB confidence interval calculation to use a sliding window,
-        which allows the algorithm to adapt to non-stationary environments by focusing on
-        recent observations.
+    def _update_estimate(self, *, action: int, reward: float) -> None:
+        self._windows[action].append(float(reward))
+        self.estimates[action] = float(np.mean(self._windows[action]))
 
-        :param action_index: The index of the action to calculate the confidence interval for.
-        :type action_index: int
-        :return: The calculated confidence interval.
-        :rtype: float
-
-        :Theory:
-            The confidence interval is calculated similarly to UCB1, but uses the minimum of
-            the current step (or window size) and the number of times the action has been selected
-            within the window.
-
-        :Optimization:
-            - Uses min() to handle both the window size and the number of selections efficiently.
-            - Adds 1 to the log term to avoid log(0) in the first step.
-        """
-        confidence_interval = math.sqrt(
-            (self.c * math.log(min(self.current_step, self.window_size) + 1))
-            / min(self.times_selected[action_index], self.window_size)
+    def _confidence_bonus(self) -> FloatArray:
+        effective_counts = np.array(
+            [max(len(window), 1) for window in self._windows], dtype=float
         )
-        return confidence_interval
+        horizon = max(min(self.step + 1, self.window_size), 2)
+        return cast(FloatArray, np.sqrt(self.c * np.log(horizon) / effective_counts))
 
     def __repr__(self) -> str:
-        return f"{super().__repr__()}(window={self.window_size})"
-
-    def __str__(self):
-        description = super().__str__()
-        return f"""{self.__class__.__name__}(
-            {description}\n
-            window_size={self.window_size})"""
+        return f"SlidingWindowUCBPolicy(c={self.c}, window_size={self.window_size})"
 
 
-class DiscountedUCBPolicy(DiscountedMixin, UCBPolicy):
-    n_bandits: int
-    optimistic_initialization: float
-    _Q_values: np.array
-    current_step: int
-    total_reward: float
-    times_selected: np.array
-    actions_estimated_reward: np.array
-    variance: float
-    reward_distribution: Type[RewardDistribution]
-    c: float
-    discount_factor: float
-    effective_n: float
+class DiscountedUCBPolicy(UCBPolicy):
+    """UCB with exponentially discounted counts and estimates."""
 
     def __init__(
         self,
-        n_bandits: int,
-        optimistic_initialization: float = 0,
-        variance: float = 1.0,
-        reward_distribution: str = "gaussian",
-        c: float = 1.0,
+        *,
+        n_arms: int | None = None,
+        n_bandits: int | None = None,
+        initial_value: float | None = None,
+        optimistic_initialization: float = 0.0,
+        c: float = 2.0,
         discount_factor: float = 0.9,
-    ):
-        """
-        Initialize a Discounted UCB policy.
-
-        :param n_bandits: Number of bandits (arms) in the problem.
-        :type n_bandits: int    
-        :param optimistic_initialization: Initial value for estimated rewards.
-        :type optimistic_initialization: float
-        :param variance: Variance of the reward distribution.
-        :type variance: float
-        :param reward_distribution: Type of reward distribution ("gaussian" or "bernoulli").
-        :type reward_distribution: str
-        :param c: Exploration parameter controlling confidence bound width.
-        :type c: float
-        :param discount_factor: Factor for discounting past rewards (between 0 and 1).
-
-        The discount factor determines how much weight is given to past observations,
-        with values closer to 1 giving more weight to historical data.
-        """
-        UCBPolicy.__init__(
-            self,
+        **kwargs: object,
+    ) -> None:
+        if not 0 < discount_factor < 1:
+            raise ValueError("discount_factor must be in (0, 1)")
+        self.discount_factor = float(discount_factor)
+        self.discounted_counts: FloatArray
+        self.discounted_sums: FloatArray
+        super().__init__(
+            n_arms=n_arms,
             n_bandits=n_bandits,
+            initial_value=initial_value,
             optimistic_initialization=optimistic_initialization,
-            variance=variance,
-            reward_distribution=reward_distribution,
             c=c,
+            **kwargs,
         )
-        DiscountedMixin.__init__(self, discount_factor=discount_factor)
-        self.effective_n = 1 / (1 - self.discount_factor)
 
-    def _calculate_confidence_interval(self, action_index: int) -> float:
-        """
-        Calculate the confidence interval for the Discounted UCB algorithm.
+    def reset(self) -> None:
+        super().reset()
+        self.discounted_counts = np.zeros(self.n_arms, dtype=float)
+        self.discounted_sums = np.zeros(self.n_arms, dtype=float)
 
-        This method implements the confidence interval calculation for Discounted UCB,
-        which uses a discount factor to give more weight to recent observations,
-        allowing adaptation to slowly varying non-stationary environments.
-
-        :param action_index: The index of the action to calculate the confidence interval for.
-        :type action_index: int
-        :return: The calculated confidence interval.
-        :rtype: float
-
-        :Theory:
-            The confidence interval is calculated using the effective sample size (effective_n)
-            instead of the current time step. The effective_n is determined by the discount factor
-            and represents the equivalent number of observations if all had full weight.
-
-        :Optimization:
-            - Precomputes effective_n in the constructor to avoid repeated calculations.
-            - Uses min() to handle both the effective_n and the number of selections efficiently.
-        """
-        confidence_interval = math.sqrt(
-            (self.c * math.log(self.effective_n))
-            / min(self.times_selected[action_index], self.effective_n)
+    def update(self, *, action: int, reward: float) -> None:
+        self._validate_action(action)
+        self.step += 1
+        self.total_reward += float(reward)
+        self.counts[action] += 1.0
+        self.discounted_counts *= self.discount_factor
+        self.discounted_sums *= self.discount_factor
+        self.discounted_counts[action] += 1.0
+        self.discounted_sums[action] += float(reward)
+        observed = self.discounted_counts > 0
+        self.estimates[observed] = (
+            self.discounted_sums[observed] / self.discounted_counts[observed]
         )
-        return confidence_interval
+
+    def _confidence_bonus(self) -> FloatArray:
+        counts = np.maximum(self.discounted_counts, 1e-12)
+        effective_horizon = max(float(np.sum(self.discounted_counts)), 2.0)
+        return cast(FloatArray, np.sqrt(self.c * np.log(effective_horizon) / counts))
 
     def __repr__(self) -> str:
-        return f"{super().__repr__()}(disc_f={self.discount_factor}, effect_n={round(self.effective_n, 2)})"
+        return (
+            f"DiscountedUCBPolicy(c={self.c}, discount_factor={self.discount_factor})"
+        )
 
-    def __str__(self):
-        description = super().__str__()
-        return f"""{self.__class__.__name__}(
-            {description}\n
-            discount_factor={self.discount_factor}\n
-            effective_n={round(self.effective_n, 2)})"""
+
+@dataclass
+class UCBStats:
+    """Diagnostic UCB state."""
+
+    estimates: FloatArray
+    counts: FloatArray
+    bonuses: FloatArray
