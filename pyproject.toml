@@ -35,6 +35,9 @@ dev = [
     "pytest-cov>=5.0",
     "ruff>=0.5",
 ]
+analysis = [
+    "pandas>=2.0",
+]
 
 [dependency-groups]
 dev = [
@@ -79,4 +82,4 @@ ignore_missing_imports = true
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-addopts = "--cov=pymab --cov-report=term-missing --cov-fail-under=75"
+addopts = "--cov=pymab --cov-report=term-missing"

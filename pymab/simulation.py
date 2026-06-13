@@ -2,9 +2,11 @@
 
 from __future__ import annotations
 
+import json
 from collections.abc import Sequence
 from dataclasses import dataclass
-from typing import cast
+from pathlib import Path
+from typing import Any, cast
 
 import numpy as np
 
@@ -70,6 +72,101 @@ class SimulationResult:
     def optimal_action_rate_by_step(self) -> np.ndarray:
         optimal = self.actions == self.optimal_actions[:, :, np.newaxis]
         return cast(np.ndarray, np.mean(optimal, axis=0))
+
+    def to_dict(self) -> dict[str, Any]:
+        """Return a JSON-serializable representation of the simulation result."""
+
+        return {
+            "rewards": self.rewards.tolist(),
+            "actions": self.actions.tolist(),
+            "expected_rewards": self.expected_rewards.tolist(),
+            "optimal_actions": self.optimal_actions.tolist(),
+            "optimal_values": self.optimal_values.tolist(),
+            "policy_names": list(self.policy_names),
+            "q_values": None if self.q_values is None else self.q_values.tolist(),
+        }
+
+    def to_pandas(self) -> Any:
+        """Return tidy per-step results as a pandas DataFrame.
+
+        Install ``pymab[analysis]`` to make pandas available.
+        """
+
+        try:
+            import pandas as pd
+        except ImportError as exc:
+            raise ImportError("Install pymab[analysis] to use to_pandas().") from exc
+
+        rows: list[dict[str, Any]] = []
+        for episode in range(self.n_episodes):
+            for step in range(self.n_steps):
+                optimal_action = int(self.optimal_actions[episode, step])
+                optimal_value = float(self.optimal_values[episode, step])
+                for policy_index, policy_name in enumerate(self.policy_names):
+                    expected_reward = float(
+                        self.expected_rewards[episode, step, policy_index]
+                    )
+                    rows.append(
+                        {
+                            "episode": episode,
+                            "step": step,
+                            "policy_index": policy_index,
+                            "policy_name": policy_name,
+                            "action": int(self.actions[episode, step, policy_index]),
+                            "reward": float(self.rewards[episode, step, policy_index]),
+                            "expected_reward": expected_reward,
+                            "optimal_action": optimal_action,
+                            "optimal_value": optimal_value,
+                            "regret": optimal_value - expected_reward,
+                            "selected_optimal_action": bool(
+                                self.actions[episode, step, policy_index]
+                                == optimal_action
+                            ),
+                        }
+                    )
+        return pd.DataFrame.from_records(rows)
+
+    def save_npz(self, path: str | Path) -> None:
+        """Persist result arrays and metadata to a compressed NumPy archive."""
+
+        destination = Path(path)
+        destination.parent.mkdir(parents=True, exist_ok=True)
+        np.savez_compressed(
+            destination,
+            rewards=self.rewards,
+            actions=self.actions,
+            expected_rewards=self.expected_rewards,
+            optimal_actions=self.optimal_actions,
+            optimal_values=self.optimal_values,
+            q_values=np.array([]) if self.q_values is None else self.q_values,
+            has_q_values=np.array(self.q_values is not None),
+            policy_names=np.array(self.policy_names, dtype=str),
+        )
+
+    @classmethod
+    def load_npz(cls, path: str | Path) -> SimulationResult:
+        """Load a result previously saved with :meth:`save_npz`."""
+
+        with np.load(Path(path)) as data:
+            has_q_values = bool(data["has_q_values"].item())
+            return cls(
+                rewards=np.asarray(data["rewards"], dtype=float),
+                actions=np.asarray(data["actions"], dtype=int),
+                expected_rewards=np.asarray(data["expected_rewards"], dtype=float),
+                optimal_actions=np.asarray(data["optimal_actions"], dtype=int),
+                optimal_values=np.asarray(data["optimal_values"], dtype=float),
+                policy_names=tuple(str(name) for name in data["policy_names"]),
+                q_values=(
+                    np.asarray(data["q_values"], dtype=float) if has_q_values else None
+                ),
+            )
+
+    def save_json(self, path: str | Path) -> None:
+        """Persist a JSON representation for lightweight inspection."""
+
+        destination = Path(path)
+        destination.parent.mkdir(parents=True, exist_ok=True)
+        destination.write_text(json.dumps(self.to_dict(), indent=2), encoding="utf-8")
 
 
 @dataclass(frozen=True)
