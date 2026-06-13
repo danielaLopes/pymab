@@ -138,21 +138,32 @@ Classic bandits:
 - `GreedyPolicy`
 - `RandomPolicy`
 - `EpsilonGreedyPolicy`
+- `DecayingEpsilonGreedyPolicy`
 - `SoftmaxPolicy`
 - `GradientBanditPolicy`
 - `UCBPolicy`
+- `KLUCBPolicy`
+- `MOSSPolicy`
 - `SlidingWindowUCBPolicy`
 - `DiscountedUCBPolicy`
+- `CUSUMUCBPolicy`
+- `PageHinkleyUCBPolicy`
 - `BernoulliThompsonSamplingPolicy`
 - `GaussianThompsonSamplingPolicy`
+- `SlidingWindowBernoulliThompsonSamplingPolicy`
+- `DiscountedBernoulliThompsonSamplingPolicy`
 - `BernoulliBayesianUCBPolicy`
 - `GaussianBayesianUCBPolicy`
+- `EXP3Policy`
+- `SuccessiveEliminationPolicy`
+- `MedianEliminationPolicy`
 
 Contextual bandits:
 
 - `LinearEpsilonGreedyPolicy`
 - `LinUCBPolicy`
 - `LinearThompsonSamplingPolicy`
+- `LogisticContextualBanditPolicy`
 
 ## Contextual Example
 

@@ -38,6 +38,7 @@ Quick start
    examples
    environments
    policies
+   offline
    distributions
    game
    reward_distribution

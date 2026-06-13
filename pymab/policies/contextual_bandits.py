@@ -177,4 +177,76 @@ class LinearThompsonSamplingPolicy(ContextualPolicy):
         )
 
 
+class LogisticContextualBanditPolicy(ContextualPolicy):
+    """Online logistic contextual bandit for Bernoulli rewards.
+
+    Each arm has an independent logistic model. The policy predicts click or
+    conversion probability for each arm, explores with epsilon-greedy sampling,
+    and updates the selected arm using one stochastic-gradient step.
+    """
+
+    def __init__(
+        self,
+        *,
+        n_arms: int | None = None,
+        n_bandits: int | None = None,
+        n_features: int | None = None,
+        context_dim: int | None = None,
+        epsilon: float = 0.05,
+        learning_rate: float = 0.1,
+        l2: float = 0.0,
+        **_: object,
+    ) -> None:
+        validate_probability(epsilon, name="epsilon")
+        if learning_rate <= 0:
+            raise ValueError("learning_rate must be positive")
+        if l2 < 0:
+            raise ValueError("l2 must be non-negative")
+        arms = n_arms if n_arms is not None else n_bandits
+        features = n_features if n_features is not None else context_dim
+        if arms is None or features is None:
+            raise TypeError("n_arms and n_features are required")
+        self.epsilon = float(epsilon)
+        self.learning_rate = float(learning_rate)
+        self.l2 = float(l2)
+        self.theta: FloatArray
+        super().__init__(n_arms=int(arms), n_features=int(features))
+        self.reset()
+
+    def reset(self) -> None:
+        self.theta = np.zeros((self.n_arms, self.n_features), dtype=float)
+
+    def select_action(self, *, context: FloatArray, rng: np.random.Generator) -> int:
+        self._validate_context(context)
+        if rng.random() < self.epsilon:
+            return int(rng.integers(self.n_arms))
+        return choose_argmax(self.predicted_probabilities(context), rng)
+
+    def update(self, *, action: int, reward: float, context: FloatArray) -> None:
+        self._validate_action(action)
+        self._validate_context(context)
+        validate_probability(float(reward), name="reward")
+        x = context[action]
+        probability = float(_sigmoid(float(self.theta[action] @ x)))
+        gradient = (float(reward) - probability) * x - self.l2 * self.theta[action]
+        self.theta[action] += self.learning_rate * gradient
+
+    def predicted_probabilities(self, context: FloatArray) -> FloatArray:
+        self._validate_context(context)
+        logits = np.einsum("ij,ij->i", context, self.theta).astype(float)
+        return cast(FloatArray, _sigmoid(logits))
+
+    def __repr__(self) -> str:
+        return (
+            "LogisticContextualBanditPolicy("
+            f"epsilon={self.epsilon}, learning_rate={self.learning_rate}, "
+            f"l2={self.l2})"
+        )
+
+
 ContextualBanditPolicy = LinearEpsilonGreedyPolicy
+
+
+def _sigmoid(values: FloatArray | float) -> FloatArray | float:
+    clipped = np.clip(values, -35.0, 35.0)
+    return cast(FloatArray | float, 1.0 / (1.0 + np.exp(-clipped)))
