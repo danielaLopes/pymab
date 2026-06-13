@@ -12,6 +12,9 @@ experiments are easier to test, compare, and extend.
 - Policies only select actions and update from observed rewards.
 - Regret is computed from expected rewards, with realized rewards kept separate.
 - Plotting dependencies are optional via `pymab[plot]`.
+- Pandas analysis helpers are optional via `pymab[analysis]`.
+- Benchmarks can compare policies across repeated seeds with confidence
+  intervals.
 
 ## Install
 
@@ -70,6 +73,44 @@ print(result.average_reward_by_step[-1])
 print(result.cumulative_regret[-1])
 ```
 
+## Compare Policies
+
+```python
+import numpy as np
+
+from pymab import compare
+from pymab.environments import BanditEnvironment
+from pymab.policies import RandomPolicy, ThompsonSamplingPolicy, UCBPolicy
+
+benchmark = compare(
+    [
+        RandomPolicy(n_arms=3),
+        UCBPolicy(n_arms=3),
+        ThompsonSamplingPolicy(n_arms=3),
+    ],
+    environment=BanditEnvironment(q_values=np.array([0.1, 0.3, 0.8])),
+    n_episodes=100,
+    n_steps=500,
+    seeds=(1, 2, 3, 4, 5),
+)
+
+print(benchmark.best_policy)
+print(benchmark.summary())
+```
+
+Install `pymab[analysis]` to convert results into pandas DataFrames:
+
+```python
+result_frame = benchmark.combined.to_pandas()
+summary_frame = benchmark.to_pandas()
+```
+
+Persist reproducible result arrays with:
+
+```python
+benchmark.combined.save_npz("results/benchmark.npz")
+```
+
 ## Non-Stationary Environments
 
 ```python
@@ -95,6 +136,7 @@ Built-in dynamics:
 Classic bandits:
 
 - `GreedyPolicy`
+- `RandomPolicy`
 - `EpsilonGreedyPolicy`
 - `SoftmaxPolicy`
 - `GradientBanditPolicy`

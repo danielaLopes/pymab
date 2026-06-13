@@ -3,11 +3,17 @@ import unittest
 import numpy as np
 
 from pymab.distributions import BernoulliReward, GaussianReward
-from pymab.environments import BanditEnvironment, LinearContextualEnvironment
+from pymab.environments import (
+    BanditEnvironment,
+    EnvironmentDynamics,
+    LinearContextualEnvironment,
+)
 from pymab.policies import (
     BernoulliThompsonSamplingPolicy,
     GreedyPolicy,
     LinUCBPolicy,
+    RandomPolicy,
+    SlidingWindowUCBPolicy,
     UCBPolicy,
 )
 from pymab.simulation import Experiment, ExperimentConfig
@@ -21,23 +27,29 @@ def _normal_lower_confidence_bound(
 
 
 class StatisticalConfidenceTests(unittest.TestCase):
-    def test_ucb_learns_stationary_gaussian_best_arm_with_confidence(self) -> None:
+    def test_ucb_outperforms_random_on_stationary_gaussian(self) -> None:
         result = Experiment(
             environment=BanditEnvironment(
                 q_values=np.array([0.0, 0.25, 1.0]),
                 reward_distribution=GaussianReward(std=0.05),
             ),
-            policies=[UCBPolicy(n_arms=3), GreedyPolicy(n_arms=3)],
+            policies=[
+                UCBPolicy(n_arms=3),
+                RandomPolicy(n_arms=3),
+                GreedyPolicy(n_arms=3),
+            ],
             config=ExperimentConfig(n_episodes=80, n_steps=80, seed=2026),
         ).run()
 
         ucb_recent_rate = float(result.optimal_action_rate_by_step[-20:, 0].mean())
-        greedy_recent_rate = float(result.optimal_action_rate_by_step[-20:, 1].mean())
+        random_recent_rate = float(result.optimal_action_rate_by_step[-20:, 1].mean())
+        greedy_recent_rate = float(result.optimal_action_rate_by_step[-20:, 2].mean())
         lower_bound = _normal_lower_confidence_bound(
             ucb_recent_rate, n_observations=80 * 20
         )
 
         self.assertGreater(lower_bound, 0.90)
+        self.assertGreater(ucb_recent_rate, random_recent_rate + 0.45)
         self.assertGreater(ucb_recent_rate, greedy_recent_rate + 0.25)
         self.assertLess(
             result.cumulative_regret[-1, 0],
@@ -50,17 +62,26 @@ class StatisticalConfidenceTests(unittest.TestCase):
                 q_values=np.array([0.1, 0.35, 0.8]),
                 reward_distribution=BernoulliReward(),
             ),
-            policies=[BernoulliThompsonSamplingPolicy(n_arms=3)],
+            policies=[
+                BernoulliThompsonSamplingPolicy(n_arms=3),
+                RandomPolicy(n_arms=3),
+            ],
             config=ExperimentConfig(n_episodes=120, n_steps=100, seed=99),
         ).run()
 
         recent_rate = float(result.optimal_action_rate_by_step[-20:, 0].mean())
+        random_recent_rate = float(result.optimal_action_rate_by_step[-20:, 1].mean())
         lower_bound = _normal_lower_confidence_bound(
             recent_rate, n_observations=120 * 20
         )
 
         self.assertGreater(lower_bound, 0.94)
+        self.assertGreater(recent_rate, random_recent_rate + 0.50)
         self.assertLess(result.cumulative_regret[-1, 0], 8.0)
+        self.assertLess(
+            result.cumulative_regret[-1, 0],
+            result.cumulative_regret[-1, 1] * 0.35,
+        )
 
     def test_linucb_learns_context_dependent_best_arm_with_confidence(self) -> None:
         def context_provider(rng: np.random.Generator) -> np.ndarray:
@@ -85,6 +106,37 @@ class StatisticalConfidenceTests(unittest.TestCase):
 
         self.assertGreater(lower_bound, 0.98)
         self.assertLess(result.cumulative_regret[-1, 0], 2.0)
+
+    def test_sliding_window_ucb_recovers_after_abrupt_shift(self) -> None:
+        class FlipBestArm(EnvironmentDynamics):
+            def apply(
+                self,
+                q_values: np.ndarray,
+                *,
+                step: int,
+                rng: np.random.Generator,
+            ) -> np.ndarray:
+                if step < 40:
+                    return np.array([1.0, 0.0])
+                return np.array([0.0, 1.0])
+
+        result = Experiment(
+            environment=BanditEnvironment(
+                q_values=np.array([1.0, 0.0]),
+                reward_distribution=GaussianReward(std=0.01),
+                dynamics=FlipBestArm(),
+            ),
+            policies=[
+                SlidingWindowUCBPolicy(n_arms=2, c=1.0, window_size=10),
+                UCBPolicy(n_arms=2, c=1.0),
+            ],
+            config=ExperimentConfig(n_episodes=80, n_steps=100, seed=42),
+        ).run()
+
+        self.assertLess(
+            result.cumulative_regret[-1, 0],
+            result.cumulative_regret[-1, 1] * 0.75,
+        )
 
 
 if __name__ == "__main__":

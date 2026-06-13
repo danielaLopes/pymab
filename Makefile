@@ -37,10 +37,10 @@ lint:
 	$(RUN_TOOL) mypy pymab
 
 test:
-	$(RUN_TOOL) pytest
+	$(RUN_TOOL) pytest --cov-fail-under=75
 
 test-ci:
-	$(RUN_TOOL) pytest
+	$(RUN_TOOL) pytest --cov-fail-under=75
 
 security:
 	$(RUN_TOOL) bandit -r pymab --severity-level low --confidence-level medium

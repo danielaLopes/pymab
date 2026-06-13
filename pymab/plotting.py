@@ -40,6 +40,21 @@ def plot_cumulative_regret(
     )
 
 
+def plot_optimal_action_rate(
+    result: SimulationResult, *, output_path: Path | None = None, show: bool = False
+) -> Any:
+    """Plot the optimal-action selection rate by step with Plotly."""
+
+    return _plot_lines(
+        result,
+        values=result.optimal_action_rate_by_step,
+        title="Optimal action rate by step",
+        yaxis_title="Optimal action rate",
+        output_path=output_path,
+        show=show,
+    )
+
+
 def _plot_lines(
     result: SimulationResult,
     *,

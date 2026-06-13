@@ -17,6 +17,11 @@ Classic Policies
    :undoc-members:
    :show-inheritance:
 
+.. automodule:: pymab.policies.random
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 .. automodule:: pymab.policies.epsilon_greedy
    :members:
    :undoc-members:

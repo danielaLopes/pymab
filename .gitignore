@@ -12,6 +12,7 @@ __pycache__/
 
 # Distribution / packaging
 .Python
+build/
 documentation/build/
 develop-eggs/
 dist/
@@ -78,6 +79,7 @@ instance/
 docs/_build/
 docs/build/
 docs/source/_build/
+examples/iframe_figures/
 
 # PyBuilder
 .pybuilder/

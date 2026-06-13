@@ -1,5 +1,6 @@
 """PyMAB: reproducible multi-armed bandit experiments."""
 
+from pymab.benchmarking import BenchmarkResult, compare
 from pymab.distributions import BernoulliReward, GaussianReward, UniformReward
 from pymab.environments import (
     AbruptShift,
@@ -18,6 +19,7 @@ __all__ = [
     "__version__",
     "AbruptShift",
     "BanditEnvironment",
+    "BenchmarkResult",
     "BernoulliReward",
     "EnvironmentChangeType",
     "Experiment",
@@ -29,4 +31,5 @@ __all__ = [
     "SimulationResult",
     "StationaryDynamics",
     "UniformReward",
+    "compare",
 ]

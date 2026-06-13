@@ -33,9 +33,14 @@ Quick start
    :caption: Contents:
 
    simulation
+   benchmarking
+   decision_guide
+   examples
    environments
    policies
    distributions
+   game
+   reward_distribution
 
 Indices and tables
 ==================

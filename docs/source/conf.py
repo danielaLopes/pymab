@@ -83,7 +83,6 @@ exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
 html_theme = "sphinx_rtd_theme"
 html_theme_options = {
     "logo_only": False,
-    "display_version": True,
     "globaltoc_collapse": False,
     "globaltoc_maxdepth": 4,
     "navigation_with_keys": True,
@@ -103,3 +102,4 @@ autosummary_generate = True
 autosummary_imported_members = True
 
 nitpicky = True
+nitpick_ignore = [("py:class", "numpy.float64")]

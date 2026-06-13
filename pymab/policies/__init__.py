@@ -15,6 +15,7 @@ from pymab.policies.epsilon_greedy import EpsilonGreedyPolicy
 from pymab.policies.gradient import GradientBanditPolicy, GradientPolicy
 from pymab.policies.greedy import GreedyPolicy
 from pymab.policies.policy import ActionValuePolicy, ContextualPolicy, Policy
+from pymab.policies.random import RandomPolicy
 from pymab.policies.softmax_selection import SoftmaxPolicy, SoftmaxSelectionPolicy
 from pymab.policies.thompson_sampling import (
     BernoulliThompsonSamplingPolicy,
@@ -46,6 +47,7 @@ __all__ = [
     "LinearThompsonSamplingPolicy",
     "LinUCBPolicy",
     "Policy",
+    "RandomPolicy",
     "SlidingWindowUCBPolicy",
     "SoftmaxPolicy",
     "SoftmaxSelectionPolicy",
