@@ -7,6 +7,9 @@ on:
       - main
       - dev
 
+permissions:
+  contents: read
+
 concurrency:
   group: ci-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
@@ -17,20 +20,20 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Check out repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Install uv
-        uses: astral-sh/setup-uv@v5
+        uses: astral-sh/setup-uv@11f9893b081a58869d3b5fccaea48c9e9e46f990 # v8.3.2
         with:
           enable-cache: true
 
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: "3.12"
 
       - name: Install dependencies
-        run: uv sync --dev --all-extras
+        run: uv sync --frozen --dev --all-extras
 
       - name: Check formatting
         run: make format
@@ -40,20 +43,20 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Check out repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Install uv
-        uses: astral-sh/setup-uv@v5
+        uses: astral-sh/setup-uv@11f9893b081a58869d3b5fccaea48c9e9e46f990 # v8.3.2
         with:
           enable-cache: true
 
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: "3.12"
 
       - name: Install dependencies
-        run: uv sync --dev --all-extras
+        run: uv sync --frozen --dev --all-extras
 
       - name: Run lint
         run: make lint
@@ -63,20 +66,20 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Check out repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Install uv
-        uses: astral-sh/setup-uv@v5
+        uses: astral-sh/setup-uv@11f9893b081a58869d3b5fccaea48c9e9e46f990 # v8.3.2
         with:
           enable-cache: true
 
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: "3.12"
 
       - name: Install dependencies
-        run: uv sync --dev --all-extras
+        run: uv sync --frozen --dev --all-extras
 
       - name: Run security checks
         env:
@@ -88,20 +91,20 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Check out repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Install uv
-        uses: astral-sh/setup-uv@v5
+        uses: astral-sh/setup-uv@11f9893b081a58869d3b5fccaea48c9e9e46f990 # v8.3.2
         with:
           enable-cache: true
 
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: "3.12"
 
       - name: Install dependencies
-        run: uv sync --dev --all-extras
+        run: uv sync --frozen --dev --all-extras
 
       - name: Run LLM security review
         env:
@@ -111,24 +114,83 @@ jobs:
         run: make llm-security
 
   test:
-    name: Test
+    name: Test (Python ${{ matrix.python-version }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.11", "3.12"]
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@11f9893b081a58869d3b5fccaea48c9e9e46f990 # v8.3.2
+        with:
+          enable-cache: true
+          cache-suffix: py${{ matrix.python-version }}
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install dependencies
+        run: uv sync --frozen --python ${{ matrix.python-version }} --dev --all-extras
+
+      - name: Run tests
+        run: make test
+
+  package:
+    name: Build and inspect package
     runs-on: ubuntu-latest
     steps:
       - name: Check out repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
+        with:
+          persist-credentials: false
 
       - name: Install uv
-        uses: astral-sh/setup-uv@v5
+        uses: astral-sh/setup-uv@11f9893b081a58869d3b5fccaea48c9e9e46f990 # v8.3.2
         with:
           enable-cache: true
 
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: "3.12"
 
-      - name: Install dependencies
-        run: uv sync --dev --all-extras
+      - name: Install build dependencies
+        run: uv sync --frozen --dev
 
-      - name: Run tests
-        run: make test
+      - name: Verify version declarations agree
+        run: |
+          uv run python - <<'PY'
+          import tomllib
+
+          import pymab
+          from docs.source.conf import release as docs_version
+
+          with open("pyproject.toml", "rb") as pyproject_file:
+              package_version = tomllib.load(pyproject_file)["project"]["version"]
+
+          if pymab.__version__ != package_version or docs_version != package_version:
+              raise SystemExit(
+                  f"Version mismatch: pyproject={package_version}, "
+                  f"module={pymab.__version__}, docs={docs_version}"
+              )
+          PY
+
+      - name: Build wheel and source distribution
+        run: uv run python -m build
+
+      - name: Validate distribution metadata
+        run: uv run twine check --strict dist/*
+
+      - name: Test the built wheel outside the source tree
+        run: |
+          python -m venv "${RUNNER_TEMP}/pymab-wheel-test"
+          "${RUNNER_TEMP}/pymab-wheel-test/bin/python" -m pip install dist/*.whl
+          cd "${RUNNER_TEMP}"
+          "${RUNNER_TEMP}/pymab-wheel-test/bin/python" -c \
+            "import pymab; print(f'Installed and imported pymab {pymab.__version__}')"
