@@ -1,0 +1,65 @@
+name: Release Please
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+    inputs:
+      release_as:
+        description: Optional version override, for example 1.0.0
+        required: false
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-please-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  release-please:
+    name: Create or update release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+
+      - name: Determine version override
+        id: release_version
+        shell: bash
+        env:
+          REQUESTED_RELEASE: ${{ inputs.release_as }}
+        run: |
+          set -euo pipefail
+
+          release_as="${REQUESTED_RELEASE}"
+          current_version="$(jq --exit-status --raw-output '.["."]' .release-please-manifest.json)"
+
+          if [[ -z "${release_as}" && "${current_version}" == "0.1.0" ]]; then
+            release_as="1.0.0"
+          fi
+
+          echo "release_as=${release_as}" >> "${GITHUB_OUTPUT}"
+
+      - name: Create GitHub App token
+        id: app_token
+        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
+        with:
+          app-id: ${{ vars.RELEASE_PLEASE_APP_ID }}
+          private-key: ${{ secrets.RELEASE_PLEASE_PRIVATE_KEY }}
+          permission-contents: write
+          permission-issues: write
+          permission-pull-requests: write
+
+      - name: Run Release Please
+        uses: googleapis/release-please-action@45996ed1f6d02564a971a2fa1b5860e934307cf7 # v5.0.0
+        with:
+          token: ${{ steps.app_token.outputs.token }}
+          target-branch: main
+          config-file: release-please-config.json
+          manifest-file: .release-please-manifest.json
+          release-as: ${{ steps.release_version.outputs.release_as }}
