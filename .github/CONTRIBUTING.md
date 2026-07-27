@@ -17,3 +17,8 @@ We use GitHub to host code, to track issues and feature requests, as well as acc
 3. Update the documentation if needed
 4. Ensure all tests pass
 5. Create a pull request!
+
+## Releasing
+
+Maintainers should follow the [release guide](../docs/RELEASING.md) to publish
+new versions to PyPI.
