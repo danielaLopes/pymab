@@ -1,33 +1,53 @@
 # Releasing PyMAB
 
-PyMAB releases are built and published by
-[`release.yml`](../.github/workflows/release.yml). The workflow uses PyPI
-Trusted Publishing, so it does not need a long-lived PyPI API token.
+Release Please maintains the version and changelog in a release pull request.
+Merging that pull request creates a `vX.Y.Z` tag and a GitHub Release. The
+[`release.yml`](../.github/workflows/release.yml) workflow then builds, tests,
+and publishes that release with PyPI Trusted Publishing.
 
 ## One-time repository setup
 
-1. In the GitHub repository settings, create an environment named `pypi`.
-   Configure a required reviewer so every production publication needs explicit
-   approval.
-2. In the PyPI `pymab` project, add a GitHub Trusted Publisher with:
+1. Create a GitHub App installed only on this repository with read/write
+   access to contents, issues, and pull requests.
+2. Add the App ID as the Actions repository variable
+   `RELEASE_PLEASE_APP_ID`.
+3. Add the complete GitHub App private key as the Actions repository secret
+   `RELEASE_PLEASE_PRIVATE_KEY`.
+4. In the GitHub repository settings, create an environment named `pypi`.
+   Configure a required reviewer so every production publication needs
+   explicit approval.
+5. In the PyPI `pymab` project, add a GitHub Trusted Publisher with:
    - Owner: `danielaLopes`
    - Repository: `pymab`
    - Workflow: `release.yml`
    - Environment: `pypi`
-3. Protect tags matching `v*` so only maintainers can create release tags.
-4. After Trusted Publishing succeeds, remove the repository's
+6. Protect tags matching `v*` while allowing the Release Please GitHub App to
+   create release tags.
+7. After Trusted Publishing succeeds, remove the repository's
    `PYPI_API_TOKEN` secret and revoke the old token on PyPI.
+
+## Prepare changes for a release
+
+Use a Conventional Commit title for each squash-merged pull request:
+
+- `fix: ...` requests a patch release.
+- `feat: ...` requests a minor release.
+- `feat!: ...` or a `BREAKING CHANGE:` footer requests a major release.
+
+After a releasable change reaches `main`, Release Please opens or updates one
+release pull request. It updates `CHANGELOG.md`, `.release-please-manifest.json`,
+`pyproject.toml`, `pymab/__init__.py`, `docs/source/conf.py`, and `uv.lock`.
+Do not edit those versions manually.
 
 ## Publish a version
 
-1. On a branch, update the version in `pyproject.toml`,
-   `pymab/__init__.py`, and `docs/source/conf.py`.
-2. Update `CHANGELOG.md`.
-3. Open a pull request and wait for every required CI check to pass.
-4. Merge the pull request.
-5. Create a GitHub Release from `main` with a tag matching the package version,
-   conventionally `vX.Y.Z` (for example, `v1.1.0`).
-6. Publish the GitHub Release and approve the `pypi` environment deployment.
+1. Review the open Release Please pull request.
+2. Wait for every required CI check to pass.
+3. Merge the release pull request when the accumulated changes are ready.
+4. Release Please creates the matching tag and GitHub Release.
+5. Open the `Publish to PyPI` workflow run and approve its `pypi` environment
+   deployment.
+6. Verify the new version on PyPI.
 
 The release workflow rejects a tag whose version does not match
 `pyproject.toml`. It builds the wheel and source distribution once, validates
@@ -37,3 +57,13 @@ version, and publishes those same artifacts to PyPI.
 Published PyPI files are immutable. If a release fails after any file reaches
 PyPI, increment the version and publish a new release rather than reusing the
 same tag or version.
+
+## First automated release
+
+The manifest starts at the currently published PyPI version, `0.1.0`. Until
+the first Release Please pull request is merged, the workflow forces that pull
+request to version `1.0.0`. Once merged, the manifest records `1.0.0` and
+future versions are calculated normally from Conventional Commits.
+
+For an exceptional manual override, run the `Release Please` workflow from the
+Actions tab and provide an exact semantic version in the `release_as` input.
