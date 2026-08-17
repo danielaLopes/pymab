@@ -1,16 +1,18 @@
 # PyMAB Reliability and Object-Oriented Remediation Design
 
 Date: 2026-08-17
-Status: Proposed for implementation
+Status: Approved for implementation
 Target branch: `improve-reliability`
 
 ## Purpose
 
 This design closes the remaining correctness, statistical-validity, extension,
 performance, packaging, and maintainability gaps identified in the v2 review.
-The implementation must preserve the convenient public facades in `pymab`,
-`pymab.policies`, and `pymab.offline` while making invalid states difficult to
-construct and third-party extension behavior explicit.
+Because v2 is already a breaking release, the implementation prioritizes clear,
+strict, maintainable contracts over compatibility with the intermediate v2
+worktree. Convenient facades remain where they improve usability, but obsolete
+or ambiguous contracts are removed instead of retained through compatibility
+layers.
 
 The work is complete only when every behavior described here has regression
 coverage and the complete CI-equivalent suite passes against both the source
@@ -23,7 +25,7 @@ tree and a built wheel.
    for the existing policy algorithm hierarchy where it remains cohesive.
 3. Validate external data before coercing it.
 4. Keep statistical assumptions explicit in types, results, and documentation.
-5. Preserve stable imports through facade modules during internal extraction.
+5. Expose one deliberate public import path per concept and document migrations.
 6. Keep randomness injectable and reproducible; never create hidden entropy in
    a public sampling API.
 7. Prefer explicit failures to silent recovery from corrupt numerical state.
@@ -41,12 +43,13 @@ symptoms without producing clear ownership boundaries.
 This could produce idealized interfaces but would create unnecessary migration
 work and risk regressions in the already improved v2 API.
 
-### C. Incremental domain refactor with facade compatibility
+### C. Domain refactor with a deliberate v2 public API
 
 This is the selected approach. Focused domain objects and services are extracted
-where responsibilities are already distinct, while existing public imports are
-re-exported. Behavioral changes are limited to correcting invalid, ambiguous,
-or statistically unsound behavior.
+where responsibilities are already distinct. Public exports are intentionally
+curated after the refactor rather than preserving every intermediate path.
+Behavioral and contract changes are allowed when they improve correctness,
+clarity, or long-term maintainability, and the migration guide records them.
 
 ## Target architecture
 
@@ -77,8 +80,8 @@ src/pymab/
 ```
 
 The existing `offline.py` module will become the `offline` package shown above.
-Its `__init__.py` will preserve every current import from `pymab.offline`, so the
-module-to-package change does not alter the public import path.
+Its `__init__.py` defines the supported offline API. Internal implementation
+types are not re-exported merely for compatibility.
 
 ## Domain errors
 
@@ -93,7 +96,8 @@ module-to-package change does not alter the public import path.
   `ValidationError`.
 - `SerializationError`: invalid or corrupt result persistence.
 
-Existing callers catching `ValueError` or `TypeError` will continue to work.
+Compatibility inheritance from built-in exceptions is used only when it makes
+the exception semantically correct, not solely to preserve old catch clauses.
 
 ## Strict validation
 
@@ -246,9 +250,8 @@ diagnostics.
 `SlidingWindowUCBPolicy` and sliding-window Bernoulli Thompson Sampling will use
 global decision time. Every observation stores its decision step, and values
 older than `window_size` decisions expire even when their arm is not selected.
-If backward compatibility for pull-count windows is desirable, that behavior
-will be exposed under an explicitly named separate policy rather than overloaded
-into `SlidingWindow*`.
+The old pull-count-window behavior is removed rather than retained under a
+second policy name.
 
 ### EXP3
 
@@ -281,9 +284,11 @@ after regression and reference tests prove equivalent behavior.
 
 ## Public API and documentation
 
-Every public module defines `__all__`. Existing facade imports remain supported.
-Internal helper modules use a leading underscore unless they are intended as
-stable extension surfaces.
+Every public module defines `__all__`. The top-level package exports the small
+set of concepts needed for common workflows; specialized APIs live in cohesive
+subpackages. Internal helper modules use a leading underscore unless they are
+intended as stable extension surfaces. Removed or relocated v2-development
+imports are documented rather than indefinitely re-exported.
 
 Documentation will state:
 
@@ -341,8 +346,9 @@ precomputed power/error analyses. They must not rely on one favorable trace.
 ## Error handling and compatibility
 
 Corrections that reject previously coerced invalid input are intentional v2
-hardening. Valid v2 call patterns keep their import paths and core return types.
-Where a result schema changes, the schema version increments and a migration is
+hardening. API and return-type changes are permitted when they produce a clearer
+domain model. The migration guide covers every user-visible change. When a
+result schema changes, the schema version increments and a migration is
 provided. No persisted payload is silently reinterpreted.
 
 Every exception raised at an orchestration boundary includes policy ID,
