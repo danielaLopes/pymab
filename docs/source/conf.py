@@ -9,13 +9,15 @@
 import os
 import sys
 
-sys.path.insert(0, os.path.abspath("../.."))
+sys.path.insert(0, os.path.abspath("../../src"))
 
+from pymab import __version__ as package_version  # noqa: E402
 
 project = "PyMAB"
 copyright = "2024, Daniela Lopes"
 author = "Daniela Lopes"
-release = "1.0.0"  # x-release-please-version
+release = package_version
+version = release
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
@@ -102,4 +104,18 @@ autosummary_generate = True
 autosummary_imported_members = True
 
 nitpicky = True
-nitpick_ignore = [("py:class", "numpy.float64")]
+nitpick_ignore = [
+    ("py:class", "JSONValue"),
+    ("py:class", "numpy.float64"),
+    ("py:class", "numpy.int64"),
+    # NumPy 2.5 exposes NDArray through a private alias that is not indexed by
+    # its public intersphinx inventory under Python 3.14.
+    ("py:class", "numpy._typing._array_like.NDArray"),
+]
+
+coverage_show_missing_items = True
+
+linkcheck_anchors = True
+linkcheck_retries = 2
+linkcheck_timeout = 15
+linkcheck_workers = 5

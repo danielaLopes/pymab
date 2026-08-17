@@ -119,7 +119,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ["3.11", "3.12"]
+        python-version: ["3.11", "3.12", "3.13", "3.14"]
     steps:
       - name: Check out repository
         uses: actions/checkout@v6
@@ -140,6 +140,83 @@ jobs:
 
       - name: Run tests
         run: make test
+
+  minimum-dependencies:
+    name: Minimum supported dependencies
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.11"
+      - name: Install minimum runtime and test dependencies
+        run: |
+          python -m pip install --disable-pip-version-check "numpy==1.24.*" hypothesis pytest pytest-cov
+          python -m pip install --disable-pip-version-check --no-deps -e .
+      - name: Run core tests
+        run: pytest -m "not optional" --no-cov
+
+  docs:
+    name: Documentation (Python ${{ matrix.python-version }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.11", "3.14"]
+    steps:
+      - uses: actions/checkout@v6
+      - name: Install uv
+        uses: astral-sh/setup-uv@11f9893b081a58869d3b5fccaea48c9e9e46f990 # v8.3.2
+      - uses: actions/setup-python@v6
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install documentation dependencies
+        run: uv sync --frozen --python ${{ matrix.python-version }} --dev --extra docs
+      - name: Run strict documentation gates
+        run: make docs
+      - name: Upload rendered documentation
+        uses: actions/upload-artifact@v5
+        with:
+          name: pymab-docs-python-${{ matrix.python-version }}
+          path: docs/build/html/
+          if-no-files-found: error
+          retention-days: 7
+
+  docs-linkcheck:
+    name: External documentation links
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v6
+      - name: Install uv
+        uses: astral-sh/setup-uv@11f9893b081a58869d3b5fccaea48c9e9e46f990 # v8.3.2
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+      - name: Install documentation dependencies
+        run: uv sync --frozen --python 3.12 --dev --extra docs
+      - name: Check external links
+        run: make docs-linkcheck
+
+  examples:
+    name: Executable examples
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - name: Install uv
+        uses: astral-sh/setup-uv@11f9893b081a58869d3b5fccaea48c9e9e46f990 # v8.3.2
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+      - name: Install all optional dependencies
+        run: uv sync --frozen --python 3.12 --dev --all-extras
+      - name: Execute Python examples
+        run: |
+          uv run python examples/bayesian_ucb_bernoulli.py
+          uv run python examples/non_stationary_policies.py
+          uv run python examples/real_world_scenarios.py
+      - name: Execute notebook code cells
+        run: uv run python scripts/check_notebooks.py
 
   package:
     name: Build and inspect package
@@ -190,7 +267,50 @@ jobs:
       - name: Test the built wheel outside the source tree
         run: |
           python -m venv "${RUNNER_TEMP}/pymab-wheel-test"
-          "${RUNNER_TEMP}/pymab-wheel-test/bin/python" -m pip install dist/*.whl
+          "${RUNNER_TEMP}/pymab-wheel-test/bin/python" -m pip install dist/*.whl mypy
           cd "${RUNNER_TEMP}"
-          "${RUNNER_TEMP}/pymab-wheel-test/bin/python" -c \
-            "import pymab; print(f'Installed and imported pymab {pymab.__version__}')"
+          "${RUNNER_TEMP}/pymab-wheel-test/bin/python" - <<'PY'
+          import numpy as np
+
+          from pymab import (
+              BanditEnvironment,
+              Experiment,
+              ExperimentConfig,
+              LoggedBanditDataset,
+              estimate_policy_value,
+          )
+          from pymab.policies import UCBPolicy
+
+          result = Experiment(
+              environment=BanditEnvironment(means=np.array([0.0, 1.0])),
+              policies={"ucb": UCBPolicy(n_arms=2)},
+              config=ExperimentConfig(horizon=3, n_replicates=2, seed=7),
+          ).run()
+          assert result.rewards.shape == (2, 3, 1)
+
+          class UniformTarget:
+              def probabilities(self, context):
+                  return np.array([0.5, 0.5])
+
+          estimate = estimate_policy_value(
+              LoggedBanditDataset(
+                  actions=np.array([0, 1]),
+                  rewards=np.array([0.0, 1.0]),
+                  propensities=np.array([0.5, 0.5]),
+                  n_arms=2,
+              ),
+              UniformTarget(),
+              bootstrap_resamples=10,
+          )
+          assert estimate.estimate == 0.5
+          PY
+          "${RUNNER_TEMP}/pymab-wheel-test/bin/python" -m mypy --strict -c '
+          import numpy as np
+          from pymab import BanditEnvironment, Experiment, ExperimentConfig, SimulationResult
+          from pymab.policies import UCBPolicy
+          result: SimulationResult = Experiment(
+              environment=BanditEnvironment(means=np.array([0.0, 1.0])),
+              policies={"ucb": UCBPolicy(n_arms=2)},
+              config=ExperimentConfig(horizon=2, n_replicates=1, seed=1),
+          ).run()
+          '

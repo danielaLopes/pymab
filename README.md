@@ -1,20 +1,9 @@
 # PyMAB
 
-PyMAB is a small Python library for reproducible multi-armed bandit experiments.
-It separates environments, policies, simulations, metrics, and plotting so
-experiments are easier to test, compare, and extend.
-
-## What changed in v1
-
-- Python 3.11+ and a clean typed API.
-- Explicit random seeds through `numpy.random.Generator`.
-- Environments own true arm values and reward sampling.
-- Policies only select actions and update from observed rewards.
-- Regret is computed from expected rewards, with realized rewards kept separate.
-- Plotting dependencies are optional via `pymab[plot]`.
-- Pandas analysis helpers are optional via `pymab[analysis]`.
-- Benchmarks can compare policies across repeated seeds with confidence
-  intervals.
+PyMAB is a typed Python library for reliable, reproducible multi-armed bandit
+experiments. Version 2 separates environment, policy, decision, and observation
+randomness; treats replicates as the independent unit of analysis; and records
+enough provenance to reproduce saved results.
 
 ## Install
 
@@ -22,16 +11,105 @@ experiments are easier to test, compare, and extend.
 pip install pymab
 ```
 
-For local development:
+Optional features are available through `pymab[plot]`, `pymab[analysis]`, and
+`pymab[bayes]`.
 
-```bash
-python -m venv .venv
-source .venv/bin/activate
-pip install -e ".[dev,plot]"
-python -m unittest discover -v
+## Basic experiment
+
+```python
+import numpy as np
+
+from pymab import BanditEnvironment, Experiment, ExperimentConfig
+from pymab.policies import EpsilonGreedyPolicy, UCBPolicy
+
+result = Experiment(
+    environment=BanditEnvironment(means=np.array([0.1, 0.4, 0.8])),
+    policies={
+        "epsilon-greedy": EpsilonGreedyPolicy(n_arms=3, epsilon=0.1),
+        "ucb": UCBPolicy(n_arms=3),
+    },
+    config=ExperimentConfig(horizon=100, n_replicates=20, seed=42),
+).run()
+
+print(result.average_reward_by_step[-1])
+print(result.cumulative_regret[-1])
 ```
 
-With uv, use the Makefile targets used by CI:
+Policy IDs are explicit and stable. Adding or reordering policies does not
+change another policy's random stream or the simulated environment path.
+
+## Paired comparison
+
+```python
+from pymab import compare
+from pymab.policies import RandomPolicy, UCBPolicy
+
+benchmark = compare(
+    {"random": RandomPolicy(n_arms=3), "ucb": UCBPolicy(n_arms=3)},
+    environment=BanditEnvironment(means=np.array([0.1, 0.3, 0.8])),
+    config=ExperimentConfig(horizon=100, n_replicates=20, seed=7),
+    baseline="random",
+    analysis_seed=91,
+)
+
+print(benchmark.lowest_mean_regret_policy)
+print(benchmark.compare_to_baseline())
+```
+
+Intervals are deterministic paired bootstrap intervals over independent
+replicates. A lower point estimate is not presented as statistical proof of a
+winner.
+
+## Offline evaluation
+
+Fixed-policy estimators require logged-action propensities and report both raw
+and post-clipping overlap diagnostics:
+
+```python
+from pymab import LoggedBanditDataset, estimate_policy_value
+
+
+class FixedTarget:
+    def probabilities(self, context):
+        return np.array([0.25, 0.75])
+
+
+logged = LoggedBanditDataset(
+    actions=np.array([0, 1, 0, 1]),
+    rewards=np.array([0.0, 1.0, 0.0, 1.0]),
+    propensities=np.full(4, 0.5),
+    n_arms=2,
+)
+estimate = estimate_policy_value(
+    logged,
+    FixedTarget(),
+    method="snips",
+    bootstrap_resamples=500,
+    seed=7,
+)
+assert estimate.estimate == 0.75
+```
+
+Adaptive replay requires the logging design explicitly. Use
+``logging_scheme="uniform"`` only for uniformly randomized logs; non-uniform
+logs also require propensities and use rejection sampling.
+
+## Probability environments
+
+Additive Gaussian drift is intentionally rejected for Bernoulli means. Use
+log-odds drift instead:
+
+```python
+from pymab import BernoulliReward, ProbabilityDrift
+
+environment = BanditEnvironment(
+    means=np.array([0.2, 0.5, 0.8]),
+    reward_model=BernoulliReward(),
+    dynamics=ProbabilityDrift(logit_std=0.05),
+)
+```
+
+## Development
 
 ```bash
 make sync
@@ -39,178 +117,12 @@ make format
 make lint
 make security
 make test
+make docs
+make docs-linkcheck  # external network check; run separately
 ```
 
-`make format` checks formatting. Use `make format-fix` to rewrite formatting
-locally.
+``make docs`` performs a clean warnings-as-errors HTML build, executes Sphinx
+doctests, enforces 100% API docstring coverage, and runs every Python snippet
+in this README.
 
-The Makefile tries `uv run ...` first. If your local uv binary fails before it
-can run a tool, the targets fall back to executables installed in `.venv`; run
-`make sync` once to create/populate that environment.
-
-## Basic Example
-
-```python
-import numpy as np
-
-from pymab.environments import BanditEnvironment
-from pymab.policies import EpsilonGreedyPolicy, UCBPolicy
-from pymab.simulation import Experiment, ExperimentConfig
-
-environment = BanditEnvironment(q_values=np.array([0.1, 0.4, 0.8]))
-policies = [
-    EpsilonGreedyPolicy(n_arms=3, epsilon=0.1),
-    UCBPolicy(n_arms=3, c=2.0),
-]
-
-result = Experiment(
-    environment=environment,
-    policies=policies,
-    config=ExperimentConfig(n_episodes=200, n_steps=500, seed=42),
-).run()
-
-print(result.average_reward_by_step[-1])
-print(result.cumulative_regret[-1])
-```
-
-## Compare Policies
-
-```python
-import numpy as np
-
-from pymab import compare
-from pymab.environments import BanditEnvironment
-from pymab.policies import RandomPolicy, ThompsonSamplingPolicy, UCBPolicy
-
-benchmark = compare(
-    [
-        RandomPolicy(n_arms=3),
-        UCBPolicy(n_arms=3),
-        ThompsonSamplingPolicy(n_arms=3),
-    ],
-    environment=BanditEnvironment(q_values=np.array([0.1, 0.3, 0.8])),
-    n_episodes=100,
-    n_steps=500,
-    seeds=(1, 2, 3, 4, 5),
-)
-
-print(benchmark.best_policy)
-print(benchmark.summary())
-```
-
-Install `pymab[analysis]` to convert results into pandas DataFrames:
-
-```python
-result_frame = benchmark.combined.to_pandas()
-summary_frame = benchmark.to_pandas()
-```
-
-Persist reproducible result arrays with:
-
-```python
-benchmark.combined.save_npz("results/benchmark.npz")
-```
-
-## Non-Stationary Environments
-
-```python
-import numpy as np
-
-from pymab.environments import BanditEnvironment, GradualDrift
-
-environment = BanditEnvironment(
-    q_values=np.array([0.2, 0.5, 0.7]),
-    dynamics=GradualDrift(change_rate=0.01),
-)
-```
-
-Built-in dynamics:
-
-- `StationaryDynamics`
-- `GradualDrift`
-- `AbruptShift`
-- `RandomArmSwap`
-
-## Policies
-
-Classic bandits:
-
-- `GreedyPolicy`
-- `RandomPolicy`
-- `EpsilonGreedyPolicy`
-- `DecayingEpsilonGreedyPolicy`
-- `SoftmaxPolicy`
-- `GradientBanditPolicy`
-- `UCBPolicy`
-- `KLUCBPolicy`
-- `MOSSPolicy`
-- `SlidingWindowUCBPolicy`
-- `DiscountedUCBPolicy`
-- `CUSUMUCBPolicy`
-- `PageHinkleyUCBPolicy`
-- `BernoulliThompsonSamplingPolicy`
-- `GaussianThompsonSamplingPolicy`
-- `SlidingWindowBernoulliThompsonSamplingPolicy`
-- `DiscountedBernoulliThompsonSamplingPolicy`
-- `BernoulliBayesianUCBPolicy`
-- `GaussianBayesianUCBPolicy`
-- `EXP3Policy`
-- `SuccessiveEliminationPolicy`
-- `MedianEliminationPolicy`
-
-Contextual bandits:
-
-- `LinearEpsilonGreedyPolicy`
-- `LinUCBPolicy`
-- `LinearThompsonSamplingPolicy`
-- `LogisticContextualBanditPolicy`
-
-## Contextual Example
-
-```python
-import numpy as np
-
-from pymab.environments import LinearContextualEnvironment
-from pymab.policies import LinUCBPolicy
-from pymab.simulation import Experiment, ExperimentConfig
-
-
-def context_provider(rng: np.random.Generator) -> np.ndarray:
-    return np.array([[1.0, 0.0], [0.0, 1.0]])
-
-
-environment = LinearContextualEnvironment(
-    theta=np.array([[1.0, 0.0], [0.0, 1.0]]),
-    context_provider=context_provider,
-)
-
-result = Experiment(
-    environment=environment,
-    policies=[LinUCBPolicy(n_arms=2, n_features=2)],
-    config=ExperimentConfig(n_episodes=100, n_steps=200, seed=7),
-).run()
-```
-
-## Plotting
-
-```python
-from pathlib import Path
-
-from pymab.plotting import plot_average_reward, plot_cumulative_regret
-
-plot_average_reward(result, output_path=Path("results/average_reward.html"))
-plot_cumulative_regret(result, output_path=Path("results/regret.html"))
-```
-
-Install plotting extras first:
-
-```bash
-pip install "pymab[plot]"
-```
-
-## Migration Notes
-
-The old `Game` API remains as a deprecated compatibility wrapper. New code
-should use `BanditEnvironment`, `ExperimentConfig`, and `Experiment` directly.
-The old `pymab.reward_distribution` import path also remains available, but the
-new module is `pymab.distributions`.
+The complete v1-to-v2 migration is documented in `docs/source/migration_v2.rst`.

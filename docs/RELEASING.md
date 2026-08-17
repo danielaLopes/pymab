@@ -36,13 +36,19 @@ Use a Conventional Commit title for each squash-merged pull request:
 
 After a releasable change reaches `main`, Release Please opens or updates one
 release pull request. It updates `CHANGELOG.md`, `.release-please-manifest.json`,
-`pyproject.toml`, `pymab/__init__.py`, `docs/source/conf.py`, and `uv.lock`.
+`pyproject.toml` and `uv.lock`. The package and documentation read that metadata
+at runtime, so no duplicate version declarations need updating.
 Do not edit those versions manually.
 
 ## Publish a version
 
 1. Review the open Release Please pull request.
 2. Wait for every required CI check to pass.
+   The documentation matrix performs clean HTML and doctest builds on the
+   minimum and latest supported Python versions, enforces API documentation
+   coverage, executes README snippets, and uploads the rendered site. External
+   link checking runs separately as a non-blocking signal because remote sites
+   can fail transiently.
 3. Merge the release pull request when the accumulated changes are ready.
 4. Release Please creates the matching tag and GitHub Release.
 5. Open the `Publish to PyPI` workflow run and approve its `pypi` environment
@@ -58,12 +64,11 @@ Published PyPI files are immutable. If a release fails after any file reaches
 PyPI, increment the version and publish a new release rather than reusing the
 same tag or version.
 
-## First automated release
+## Version 2 release
 
-The manifest starts at the currently published PyPI version, `0.1.0`. Until
-the first Release Please pull request is merged, the workflow forces that pull
-request to version `1.0.0`. Once merged, the manifest records `1.0.0` and
-future versions are calculated normally from Conventional Commits.
+The v2 migration is intentionally breaking. Review the migration guide and use
+a breaking Conventional Commit so Release Please preserves major-version
+semantics for subsequent releases.
 
 For an exceptional manual override, run the `Release Please` workflow from the
 Actions tab and provide an exact semantic version in the `release_as` input.

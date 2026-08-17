@@ -1,22 +1,50 @@
 # Contributing to PyMAB
 
-We love your input! We want to make contributing to PyMAB as easy and transparent as possible, whether it's:
+PyMAB accepts bug reports, design discussions, documentation improvements, and
+code contributions through GitHub. For a substantial or user-visible change,
+open an issue before implementation so its statistical and API implications can
+be agreed on first.
 
-- Reporting a bug
-- Discussing the current state of the code
-- Submitting a fix
-- Proposing new features
-- Becoming a maintainer
+## Development setup
 
-## Development Process
-We use GitHub to host code, to track issues and feature requests, as well as accept pull requests.
+Python 3.11 or newer and [uv](https://docs.astral.sh/uv/) are recommended:
 
-## Pull Request Process
-1. Fork the repository and create your branch from `main`
-2. If you've added code that should be tested, add tests
-3. Update the documentation if needed
-4. Ensure all tests pass
-5. Create a pull request!
+```console
+git clone https://github.com/danielaLopes/pymab.git
+cd pymab
+make sync
+```
+
+`make sync` installs every development tool and all optional runtime features.
+Its pip fallback requires a pip version that supports PEP 735 dependency groups.
+
+## Quality checks
+
+Run these commands from the repository root:
+
+```console
+make format             # verify formatting
+make format-fix         # apply formatting
+make lint               # Ruff and strict mypy
+make test               # tests and branch coverage
+make docs               # strict HTML, doctest, coverage, and snippets
+make docs-linkcheck     # external links (network-dependent)
+make security           # Bandit; opt into the network audit as shown below
+PYMAB_RUN_NETWORK_AUDIT=1 make security
+python -m build
+twine check --strict dist/*
+```
+
+`make ci` runs the deterministic local CI subset. Add focused regression tests
+for behavioral changes, document assumptions for statistical algorithms, and
+update the migration guide for public API changes.
+
+## Pull requests
+
+Create a focused branch from `main`, keep unrelated changes out of the commit,
+and explain both the user-visible effect and the validation performed. The full
+CI matrix checks Python 3.11 through 3.14, minimum dependencies, documentation,
+examples, security, and the installed wheel.
 
 ## Releasing
 

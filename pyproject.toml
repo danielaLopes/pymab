@@ -4,8 +4,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "pymab"
-version = "1.0.0"
-description = "Reproducible multi-armed bandit experiments for Python."
+version = "2.0.0"
+description = "Reliable, statistically rigorous multi-armed bandit experiments."
 readme = "README.md"
 requires-python = ">=3.11"
 license = "MIT"
@@ -19,32 +19,24 @@ classifiers = [
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
     "Topic :: Scientific/Engineering :: Artificial Intelligence",
 ]
 dependencies = ["numpy>=1.24"]
 
 [project.optional-dependencies]
-plot = ["plotly>=5.0", "matplotlib>=3.7"]
+plot = ["plotly>=5.0"]
 docs = ["sphinx>=7.0", "sphinx-rtd-theme>=2.0"]
-dev = [
-    "bandit>=1.8",
-    "build>=1.2",
-    "mypy>=1.8",
-    "pip-audit>=2.9",
-    "pytest>=8.0",
-    "pytest-cov>=5.0",
-    "ruff>=0.5",
-    "twine>=6.1",
-]
-analysis = [
-    "pandas>=2.0",
-]
+analysis = ["pandas>=2.0"]
+bayes = ["scipy>=1.11"]
 
 [dependency-groups]
 dev = [
     "bandit>=1.8",
     "build>=1.2",
     "mypy>=1.8",
+    "hypothesis>=6.100",
     "pip-audit>=2.9",
     "pytest>=8.0",
     "pytest-cov>=5.0",
@@ -58,11 +50,15 @@ Repository = "https://github.com/danielaLopes/pymab"
 Issues = "https://github.com/danielaLopes/pymab/issues"
 
 [tool.setuptools.packages.find]
+where = ["src"]
 include = ["pymab*"]
 exclude = ["tests*", "docs*", "examples*", "results*"]
 
 [tool.setuptools.package-data]
 pymab = ["py.typed"]
+
+[tool.setuptools]
+package-dir = {"" = "src"}
 
 [tool.ruff]
 line-length = 88
@@ -71,6 +67,11 @@ target-version = "py311"
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "B", "C4", "SIM", "S"]
 ignore = ["E501"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["S101"]
+"scripts/check_notebooks.py" = ["S102"]
+"scripts/check_readme_snippets.py" = ["S102"]
 
 [tool.ruff.format]
 quote-style = "double"
@@ -81,7 +82,22 @@ python_version = "3.11"
 strict = true
 warn_unused_configs = true
 ignore_missing_imports = true
+mypy_path = "src"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-addopts = "--cov=pymab --cov-report=term-missing"
+addopts = "--cov=pymab --cov-branch --cov-report=term-missing"
+markers = [
+    "optional: requires one or more optional dependencies",
+]
+
+[tool.coverage.run]
+source = ["src/pymab"]
+branch = true
+
+[tool.coverage.report]
+exclude_also = [
+    "if TYPE_CHECKING:",
+    "raise NotImplementedError",
+    "@abstractmethod",
+]

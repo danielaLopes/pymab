@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
     inputs:
       release_as:
-        description: Optional version override, for example 1.0.0
+        description: Optional version override, for example 2.1.0
         required: false
         type: string
 
@@ -37,12 +37,6 @@ jobs:
           set -euo pipefail
 
           release_as="${REQUESTED_RELEASE}"
-          current_version="$(jq --exit-status --raw-output '.["."]' .release-please-manifest.json)"
-
-          if [[ -z "${release_as}" && "${current_version}" == "0.1.0" ]]; then
-            release_as="1.0.0"
-          fi
-
           echo "release_as=${release_as}" >> "${GITHUB_OUTPUT}"
 
       - name: Create GitHub App token

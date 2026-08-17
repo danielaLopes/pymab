@@ -65,6 +65,19 @@ UCB and Bayesian Policies
    :undoc-members:
    :show-inheritance:
 
+Non-stationary Policies
+-----------------------
+
+.. automodule:: pymab.policies.nonstationary
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+.. automodule:: pymab.policies.change_detection
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 Contextual Policies
 -------------------
 
