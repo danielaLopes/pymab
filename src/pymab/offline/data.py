@@ -11,6 +11,7 @@ from typing import Protocol, runtime_checkable
 import numpy as np
 
 from pymab.errors import ValidationError
+from pymab.statistics import ConfidenceMethod, ResamplingUnit
 from pymab.types import FloatArray, IntArray
 from pymab.validation import float_array, integer_array, positive_integer
 
@@ -59,13 +60,6 @@ class OverlapStatus(StrEnum):
     WEAK = "weak"
     NONE = "none"
     MODEL_ONLY = "model_only"
-
-
-class ResamplingUnit(StrEnum):
-    """Independent unit used by bootstrap uncertainty estimation."""
-
-    EVENT = "event"
-    CLUSTER = "cluster"
 
 
 class LoggingScheme(StrEnum):
@@ -184,7 +178,7 @@ class OfflineEstimate:
     weights: WeightDiagnostics
     overlap_status: OverlapStatus
     resampling_unit: ResamplingUnit
-    confidence_method: str
+    confidence_method: ConfidenceMethod
     confidence_level: float
     n_events: int
 

@@ -2,7 +2,6 @@ import unittest
 
 import numpy as np
 
-from pymab.benchmarking import bootstrap_mean_interval
 from pymab.distributions import BernoulliReward, GaussianReward
 from pymab.environments import (
     BanditEnvironment,
@@ -18,14 +17,17 @@ from pymab.policies import (
     UCBPolicy,
 )
 from pymab.simulation import Experiment, ExperimentConfig
+from pymab.statistics import BootstrapConfig, bootstrap_mean_interval
 from pymab.types import RewardDomain
 
 
 def _replicate_mean_lower_bound(values: np.ndarray, *, seed: int) -> float:
-    lower, _ = bootstrap_mean_interval(values, n_resamples=2_000, seed=seed)
-    if lower is None:
+    estimate = bootstrap_mean_interval(
+        values, config=BootstrapConfig(n_resamples=2_000, seed=seed)
+    )
+    if estimate.ci_lower is None:
         raise AssertionError("at least two independent replicates are required")
-    return lower
+    return estimate.ci_lower
 
 
 class StatisticalConfidenceTests(unittest.TestCase):
@@ -139,9 +141,12 @@ class StatisticalConfidenceTests(unittest.TestCase):
             result.optimal_action_indicator[:, 40:60, :], axis=1
         )
         paired_difference = early_post_shift_rates[:, 0] - early_post_shift_rates[:, 1]
-        lower, _ = bootstrap_mean_interval(paired_difference, n_resamples=2_000, seed=4)
-        self.assertIsNotNone(lower)
-        self.assertGreater(float(lower), 0.05)
+        estimate = bootstrap_mean_interval(
+            paired_difference,
+            config=BootstrapConfig(n_resamples=2_000, seed=4),
+        )
+        self.assertIsNotNone(estimate.ci_lower)
+        self.assertGreater(float(estimate.ci_lower), 0.05)
 
 
 if __name__ == "__main__":

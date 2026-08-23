@@ -42,14 +42,18 @@ change another policy's random stream or the simulated environment path.
 
 ```python
 from pymab import compare
+from pymab.benchmarking import BenchmarkConfig
 from pymab.policies import RandomPolicy, UCBPolicy
+from pymab.statistics import BootstrapConfig
 
 benchmark = compare(
     {"random": RandomPolicy(n_arms=3), "ucb": UCBPolicy(n_arms=3)},
     environment=BanditEnvironment(means=np.array([0.1, 0.3, 0.8])),
     config=ExperimentConfig(horizon=100, n_replicates=20, seed=7),
-    baseline="random",
-    analysis_seed=91,
+    analysis=BenchmarkConfig(
+        bootstrap=BootstrapConfig(seed=91),
+        baseline="random",
+    ),
 )
 
 print(benchmark.lowest_mean_regret_policy)
@@ -67,6 +71,8 @@ and post-clipping overlap diagnostics:
 
 ```python
 from pymab import LoggedBanditDataset, estimate_policy_value
+from pymab.offline import EstimateMethod, EstimatorConfig
+from pymab.statistics import BootstrapConfig
 
 
 class FixedTarget:
@@ -83,9 +89,10 @@ logged = LoggedBanditDataset(
 estimate = estimate_policy_value(
     logged,
     FixedTarget(),
-    method="snips",
-    bootstrap_resamples=500,
-    seed=7,
+    config=EstimatorConfig(
+        method=EstimateMethod.SNIPS,
+        bootstrap=BootstrapConfig(n_resamples=500, seed=7),
+    ),
 )
 assert estimate.estimate == 0.75
 ```

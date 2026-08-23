@@ -1,5 +1,21 @@
 # Changelog
 
+## Unreleased
+
+### Added
+
+- A shared typed statistical core with deterministic, memory-bounded event,
+  cluster, ratio, paired-difference, and replicate-curve bootstrapping.
+- Immutable benchmark summary and comparison records with explicit JSON and
+  pandas conversion boundaries.
+
+### Changed
+
+- Benchmarking, offline estimation, and plotting now share
+  `BootstrapConfig`; separate bootstrap keyword arguments and
+  `BootstrapBandConfig` were removed.
+- The repository branch-coverage gate increased from 90% to 92%.
+
 ## [2.0.0] - 2026-08-09
 
 ### Added

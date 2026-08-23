@@ -5,15 +5,19 @@ import pytest
 
 from pymab.errors import OverlapError
 from pymab.offline import (
+    EstimateMethod,
+    EstimatorConfig,
     LoggedBanditDataset,
     LoggingScheme,
     OverlapStatus,
+    PolicyValueEstimator,
     ResamplingUnit,
     estimate_policy_value,
     sequential_replay,
 )
 from pymab.policies import LogisticContextualBanditPolicy, RandomPolicy
 from pymab.policies.policy import Policy
+from pymab.statistics import BootstrapConfig, ConfidenceMethod
 
 
 class FixedTarget:
@@ -65,29 +69,48 @@ def _dataset() -> LoggedBanditDataset:
     )
 
 
+def _config(
+    method: EstimateMethod | str = EstimateMethod.IPS,
+    *,
+    weight_clip: float | None = None,
+    n_resamples: int = 100,
+    seed: int = 0,
+    max_chunk_elements: int = 1_000_000,
+    confidence_level: float = 0.95,
+) -> EstimatorConfig:
+    return EstimatorConfig(
+        method=method,
+        weight_clip=weight_clip,
+        bootstrap=BootstrapConfig(
+            confidence_level=confidence_level,
+            n_resamples=n_resamples,
+            seed=seed,
+            max_chunk_elements=max_chunk_elements,
+        ),
+    )
+
+
 @pytest.mark.parametrize("method", ["ips", "snips", "dr"])
 def test_offline_estimators_match_known_value(method) -> None:
     kwargs = {"reward_model": PerfectCrossFittedModel()} if method == "dr" else {}
     estimate = estimate_policy_value(
         _dataset(),
         FixedTarget([0.25, 0.75]),
-        method=method,
-        bootstrap_resamples=200,
-        seed=1,
+        config=_config(method, n_resamples=200, seed=1),
         **kwargs,
     )
     assert estimate.estimate == pytest.approx(0.75)
     assert estimate.effective_sample_size == pytest.approx(3.2)
     assert estimate.ci_lower is not None
     assert estimate.max_weight == 1.5
+    assert estimate.confidence_method is ConfidenceMethod.PERCENTILE_BOOTSTRAP
 
 
 def test_weight_clipping_is_reported() -> None:
     estimate = estimate_policy_value(
         _dataset(),
         FixedTarget([0.25, 0.75]),
-        weight_clip=1.0,
-        bootstrap_resamples=20,
+        config=_config(weight_clip=1.0, n_resamples=20),
     )
     assert estimate.clipped_fraction == 0.5
     assert estimate.max_weight == 1.0
@@ -106,15 +129,13 @@ def test_zero_overlap_is_explicit() -> None:
         estimate_policy_value(
             dataset,
             FixedTarget([0.0, 1.0]),
-            method="ips",
-            bootstrap_resamples=10,
+            config=_config("ips", n_resamples=10),
         )
     estimate = estimate_policy_value(
         dataset,
         FixedTarget([0.0, 1.0]),
-        method="dr",
+        config=_config("dr", n_resamples=10),
         reward_model=PerfectCrossFittedModel(),
-        bootstrap_resamples=10,
     )
     assert estimate.estimate == 1.0
     assert estimate.overlap_status is OverlapStatus.MODEL_ONLY
@@ -175,28 +196,26 @@ def test_logged_dataset_is_immutable_and_contextual() -> None:
 )
 def test_target_probability_validation(target) -> None:
     with pytest.raises(ValueError):
-        estimate_policy_value(_dataset(), target, bootstrap_resamples=10)
+        estimate_policy_value(_dataset(), target, config=_config(n_resamples=10))
 
 
 def test_estimator_argument_validation() -> None:
     with pytest.raises(ValueError, match="method"):
-        estimate_policy_value(_dataset(), FixedTarget([0.5, 0.5]), method="x")
+        _config("x")
     with pytest.raises(ValueError, match="cross-fitted"):
-        estimate_policy_value(_dataset(), FixedTarget([0.5, 0.5]), method="dr")
+        estimate_policy_value(_dataset(), FixedTarget([0.5, 0.5]), config=_config("dr"))
     with pytest.raises(ValueError, match="weight_clip"):
-        estimate_policy_value(_dataset(), FixedTarget([0.5, 0.5]), weight_clip=0)
+        _config(weight_clip=0)
     with pytest.raises(ValueError, match="confidence"):
-        estimate_policy_value(_dataset(), FixedTarget([0.5, 0.5]), confidence_level=1)
-    with pytest.raises(ValueError, match="bootstrap"):
-        estimate_policy_value(
-            _dataset(), FixedTarget([0.5, 0.5]), bootstrap_resamples=0
-        )
-    with pytest.raises(ValueError, match="bootstrap_max"):
-        estimate_policy_value(
-            _dataset(),
-            FixedTarget([0.5, 0.5]),
-            bootstrap_max_index_elements=0,
-        )
+        _config(confidence_level=1)
+    with pytest.raises(ValueError, match="n_resamples"):
+        _config(n_resamples=0)
+    with pytest.raises(ValueError, match="max_chunk"):
+        _config(max_chunk_elements=0)
+    with pytest.raises(TypeError, match="BootstrapConfig"):
+        EstimatorConfig(bootstrap=object())  # type: ignore[arg-type]
+    with pytest.raises(TypeError, match="EstimatorConfig"):
+        PolicyValueEstimator(object())  # type: ignore[arg-type]
 
 
 def test_reward_model_prediction_validation() -> None:
@@ -208,9 +227,20 @@ def test_reward_model_prediction_validation() -> None:
         estimate_policy_value(
             _dataset(),
             FixedTarget([0.5, 0.5]),
-            method="dr",
+            config=_config("dr", n_resamples=10),
             reward_model=BadModel(),
-            bootstrap_resamples=10,
+        )
+
+    class WrongShapeModel:
+        def predict_event(self, event_index, context):
+            return np.array([0.0])
+
+    with pytest.raises(ValueError, match="one prediction per arm"):
+        estimate_policy_value(
+            _dataset(),
+            FixedTarget([0.5, 0.5]),
+            config=_config("dr", n_resamples=10),
+            reward_model=WrongShapeModel(),
         )
 
 
@@ -228,9 +258,7 @@ def test_estimators_recover_known_logged_policy_value() -> None:
         estimate = estimate_policy_value(
             dataset,
             FixedTarget([0.3, 0.7]),
-            method=method,
-            bootstrap_resamples=200,
-            seed=3,
+            config=_config(method, n_resamples=200, seed=3),
         )
         assert estimate.estimate == pytest.approx(0.7, abs=0.025)
         assert estimate.resampling_unit is ResamplingUnit.EVENT
@@ -238,19 +266,24 @@ def test_estimators_recover_known_logged_policy_value() -> None:
     dr = estimate_policy_value(
         dataset,
         FixedTarget([0.3, 0.7]),
-        method="dr",
+        config=_config("dr", n_resamples=50),
         reward_model=PerfectCrossFittedModel(),
-        bootstrap_resamples=50,
     )
     assert dr.estimate == pytest.approx(0.7)
 
 
-def test_ips_bootstrap_has_reference_monte_carlo_coverage() -> None:
+@pytest.mark.parametrize(
+    "method",
+    [EstimateMethod.IPS, EstimateMethod.SNIPS, EstimateMethod.DOUBLY_ROBUST],
+)
+def test_offline_bootstrap_has_reference_monte_carlo_coverage(
+    method: EstimateMethod,
+) -> None:
     rng = np.random.default_rng(2026)
     estimates: list[float] = []
     covered = 0
-    for trial in range(40):
-        actions = (rng.random(500) >= 0.8).astype(np.int64)
+    for trial in range(30):
+        actions = (rng.random(400) >= 0.8).astype(np.int64)
         propensities = np.where(actions == 0, 0.8, 0.2)
         estimate = estimate_policy_value(
             LoggedBanditDataset(
@@ -260,16 +293,19 @@ def test_ips_bootstrap_has_reference_monte_carlo_coverage() -> None:
                 n_arms=2,
             ),
             FixedTarget([0.3, 0.7]),
-            method="ips",
-            bootstrap_resamples=300,
-            seed=trial,
+            config=_config(method, n_resamples=200, seed=trial),
+            reward_model=(
+                PerfectCrossFittedModel()
+                if method is EstimateMethod.DOUBLY_ROBUST
+                else None
+            ),
         )
         estimates.append(estimate.estimate)
         assert estimate.ci_lower is not None
         assert estimate.ci_upper is not None
         covered += int(estimate.ci_lower <= 0.7 <= estimate.ci_upper)
     assert np.mean(estimates) == pytest.approx(0.7, abs=0.03)
-    assert covered >= 34
+    assert covered >= 26
 
 
 @pytest.mark.parametrize("method", ["ips", "snips", "dr"])
@@ -278,17 +314,13 @@ def test_vectorized_target_policy_matches_event_interface(method: str) -> None:
     event = estimate_policy_value(
         _dataset(),
         FixedTarget([0.25, 0.75]),
-        method=method,
-        bootstrap_resamples=50,
-        seed=5,
+        config=_config(method, n_resamples=50, seed=5),
         **kwargs,
     )
     batch = estimate_policy_value(
         _dataset(),
         BatchFixedTarget([0.25, 0.75]),
-        method=method,
-        bootstrap_resamples=50,
-        seed=5,
+        config=_config(method, n_resamples=50, seed=5),
         **kwargs,
     )
     assert batch == event
@@ -299,7 +331,62 @@ def test_vectorized_target_policy_validates_matrix_contract() -> None:
         estimate_policy_value(
             _dataset(),
             BatchFixedTarget([1.0]),
-            bootstrap_resamples=10,
+            config=_config(n_resamples=10),
+        )
+    with pytest.raises(ValueError, match="non-negative"):
+        estimate_policy_value(
+            _dataset(),
+            BatchFixedTarget([-0.1, 1.1]),
+            config=_config(n_resamples=10),
+        )
+    with pytest.raises(ValueError, match="sum to one"):
+        estimate_policy_value(
+            _dataset(),
+            BatchFixedTarget([0.2, 0.2]),
+            config=_config(n_resamples=10),
+        )
+
+
+def test_vectorized_dr_validates_reward_model_shape() -> None:
+    class WrongShapeModel:
+        def predict_event(self, event_index, context):
+            return np.array([0.0])
+
+    with pytest.raises(ValueError, match="one prediction per arm"):
+        estimate_policy_value(
+            _dataset(),
+            BatchFixedTarget([0.5, 0.5]),
+            config=_config("dr", n_resamples=10),
+            reward_model=WrongShapeModel(),
+        )
+
+
+def test_extreme_importance_weights_report_weak_overlap() -> None:
+    estimate = estimate_policy_value(
+        LoggedBanditDataset(
+            actions=np.array([0, 0]),
+            rewards=np.array([0.0, 1.0]),
+            propensities=np.array([0.001, 0.001]),
+            n_arms=2,
+        ),
+        FixedTarget([1.0, 0.0]),
+        config=_config(n_resamples=10),
+    )
+    assert estimate.overlap_status is OverlapStatus.WEAK
+
+
+def test_overflowing_importance_weight_is_rejected() -> None:
+    dataset = LoggedBanditDataset(
+        actions=np.array([0, 0]),
+        rewards=np.array([0.0, 1.0]),
+        propensities=np.full(2, np.nextafter(0.0, 1.0)),
+        n_arms=2,
+    )
+    with np.errstate(over="ignore"), pytest.raises(OverlapError, match="overflowed"):
+        estimate_policy_value(
+            dataset,
+            FixedTarget([1.0, 0.0]),
+            config=_config(n_resamples=10),
         )
 
 
@@ -315,7 +402,7 @@ def test_cluster_ids_activate_cluster_bootstrap() -> None:
     estimate = estimate_policy_value(
         dataset,
         FixedTarget([0.25, 0.75]),
-        bootstrap_resamples=100,
+        config=_config(n_resamples=100),
     )
     assert estimate.resampling_unit is ResamplingUnit.CLUSTER
 

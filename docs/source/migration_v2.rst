@@ -62,6 +62,16 @@ development:
 * UCB and MOSS expose ``reward_scale``; MOSS rejects ``horizon < n_arms``.
 * Plotly is the sole dependency of the ``plot`` extra. Matplotlib was removed
   because PyMAB does not expose a Matplotlib backend.
+* Bootstrap controls now live in ``pymab.statistics.BootstrapConfig``.
+  ``BenchmarkResult`` receives a ``BenchmarkConfig``; ``compare`` receives it
+  as ``analysis``; and ``estimate_policy_value`` receives an
+  ``EstimatorConfig``. Plot helpers accept the same ``BootstrapConfig``.
+* ``BenchmarkResult.summary`` and ``compare_to_baseline`` return immutable
+  typed records. Use each record's attributes in Python and ``to_dict`` when a
+  flat JSON-compatible representation is required.
+* Import ``bootstrap_mean_interval`` and ``standard_error`` from
+  ``pymab.statistics``. ``BootstrapBandConfig`` and the separate offline
+  bootstrap keywords were removed.
 
 Minimal v2 replacement
 ----------------------
