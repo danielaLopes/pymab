@@ -1,5 +1,55 @@
 # Changelog
 
+## [2.0.0] - 2026-08-09
+
+### Added
+
+- Deterministic experiments with named random-number streams, stable policy IDs,
+  multiple replicates, and common or independent reward coupling.
+- Immutable, schema-versioned simulation results with JSON and NPZ persistence.
+- Atomic persistence, schema migrations, recursively immutable metadata, and
+  automatic Python/NumPy/component provenance with optional context recording.
+- Paired bootstrap comparisons, standard errors, baseline deltas, and
+  recommendation metrics for best-arm identification.
+- Logged-bandit datasets, IPS, SNIPS, doubly robust estimation, overlap
+  diagnostics, and sequential replay evaluation.
+- Raw and clipped importance-weight diagnostics, cluster bootstrap, vectorized
+  target policies, explicit zero-overlap failures, and propensity-aware replay.
+- Explicit policy capabilities and separate reward-model and arm-prior APIs.
+- Linear and logistic contextual environments, bounded probability drift, and
+  a migration guide for the intentionally breaking v2 API.
+
+### Changed
+
+- Moved the package to a `src/` layout and made NumPy the only required runtime
+  dependency. Pandas, plotting, SciPy, and documentation support are optional.
+- Policy constructors now use one explicit vocabulary (`n_arms`, `n_features`)
+  and policies implement an explicit clone/reset contract.
+- Sliding-window policies now expire observations by global decision time;
+  EXP3 uses stable log weights; UCB-style bounds expose reward scale.
+- Offline evaluation, result persistence, provenance, non-stationary policies,
+  and change detection now have focused modules behind curated facades.
+- Optimal-action calculations treat statistically indistinguishable arms as
+  ties using a documented numerical tolerance.
+- Documentation CI now performs clean strict builds on Python 3.11 and 3.14,
+  executes doctests and README snippets, enforces API coverage, checks external
+  links separately, and publishes rendered HTML artifacts.
+
+### Removed
+
+- The v1 `Game` facade, compatibility aliases, environment mixins, implicit
+  output directories, and import-time logging/plot configuration.
+
+### Fixed
+
+- Shared-RNG coupling that made a policy's result depend on policy order or on
+  unrelated policies included in an experiment.
+- Bernoulli drift leaving the valid probability domain and matrix inversion in
+  contextual policies.
+- Lossy integer coercion, shared mutable extension state, broken NumPy dataclass
+  equality, misleading zero-overlap intervals, and unbounded plot bootstrap
+  allocations.
+
 ## [1.0.0](https://github.com/danielaLopes/pymab/compare/v0.1.0...v1.0.0) (2026-08-09)
 
 

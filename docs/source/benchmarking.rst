@@ -1,113 +1,52 @@
-Benchmarking and Result Analysis
-================================
+Benchmarking and inference
+==========================
 
-Use ``compare`` when the question is not just "can this policy run?" but
-"which policy won under repeated seeds?"
+``compare`` runs all policies inside one paired experiment. Its independent
+unit is the replicate, not an individual time step.
 
-.. code-block:: python
+.. testcode:: benchmarking
 
    import numpy as np
 
-   from pymab import compare
-   from pymab.environments import BanditEnvironment
-   from pymab.policies import RandomPolicy, ThompsonSamplingPolicy, UCBPolicy
+   from pymab import BanditEnvironment, ExperimentConfig, compare
+   from pymab.policies import RandomPolicy, UCBPolicy
 
    benchmark = compare(
-       [
-           RandomPolicy(n_arms=3),
-           UCBPolicy(n_arms=3),
-           ThompsonSamplingPolicy(n_arms=3),
-       ],
-       environment=BanditEnvironment(q_values=np.array([0.1, 0.3, 0.8])),
-       n_episodes=100,
-       n_steps=500,
-       seeds=(1, 2, 3, 4, 5),
+       {"random": RandomPolicy(n_arms=3), "ucb": UCBPolicy(n_arms=3)},
+       environment=BanditEnvironment(means=np.array([0.1, 0.3, 0.8])),
+       config=ExperimentConfig(horizon=20, n_replicates=4, seed=7),
+       baseline="random",
+       analysis_seed=91,
    )
 
-   print(benchmark.best_policy)
-   print(benchmark.summary())
+   assert benchmark.lowest_mean_regret_policy in {"random", "ucb"}
+   assert len(benchmark.summary()) == 2
+   assert len(benchmark.compare_to_baseline()) == 1
 
-Summary Columns
----------------
+``summary`` reports means, standard errors, and percentile-bootstrap interval
+bounds for cumulative expected regret, realized total reward, optimal-action
+rate, and final simple regret. ``compare_to_baseline`` bootstraps paired
+replicate differences, preserving the common-random-number design.
 
-``BenchmarkResult.summary()`` returns one dictionary per policy:
+``lowest_mean_regret_policy`` is only a point-estimate ranking. Use paired
+intervals, effect size, domain relevance, and adequate independent replication
+before making a substantive claim.
 
-``policy_name``
-   Readable policy representation.
+Persistence and tables
+----------------------
 
-``mean_cumulative_regret``
-   Mean final cumulative expected regret across top-level seeds. Lower is
-   better.
-
-``cumulative_regret_ci``
-   Normal-theory confidence interval margin for final regret.
-
-``mean_total_reward``
-   Mean cumulative realized reward across top-level seeds. Higher is better.
-
-``total_reward_ci``
-   Confidence interval margin for total reward.
-
-``mean_optimal_action_rate``
-   Fraction of steps that selected the best current action.
-
-DataFrame Export
-----------------
-
-Install the analysis extra to get pandas support:
-
-.. code-block:: bash
-
-   pip install "pymab[analysis]"
-
-Then convert simulations or benchmarks into tidy tables:
-
-.. code-block:: python
-
-   result_frame = benchmark.combined.to_pandas()
-   summary_frame = benchmark.to_pandas()
-
-The simulation DataFrame has one row per episode, step, and policy. It includes
-actions, realized rewards, expected rewards, regret, and whether the selected
-action was optimal.
-
-Persistence
------------
-
-Use compressed NumPy archives for reproducible experiment artifacts:
-
-.. code-block:: python
-
-   benchmark.combined.save_npz("results/benchmark.npz")
-
-   from pymab.simulation import SimulationResult
-
-   loaded = SimulationResult.load_npz("results/benchmark.npz")
-
-``SimulationResult.to_dict()`` is useful for APIs and lightweight JSON
-inspection. Prefer ``save_npz`` for larger arrays.
-
-Standard Plots
---------------
-
-Install the plot extra:
-
-.. code-block:: bash
-
-   pip install "pymab[plot]"
-
-Then create standard comparison plots:
-
-.. code-block:: python
-
-   benchmark.plot_average_reward(output_path="results/average_reward.html")
-   benchmark.plot_cumulative_regret(output_path="results/regret.html")
-   benchmark.plot_optimal_action_rate(output_path="results/optimal_rate.html")
-
-API Reference
--------------
+``SimulationResult.save_npz`` stores arrays plus versioned JSON metadata. Both
+NPZ and JSON formats have matching load methods. ``to_pandas`` includes policy
+IDs, replicate numbers, and replicate seeds on every tidy row.
 
 .. automodule:: pymab.benchmarking
    :members:
-   :undoc-members:
+   :show-inheritance:
+
+Plot uncertainty bands use ``BootstrapBandConfig`` and a bounded-memory,
+replicate-level bootstrap. Benchmark plot wrappers inherit the benchmark's
+confidence level, resample count, and analysis seed.
+
+.. automodule:: pymab.plotting
+   :members:
    :show-inheritance:

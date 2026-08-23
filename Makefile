@@ -1,4 +1,5 @@
-.PHONY: audit ci docs format format-fix lint llm-security security sync test test-ci
+.PHONY: audit ci docs docs-coverage docs-doctest docs-html docs-linkcheck \
+	docs-snippets format format-fix lint llm-security security sync test test-ci
 
 UV ?= uv
 PYTHON ?= python3.12
@@ -6,6 +7,10 @@ PYTHON_VERSION ?= 3.12
 UV_CACHE_DIR ?= .uv-cache
 export UV_CACHE_DIR
 RUN_TOOL = sh scripts/run_tool.sh
+DOCS_SOURCE = docs/source
+DOCS_BUILD = docs/build
+SPHINX_STRICT_FLAGS = -W --keep-going -n -E -a
+DOCS_COVERAGE_MIN ?= 100
 UV_EXPORT_FLAGS ?= --frozen --all-extras --all-groups --no-emit-project --no-hashes
 PIP_AUDIT_FLAGS ?= --strict
 ifeq ($(CI),true)
@@ -23,7 +28,7 @@ sync:
 		$(PYTHON) -m venv .venv; \
 		. .venv/bin/activate; \
 		python -m pip install --upgrade pip; \
-		python -m pip install -e ".[dev,plot,docs]"; \
+		python -m pip install --group dev -e ".[plot,docs,analysis,bayes]"; \
 	}
 
 format:
@@ -34,16 +39,16 @@ format-fix:
 
 lint:
 	$(RUN_TOOL) ruff check .
-	$(RUN_TOOL) mypy pymab
+	$(RUN_TOOL) mypy src/pymab
 
 test:
-	$(RUN_TOOL) pytest --cov-fail-under=75
+	$(RUN_TOOL) pytest --cov-fail-under=90
 
 test-ci:
-	$(RUN_TOOL) pytest --cov-fail-under=75
+	$(RUN_TOOL) pytest --cov-fail-under=90
 
 security:
-	$(RUN_TOOL) bandit -r pymab --severity-level low --confidence-level medium
+	$(RUN_TOOL) bandit -r src/pymab --severity-level low --confidence-level medium
 	@if [ "$${PYMAB_RUN_NETWORK_AUDIT:-0}" = "1" ]; then \
 		$(MAKE) audit; \
 	else \
@@ -59,5 +64,25 @@ audit:
 llm-security:
 	$(RUN_TOOL) python scripts/llm_security_review.py
 
-docs:
-	$(RUN_TOOL) sphinx-build docs/source docs/build
+docs: docs-html docs-doctest docs-coverage docs-snippets
+
+docs-html:
+	$(RUN_TOOL) sphinx-build $(SPHINX_STRICT_FLAGS) -b html \
+		$(DOCS_SOURCE) $(DOCS_BUILD)/html
+
+docs-doctest:
+	$(RUN_TOOL) sphinx-build $(SPHINX_STRICT_FLAGS) -b doctest \
+		$(DOCS_SOURCE) $(DOCS_BUILD)/doctest
+
+docs-coverage:
+	$(RUN_TOOL) sphinx-build $(SPHINX_STRICT_FLAGS) -b coverage \
+		$(DOCS_SOURCE) $(DOCS_BUILD)/coverage
+	$(RUN_TOOL) python scripts/check_docs_coverage.py \
+		$(DOCS_BUILD)/coverage/python.txt --minimum $(DOCS_COVERAGE_MIN)
+
+docs-snippets:
+	$(RUN_TOOL) python scripts/check_readme_snippets.py README.md
+
+docs-linkcheck:
+	$(RUN_TOOL) sphinx-build $(SPHINX_STRICT_FLAGS) -b linkcheck \
+		$(DOCS_SOURCE) $(DOCS_BUILD)/linkcheck

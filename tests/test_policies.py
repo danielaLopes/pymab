@@ -1,9 +1,10 @@
 import unittest
 
 import numpy as np
+import pytest
 
 from pymab.policies import (
-    BayesianUCBPolicy,
+    BernoulliBayesianUCBPolicy,
     BernoulliThompsonSamplingPolicy,
     CUSUMUCBPolicy,
     DecayingEpsilonGreedyPolicy,
@@ -11,7 +12,7 @@ from pymab.policies import (
     DiscountedUCBPolicy,
     EpsilonGreedyPolicy,
     EXP3Policy,
-    GaussianThompsonSamplingPolicy,
+    GaussianBayesianUCBPolicy,
     GradientBanditPolicy,
     GreedyPolicy,
     KLUCBPolicy,
@@ -21,7 +22,6 @@ from pymab.policies import (
     SlidingWindowUCBPolicy,
     SoftmaxPolicy,
     SuccessiveEliminationPolicy,
-    ThompsonSamplingPolicy,
     UCBPolicy,
 )
 
@@ -154,18 +154,19 @@ class PolicyTests(unittest.TestCase):
         policy.phase_epsilon = 10.0
         policy.phase_delta = 0.5
         policy.update(action=0, reward=1.0)
-        policy.update(action=1, reward=0.0)
-        policy.update(action=2, reward=-1.0)
+        policy.update(action=1, reward=0.5)
+        policy.update(action=2, reward=0.0)
         self.assertLess(np.sum(policy.active), 3)
 
-    def test_thompson_factory_preserves_distribution(self) -> None:
-        bernoulli = ThompsonSamplingPolicy(n_arms=2, reward_distribution="bernoulli")
-        gaussian = ThompsonSamplingPolicy(n_arms=2, reward_distribution="gaussian")
-        self.assertIsInstance(bernoulli, BernoulliThompsonSamplingPolicy)
-        self.assertIsInstance(gaussian, GaussianThompsonSamplingPolicy)
+    def test_gaussian_bayesian_ucb(self) -> None:
+        policy = GaussianBayesianUCBPolicy(n_arms=2)
+        action = policy.select_action(rng=np.random.default_rng(1))
+        self.assertIn(action, {0, 1})
 
-    def test_bayesian_ucb_factory(self) -> None:
-        policy = BayesianUCBPolicy(n_arms=2, reward_distribution="gaussian")
+    @pytest.mark.optional
+    def test_bernoulli_bayesian_ucb_uses_exact_quantile(self) -> None:
+        pytest.importorskip("scipy")
+        policy = BernoulliBayesianUCBPolicy(n_arms=2, quantile=0.9)
         action = policy.select_action(rng=np.random.default_rng(1))
         self.assertIn(action, {0, 1})
 

@@ -8,10 +8,6 @@
       "package-name": "pymab",
       "extra-files": [
         {
-          "type": "generic",
-          "path": "docs/source/conf.py"
-        },
-        {
           "type": "toml",
           "path": "uv.lock",
           "jsonpath": "$['package'][?(@.name.value=='pymab')].version"
