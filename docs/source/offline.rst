@@ -31,6 +31,41 @@ IDs, such as user, session, or trajectory IDs, when events within a cluster are
 dependent; PyMAB then resamples whole clusters. Reward predictions supplied to
 DR must be out-of-fold or otherwise independent of the evaluated event.
 
+Estimator behavior and bootstrap controls are explicit typed configurations:
+
+.. testcode:: offline-estimator
+
+   import numpy as np
+
+   from pymab.offline import (
+       EstimateMethod,
+       EstimatorConfig,
+       LoggedBanditDataset,
+       estimate_policy_value,
+   )
+   from pymab.statistics import BootstrapConfig
+
+   class UniformTarget:
+       def probabilities(self, context):
+           return np.array([0.5, 0.5])
+
+   logged = LoggedBanditDataset(
+       actions=np.array([0, 1]),
+       rewards=np.array([0.0, 1.0]),
+       propensities=np.array([0.5, 0.5]),
+       n_arms=2,
+   )
+   estimate = estimate_policy_value(
+       logged,
+       UniformTarget(),
+       config=EstimatorConfig(
+           method=EstimateMethod.SNIPS,
+           bootstrap=BootstrapConfig(n_resamples=100, seed=7),
+       ),
+   )
+
+   assert estimate.estimate == 0.5
+
 .. automodule:: pymab.offline
    :members:
    :show-inheritance:

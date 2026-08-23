@@ -279,7 +279,9 @@ jobs:
               LoggedBanditDataset,
               estimate_policy_value,
           )
+          from pymab.offline import EstimatorConfig
           from pymab.policies import UCBPolicy
+          from pymab.statistics import BootstrapConfig
 
           result = Experiment(
               environment=BanditEnvironment(means=np.array([0.0, 1.0])),
@@ -300,7 +302,9 @@ jobs:
                   n_arms=2,
               ),
               UniformTarget(),
-              bootstrap_resamples=10,
+              config=EstimatorConfig(
+                  bootstrap=BootstrapConfig(n_resamples=10),
+              ),
           )
           assert estimate.estimate == 0.5
           PY

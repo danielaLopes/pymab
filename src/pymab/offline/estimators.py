@@ -2,13 +2,12 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
-from numbers import Integral
+from dataclasses import dataclass, field
 
 import numpy as np
 
+from pymab._resampling import summarize_observations
 from pymab.errors import OverlapError, ValidationError
-from pymab.offline.bootstrap import Bootstrapper
 from pymab.offline.data import (
     BatchTargetPolicy,
     CrossFittedRewardModel,
@@ -19,6 +18,7 @@ from pymab.offline.data import (
     TargetPolicy,
     WeightDiagnostics,
 )
+from pymab.statistics import BootstrapConfig, ResamplingUnit
 from pymab.types import FloatArray
 from pymab.validation import finite_float, float_array, probability_vector
 
@@ -29,10 +29,7 @@ class EstimatorConfig:
 
     method: EstimateMethod = EstimateMethod.IPS
     weight_clip: float | None = None
-    confidence_level: float = 0.95
-    bootstrap_resamples: int = 10_000
-    bootstrap_max_index_elements: int = 1_000_000
-    seed: int = 0
+    bootstrap: BootstrapConfig = field(default_factory=BootstrapConfig)
 
     def __post_init__(self) -> None:
         try:
@@ -45,37 +42,16 @@ class EstimatorConfig:
             if clip <= 0:
                 raise ValidationError("weight_clip must be positive")
             object.__setattr__(self, "weight_clip", clip)
-        confidence = finite_float(self.confidence_level, name="confidence_level")
-        if not 0 < confidence < 1:
-            raise ValidationError("confidence_level must be in (0, 1)")
-        object.__setattr__(self, "confidence_level", confidence)
-        if isinstance(self.bootstrap_resamples, bool) or not isinstance(
-            self.bootstrap_resamples, Integral
-        ):
-            raise TypeError("bootstrap_resamples must be an integer")
-        if int(self.bootstrap_resamples) <= 0:
-            raise ValidationError("bootstrap_resamples must be positive")
-        object.__setattr__(self, "bootstrap_resamples", int(self.bootstrap_resamples))
-        if isinstance(self.bootstrap_max_index_elements, bool) or not isinstance(
-            self.bootstrap_max_index_elements, Integral
-        ):
-            raise TypeError("bootstrap_max_index_elements must be an integer")
-        if int(self.bootstrap_max_index_elements) <= 0:
-            raise ValidationError("bootstrap_max_index_elements must be positive")
-        object.__setattr__(
-            self,
-            "bootstrap_max_index_elements",
-            int(self.bootstrap_max_index_elements),
-        )
-        if isinstance(self.seed, bool) or not isinstance(self.seed, Integral):
-            raise TypeError("seed must be an integer")
-        object.__setattr__(self, "seed", int(self.seed))
+        if not isinstance(self.bootstrap, BootstrapConfig):
+            raise TypeError("bootstrap must be a BootstrapConfig")
 
 
 class PolicyValueEstimator:
     """Evaluate a fixed target policy against immutable logged feedback."""
 
     def __init__(self, config: EstimatorConfig) -> None:
+        if not isinstance(config, EstimatorConfig):
+            raise TypeError("config must be an EstimatorConfig")
         self.config = config
 
     def estimate(
@@ -85,11 +61,6 @@ class PolicyValueEstimator:
         *,
         reward_model: CrossFittedRewardModel | None = None,
     ) -> OfflineEstimate:
-        if self.config.bootstrap_max_index_elements < dataset.n_events:
-            raise ValidationError(
-                "bootstrap_max_index_elements must accommodate one complete "
-                "logged-data resample"
-            )
         if self.config.method is EstimateMethod.DOUBLY_ROBUST and reward_model is None:
             raise ValidationError(
                 "doubly robust estimation requires a cross-fitted reward model"
@@ -120,17 +91,17 @@ class PolicyValueEstimator:
             target=target,
             weights=weights,
         )
-        estimate = self._point_estimate(contributions=contributions, weights=weights)
-        uncertainty = Bootstrapper(
-            n_resamples=self.config.bootstrap_resamples,
-            confidence_level=self.config.confidence_level,
-            seed=self.config.seed,
-            max_index_elements=self.config.bootstrap_max_index_elements,
-        ).summarize(
+        resampling_unit = (
+            ResamplingUnit.CLUSTER
+            if dataset.clusters is not None
+            else ResamplingUnit.EVENT
+        )
+        uncertainty = summarize_observations(
             contributions=contributions,
-            weights=weights,
-            method=self.config.method,
-            clusters=(None if dataset.clusters is None else tuple(dataset.clusters)),
+            weights=(weights if self.config.method is EstimateMethod.SNIPS else None),
+            clusters=dataset.clusters,
+            config=self.config.bootstrap,
+            resampling_unit=resampling_unit,
         )
         diagnostics = _weight_diagnostics(
             raw_weights=raw_weights,
@@ -144,15 +115,15 @@ class PolicyValueEstimator:
         )
         return OfflineEstimate(
             method=self.config.method,
-            estimate=estimate,
+            estimate=uncertainty.estimate,
             standard_error=uncertainty.standard_error,
-            ci_lower=uncertainty.lower,
-            ci_upper=uncertainty.upper,
+            ci_lower=uncertainty.ci_lower,
+            ci_upper=uncertainty.ci_upper,
             weights=diagnostics,
             overlap_status=overlap,
-            resampling_unit=uncertainty.unit,
-            confidence_method="percentile_bootstrap",
-            confidence_level=self.config.confidence_level,
+            resampling_unit=uncertainty.resampling_unit,
+            confidence_method=uncertainty.confidence_method,
+            confidence_level=uncertainty.confidence_level,
             n_events=dataset.n_events,
         )
 
@@ -281,16 +252,6 @@ class PolicyValueEstimator:
             dtype=float,
         )
 
-    def _point_estimate(
-        self, *, contributions: FloatArray, weights: FloatArray
-    ) -> float:
-        if self.config.method is not EstimateMethod.SNIPS:
-            return float(np.mean(contributions))
-        denominator = float(np.sum(weights))
-        if denominator <= 0:
-            raise OverlapError("SNIPS is undefined because all target weights are zero")
-        return float(np.sum(contributions) / denominator)
-
 
 @dataclass(frozen=True)
 class _TargetQuantities:
@@ -348,36 +309,17 @@ def estimate_policy_value(
     dataset: LoggedBanditDataset,
     target_policy: TargetPolicy | BatchTargetPolicy,
     *,
-    method: EstimateMethod | str = EstimateMethod.IPS,
+    config: EstimatorConfig | None = None,
     reward_model: CrossFittedRewardModel | None = None,
-    weight_clip: float | None = None,
-    confidence_level: float = 0.95,
-    bootstrap_resamples: int = 10_000,
-    bootstrap_max_index_elements: int = 1_000_000,
-    seed: int = 0,
 ) -> OfflineEstimate:
     """Estimate a fixed target policy using a validated estimator service."""
 
-    config = EstimatorConfig(
-        method=_validate_method(method),
-        weight_clip=weight_clip,
-        confidence_level=confidence_level,
-        bootstrap_resamples=bootstrap_resamples,
-        bootstrap_max_index_elements=bootstrap_max_index_elements,
-        seed=seed,
-    )
-    return PolicyValueEstimator(config).estimate(
+    settings = EstimatorConfig() if config is None else config
+    return PolicyValueEstimator(settings).estimate(
         dataset,
         target_policy,
         reward_model=reward_model,
     )
-
-
-def _validate_method(value: EstimateMethod | str) -> EstimateMethod:
-    try:
-        return EstimateMethod(value)
-    except ValueError as exc:
-        raise ValidationError("method must be 'ips', 'snips', or 'dr'") from exc
 
 
 __all__ = ["EstimatorConfig", "PolicyValueEstimator", "estimate_policy_value"]

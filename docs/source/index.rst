@@ -36,6 +36,7 @@ Quick start
    simulation
    reliability
    types
+   statistics
    benchmarking
    decision_guide
    examples
