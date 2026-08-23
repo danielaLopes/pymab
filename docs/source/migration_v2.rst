@@ -56,6 +56,9 @@ development:
 * Result schema 3 adds immutable runtime/component provenance and optional
   recorded contexts. Schema 2 payloads migrate with explicit unknown
   provenance.
+* Import ``SimulationResult`` from ``pymab.results`` or the package root. It is
+  no longer re-exported from ``pymab.simulation``; that module owns experiment
+  configuration and orchestration only.
 * Sliding-window policies live in ``pymab.policies.nonstationary`` and
   change-point policies in ``pymab.policies.change_detection``. Importing all
   policy classes from ``pymab.policies`` remains the supported facade.

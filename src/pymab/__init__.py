@@ -1,7 +1,6 @@
 """PyMAB: reliable multi-armed bandit experiments."""
 
-from importlib.metadata import PackageNotFoundError, version
-
+from pymab._version import __version__
 from pymab.benchmarking import BenchmarkResult, compare
 from pymab.distributions import (
     BernoulliReward,
@@ -41,12 +40,8 @@ from pymab.offline import (
     sequential_replay,
 )
 from pymab.provenance import RunProvenance
-from pymab.simulation import Experiment, ExperimentConfig, SimulationResult
-
-try:
-    __version__ = version("pymab")
-except PackageNotFoundError:
-    __version__ = "2.0.0.dev0"
+from pymab.results import SimulationResult
+from pymab.simulation import Experiment, ExperimentConfig
 
 __all__ = [
     "__version__",

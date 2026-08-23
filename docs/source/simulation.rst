@@ -18,6 +18,11 @@ the complete context tensor when downstream auditing requires it.
    :undoc-members:
    :show-inheritance:
 
+.. automodule:: pymab.results
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 .. automodule:: pymab.metrics
    :members:
    :undoc-members:
