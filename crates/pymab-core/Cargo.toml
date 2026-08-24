@@ -19,6 +19,8 @@ path = "src/lib.rs"
 blake2.workspace = true
 rand.workspace = true
 rand_chacha.workspace = true
+rand_distr.workspace = true
+statrs.workspace = true
 
 [dev-dependencies]
 serde.workspace = true

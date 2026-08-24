@@ -4,9 +4,15 @@ use std::path::PathBuf;
 
 use pymab::policy::action_value::ActionValueState;
 use pymab::policy::basic::{GreedyPolicy, RandomPolicy};
+use pymab::policy::bayesian_ucb::{BernoulliBayesianUCBPolicy, GaussianBayesianUCBPolicy};
 use pymab::policy::epsilon_greedy::{DecayingEpsilonGreedyPolicy, EpsilonGreedyPolicy};
+use pymab::policy::gradient::GradientBanditPolicy;
 use pymab::policy::registry::PolicyKind;
 use pymab::policy::softmax::SoftmaxPolicy;
+use pymab::policy::thompson::{
+    BernoulliPosteriorState, BernoulliThompsonSamplingPolicy, GaussianPosteriorState,
+    GaussianThompsonSamplingPolicy,
+};
 use pymab::policy::ucb::{KLUCBPolicy, MOSSPolicy, UCBPolicy};
 use pymab::policy::Policy;
 use pymab::types::ActionIndex;
@@ -63,6 +69,12 @@ fn number(value: &Value, field: &str) -> f64 {
         .unwrap_or_else(|| panic!("{field} is numeric"))
 }
 
+fn boolean(value: &Value, field: &str) -> bool {
+    value[field]
+        .as_bool()
+        .unwrap_or_else(|| panic!("{field} is boolean"))
+}
+
 fn assert_action_value_state(state: &ActionValueState, expected: &Value) {
     assert_eq!(state.step(), integer(expected, "step"));
     assert_eq!(state.total_reward(), number(expected, "total_reward"));
@@ -80,6 +92,53 @@ fn assert_action_value_state(state: &ActionValueState, expected: &Value) {
         .collect();
     assert_eq!(state.counts(), counts);
     assert_eq!(state.estimates(), estimates);
+}
+
+fn assert_bernoulli_state(state: &BernoulliPosteriorState, expected: &Value) {
+    assert_action_value_state(state.action_values(), expected);
+    let successes: Vec<_> = expected["successes"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|value| value.as_u64().unwrap())
+        .collect();
+    let failures: Vec<_> = expected["failures"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|value| value.as_u64().unwrap())
+        .collect();
+    assert_eq!(state.successes(), successes);
+    assert_eq!(state.failures(), failures);
+}
+
+fn assert_gaussian_state(state: &GaussianPosteriorState, expected: &Value) {
+    assert_action_value_state(state.action_values(), expected);
+    let means: Vec<_> = expected["means"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|value| value.as_f64().unwrap())
+        .collect();
+    let precisions: Vec<_> = expected["precisions"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|value| value.as_f64().unwrap())
+        .collect();
+    assert_eq!(state.means(), means);
+    assert_eq!(state.precisions(), precisions);
+}
+
+fn apply_updates<P: Policy>(policy: &mut P, fixture: &PolicyFixture) {
+    for update in &fixture.updates {
+        policy
+            .update(
+                ActionIndex::new(integer(update, "action") as usize, policy.n_arms()).unwrap(),
+                number(update, "reward"),
+            )
+            .unwrap();
+    }
 }
 
 fn assert_basic_fixture<P>(mut policy: P, fixture: &PolicyFixture)
@@ -241,6 +300,122 @@ fn ucb_policy_fixtures_match_rust_state() {
                 &fixture,
             ),
             other => panic!("unexpected UCB policy fixture {other}"),
+        }
+    }
+}
+
+#[test]
+fn posterior_policy_fixtures_match_rust_state() {
+    for name in [
+        "gradient.json",
+        "bernoulli_thompson.json",
+        "gaussian_thompson.json",
+        "bernoulli_bayesian_ucb.json",
+        "gaussian_bayesian_ucb.json",
+    ] {
+        let fixture = read_policy_fixture(name);
+        let config = &fixture.config;
+        let n_arms = integer(config, "n_arms") as usize;
+        let expected = &fixture.checkpoints.last().unwrap()["state"];
+        match fixture.policy_kind.as_str() {
+            "gradient_bandit" => {
+                let mut policy = GradientBanditPolicy::new(
+                    n_arms,
+                    number(config, "learning_rate"),
+                    boolean(config, "use_baseline"),
+                )
+                .unwrap();
+                apply_updates(&mut policy, &fixture);
+                assert_eq!(policy.state().step(), integer(expected, "step"));
+                assert_eq!(
+                    policy.state().average_reward(),
+                    number(expected, "average_reward")
+                );
+                assert_eq!(
+                    policy.state().preferences(),
+                    expected["preferences"]
+                        .as_array()
+                        .unwrap()
+                        .iter()
+                        .map(|value| value.as_f64().unwrap())
+                        .collect::<Vec<_>>()
+                );
+                policy.reset();
+                assert_eq!(policy.state().step(), 0);
+            }
+            "bernoulli_thompson_sampling" => {
+                let mut policy = BernoulliThompsonSamplingPolicy::new(
+                    n_arms,
+                    number(config, "alpha_prior"),
+                    number(config, "beta_prior"),
+                )
+                .unwrap();
+                apply_updates(&mut policy, &fixture);
+                assert_bernoulli_state(policy.state(), expected);
+                policy.reset();
+                assert_bernoulli_state(policy.state(), &fixture.reset_state);
+            }
+            "gaussian_thompson_sampling" => {
+                let mut policy = GaussianThompsonSamplingPolicy::new(
+                    n_arms,
+                    number(config, "prior_mean"),
+                    number(config, "prior_precision"),
+                    number(config, "reward_precision"),
+                )
+                .unwrap();
+                apply_updates(&mut policy, &fixture);
+                assert_gaussian_state(policy.state(), expected);
+                policy.reset();
+                assert_gaussian_state(policy.state(), &fixture.reset_state);
+            }
+            "bernoulli_bayesian_ucb" => {
+                let mut policy = BernoulliBayesianUCBPolicy::new(
+                    n_arms,
+                    number(config, "alpha_prior"),
+                    number(config, "beta_prior"),
+                    number(config, "quantile"),
+                )
+                .unwrap();
+                apply_updates(&mut policy, &fixture);
+                assert_bernoulli_state(policy.state(), expected);
+                let expected_bounds =
+                    &fixture.checkpoints.last().unwrap()["scores"]["upper_bounds"];
+                for (actual, expected) in policy
+                    .upper_bounds()
+                    .unwrap()
+                    .iter()
+                    .zip(expected_bounds.as_array().unwrap())
+                {
+                    assert!((actual - expected.as_f64().unwrap()).abs() < 1e-12);
+                }
+                policy.reset();
+                assert_bernoulli_state(policy.state(), &fixture.reset_state);
+            }
+            "gaussian_bayesian_ucb" => {
+                let mut policy = GaussianBayesianUCBPolicy::new(
+                    n_arms,
+                    number(config, "prior_mean"),
+                    number(config, "prior_precision"),
+                    number(config, "reward_precision"),
+                    number(config, "quantile"),
+                )
+                .unwrap();
+                apply_updates(&mut policy, &fixture);
+                assert_gaussian_state(policy.state(), expected);
+                let expected_bounds =
+                    &fixture.checkpoints.last().unwrap()["scores"]["upper_bounds"];
+                for (actual, expected) in policy
+                    .upper_bounds()
+                    .unwrap()
+                    .iter()
+                    .zip(expected_bounds.as_array().unwrap())
+                {
+                    assert!((actual - expected.as_f64().unwrap()).abs() < 1e-12);
+                }
+                policy.reset();
+                assert_gaussian_state(policy.state(), &fixture.reset_state);
+            }
+            other => panic!("unexpected posterior fixture {other}"),
         }
     }
 }

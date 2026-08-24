@@ -110,6 +110,20 @@ impl ActionValueState {
         Ok(())
     }
 
+    /// Replace one estimate after a specialized posterior update.
+    pub(crate) fn set_estimate(&mut self, action: ActionIndex, estimate: f64) -> Result<()> {
+        finite("estimate", estimate)?;
+        let index = action.get();
+        if index >= self.n_arms() {
+            return Err(PyMabError::validation(
+                "action",
+                format!("index {index} is outside [0, {})", self.n_arms()),
+            ));
+        }
+        self.estimates[index] = estimate;
+        Ok(())
+    }
+
     /// Reset all learned values and retain allocated buffers.
     pub fn reset(&mut self) {
         self.step = 0;
@@ -180,7 +194,8 @@ pub fn choose_argmax(values: &[f64], rng: &mut NativeRng) -> Result<ActionIndex>
     ActionIndex::new(selected, values.len())
 }
 
-fn deterministic_argmax(values: &[f64]) -> Result<ActionIndex> {
+/// Return the first index containing the maximum finite value.
+pub fn deterministic_argmax(values: &[f64]) -> Result<ActionIndex> {
     validate_values(values)?;
     let maximum = values.iter().copied().fold(f64::NEG_INFINITY, f64::max);
     let index = values

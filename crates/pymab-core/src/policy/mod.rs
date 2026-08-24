@@ -8,9 +8,12 @@ use crate::types::{ActionIndex, ContextShape, PolicyCapabilities};
 
 pub mod action_value;
 pub mod basic;
+pub mod bayesian_ucb;
 pub mod epsilon_greedy;
+pub mod gradient;
 pub mod registry;
 pub mod softmax;
+pub mod thompson;
 pub mod ucb;
 
 /// Contract implemented by non-contextual policies.
@@ -100,6 +103,11 @@ pub(crate) enum BuiltInPolicy {
     Ucb(ucb::UCBPolicy),
     KlUcb(ucb::KLUCBPolicy),
     Moss(ucb::MOSSPolicy),
+    Gradient(gradient::GradientBanditPolicy),
+    BernoulliThompson(thompson::BernoulliThompsonSamplingPolicy),
+    GaussianThompson(thompson::GaussianThompsonSamplingPolicy),
+    BernoulliBayesianUcb(bayesian_ucb::BernoulliBayesianUCBPolicy),
+    GaussianBayesianUcb(bayesian_ucb::GaussianBayesianUCBPolicy),
 }
 
 #[allow(dead_code)]

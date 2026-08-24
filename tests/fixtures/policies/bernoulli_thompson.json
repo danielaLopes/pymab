@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "policy_kind": "bernoulli_thompson_sampling",
+  "config": {"n_arms": 2, "alpha_prior": 1.0, "beta_prior": 1.0},
+  "updates": [{"action": 0, "reward": 1.0}, {"action": 1, "reward": 0.0}],
+  "checkpoints": [{
+    "after_update": 2,
+    "state": {"step": 2, "total_reward": 1.0, "counts": [1, 1], "estimates": [1.0, 0.0], "successes": [1, 0], "failures": [0, 1]},
+    "scores": {}
+  }],
+  "recommendation": 0,
+  "reset_state": {"step": 0, "total_reward": 0.0, "counts": [0, 0], "estimates": [0.0, 0.0], "successes": [0, 0], "failures": [0, 0]},
+  "expected_error": null
+}
