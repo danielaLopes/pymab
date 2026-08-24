@@ -4,6 +4,9 @@
 
 ### Added
 
+- PyMAB Arcade, a static browser experience for learning epsilon-greedy and
+  LinUCB with the real package wheel, an inspectable decision view, and a
+  disposable Python Lab.
 - A shared typed statistical core with deterministic, memory-bounded event,
   cluster, ratio, paired-difference, and replicate-curve bootstrapping.
 - Immutable benchmark summary and comparison records with explicit JSON and

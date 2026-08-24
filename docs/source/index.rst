@@ -38,6 +38,7 @@ Quick start
    types
    statistics
    benchmarking
+   arcade
    decision_guide
    examples
    policy_assumptions
