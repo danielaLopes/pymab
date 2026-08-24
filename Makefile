@@ -1,5 +1,6 @@
 .PHONY: audit ci docs docs-coverage docs-doctest docs-html docs-linkcheck \
-	docs-snippets format format-fix lint llm-security security sync test test-ci
+	docs-snippets format format-fix lint llm-security security sync test test-ci demo-test \
+	web-sync web-format web-lint web-test web-build web-e2e web-ci
 
 UV ?= uv
 PYTHON ?= python3.12
@@ -39,13 +40,17 @@ format-fix:
 
 lint:
 	$(RUN_TOOL) ruff check .
-	$(RUN_TOOL) mypy src/pymab
+	$(RUN_TOOL) mypy src/pymab web/python
 
 test:
 	$(RUN_TOOL) pytest --cov-fail-under=92
 
 test-ci:
 	$(RUN_TOOL) pytest --cov-fail-under=92
+
+demo-test:
+	$(RUN_TOOL) pytest -o addopts= tests/demo --cov=web/python/pymab_demo \
+		--cov-branch --cov-report=term-missing --cov-fail-under=95
 
 security:
 	$(RUN_TOOL) bandit -r src/pymab --severity-level low --confidence-level medium
@@ -86,3 +91,23 @@ docs-snippets:
 docs-linkcheck:
 	$(RUN_TOOL) sphinx-build $(SPHINX_STRICT_FLAGS) -b linkcheck \
 		$(DOCS_SOURCE) $(DOCS_BUILD)/linkcheck
+
+web-sync:
+	cd web && npm ci
+
+web-format:
+	cd web && npm run format:check
+
+web-lint:
+	cd web && npm run lint && npm run typecheck
+
+web-test:
+	cd web && npm run test:coverage
+
+web-build:
+	cd web && npm run build
+
+web-e2e:
+	cd web && npm run e2e
+
+web-ci: web-format web-lint web-test web-build

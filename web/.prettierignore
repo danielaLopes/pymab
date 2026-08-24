@@ -1,0 +1,6 @@
+.generated/
+dist/
+coverage/
+playwright-report/
+test-results/
+.playwright-cli/
