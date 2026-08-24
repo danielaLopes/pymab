@@ -9,6 +9,11 @@ __pycache__/
 
 # C extensions
 *.so
+*.dylib
+*.dll
+
+# Rust backup files
+**/*.rs.bk
 
 # Distribution / packaging
 .Python

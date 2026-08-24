@@ -1,0 +1,16 @@
+[package]
+name = "pymab"
+version.workspace = true
+authors.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+homepage.workspace = true
+description = "Reliable, reproducible multi-armed bandit policies and experiments."
+keywords = ["bandits", "reinforcement-learning", "experimentation"]
+categories = ["algorithms", "science"]
+
+[lib]
+name = "pymab"
+path = "src/lib.rs"

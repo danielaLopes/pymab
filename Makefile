@@ -1,12 +1,15 @@
 .PHONY: audit ci docs docs-coverage docs-doctest docs-html docs-linkcheck \
-	docs-snippets format format-fix lint llm-security security sync test test-ci
+	docs-snippets format format-fix lint llm-security native rust-format \
+	rust-format-fix rust-lint rust-test security sync test test-ci
 
 UV ?= uv
+CARGO ?= cargo
 PYTHON ?= python3.12
 PYTHON_VERSION ?= 3.12
 UV_CACHE_DIR ?= .uv-cache
 export UV_CACHE_DIR
 RUN_TOOL = sh scripts/run_tool.sh
+MATURIN = $(RUN_TOOL) maturin
 DOCS_SOURCE = docs/source
 DOCS_BUILD = docs/build
 SPHINX_STRICT_FLAGS = -W --keep-going -n -E -a
@@ -36,6 +39,21 @@ format:
 
 format-fix:
 	$(RUN_TOOL) ruff format .
+
+native:
+	$(MATURIN) develop --manifest-path crates/pymab-python/Cargo.toml
+
+rust-format:
+	$(CARGO) fmt --all --check
+
+rust-format-fix:
+	$(CARGO) fmt --all
+
+rust-lint:
+	$(CARGO) clippy --workspace --all-targets --all-features --locked -- -D warnings
+
+rust-test:
+	$(CARGO) test --workspace --all-features --locked
 
 lint:
 	$(RUN_TOOL) ruff check .

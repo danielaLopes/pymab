@@ -248,12 +248,12 @@ jobs:
           import pymab
           from docs.source.conf import release as docs_version
 
-          with open("pyproject.toml", "rb") as pyproject_file:
-              package_version = tomllib.load(pyproject_file)["project"]["version"]
+          with open("Cargo.toml", "rb") as cargo_file:
+              package_version = tomllib.load(cargo_file)["workspace"]["package"]["version"]
 
           if pymab.__version__ != package_version or docs_version != package_version:
               raise SystemExit(
-                  f"Version mismatch: pyproject={package_version}, "
+                  f"Version mismatch: cargo={package_version}, "
                   f"module={pymab.__version__}, docs={docs_version}"
               )
           PY

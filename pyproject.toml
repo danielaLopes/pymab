@@ -1,10 +1,10 @@
 [build-system]
-requires = ["setuptools>=77", "wheel"]
-build-backend = "setuptools.build_meta"
+requires = ["maturin>=1.15,<2"]
+build-backend = "maturin"
 
 [project]
 name = "pymab"
-version = "2.0.0"
+dynamic = ["version"]
 description = "Reliable, statistically rigorous multi-armed bandit experiments."
 readme = "README.md"
 requires-python = ">=3.11"
@@ -36,6 +36,7 @@ dev = [
     "bandit>=1.8",
     "build>=1.2",
     "mypy>=1.8",
+    "maturin>=1.15,<2",
     "hypothesis>=6.100",
     "pip-audit>=2.9",
     "pytest>=8.0",
@@ -49,16 +50,12 @@ Homepage = "https://github.com/danielaLopes/pymab"
 Repository = "https://github.com/danielaLopes/pymab"
 Issues = "https://github.com/danielaLopes/pymab/issues"
 
-[tool.setuptools.packages.find]
-where = ["src"]
-include = ["pymab*"]
-exclude = ["tests*", "docs*", "examples*", "results*"]
-
-[tool.setuptools.package-data]
-pymab = ["py.typed"]
-
-[tool.setuptools]
-package-dir = {"" = "src"}
+[tool.maturin]
+bindings = "pyo3"
+features = ["extension-module"]
+manifest-path = "crates/pymab-python/Cargo.toml"
+module-name = "pymab._pymab"
+python-source = "src"
 
 [tool.ruff]
 line-length = 88

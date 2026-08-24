@@ -1,0 +1,16 @@
+[workspace]
+members = ["crates/pymab-core", "crates/pymab-python"]
+resolver = "2"
+
+[workspace.package]
+version = "2.0.0"
+authors = ["Daniela Lopes <danielalopes_97@hotmail.com>"]
+edition = "2021"
+rust-version = "1.83"
+license = "MIT"
+repository = "https://github.com/danielaLopes/pymab"
+homepage = "https://github.com/danielaLopes/pymab"
+
+[workspace.dependencies]
+numpy = "0.29.0"
+pyo3 = "0.29.2"

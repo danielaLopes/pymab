@@ -38,7 +38,7 @@ jobs:
         run: |
           package_version="$(
             python -c \
-              "import tomllib; print(tomllib.load(open('pyproject.toml', 'rb'))['project']['version'])"
+              "import tomllib; print(tomllib.load(open('Cargo.toml', 'rb'))['workspace']['package']['version'])"
           )"
           tag_version="${GITHUB_REF_NAME#v}"
           if [[ "${tag_version}" != "${package_version}" ]]; then
