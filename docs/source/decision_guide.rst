@@ -5,6 +5,8 @@ Which Policy Should I Use?
 --------------------------
 
 Use this as a starting point, then benchmark with your reward assumptions.
+For a visual introduction to epsilon-greedy and LinUCB, work through
+:doc:`arcade` before comparing them in a full experiment.
 
 ``RandomPolicy``
    Baseline only. Include it in benchmarks so improvements have a sanity-check
