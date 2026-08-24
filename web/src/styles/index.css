@@ -726,6 +726,56 @@ main {
   gap: 0.6rem;
   margin-top: 1rem;
 }
+.debrief-details {
+  margin-top: 1rem;
+}
+.debrief-details > summary {
+  cursor: pointer;
+  color: var(--mint);
+  font-weight: 700;
+}
+.truth-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.5rem;
+  margin: 1rem 0;
+}
+.truth-grid div {
+  border: 1px solid var(--line);
+  border-radius: 0.6rem;
+  padding: 0.65rem;
+}
+.truth-grid dt {
+  color: var(--muted);
+  font-size: 0.68rem;
+}
+.truth-grid dd {
+  margin: 0.2rem 0 0;
+  font-weight: 700;
+}
+.debrief-table-wrap {
+  overflow-x: auto;
+}
+.debrief-table {
+  width: 100%;
+  min-width: 34rem;
+  border-collapse: collapse;
+  font-size: 0.68rem;
+}
+.debrief-table caption {
+  text-align: left;
+  color: var(--muted);
+  padding: 0.8rem 0 0.4rem;
+}
+.debrief-table th,
+.debrief-table td {
+  border-bottom: 1px solid var(--line);
+  padding: 0.45rem;
+  text-align: left;
+}
+.debrief-table thead th {
+  color: var(--muted);
+}
 .primary-button {
   background: var(--mint);
   color: #08221f;
@@ -969,7 +1019,7 @@ pre {
 }
 .cm-gutters {
   background: #071d23 !important;
-  color: #5c7f7c !important;
+  color: #9abbb6 !important;
   border: 0 !important;
 }
 .cm-activeLine,

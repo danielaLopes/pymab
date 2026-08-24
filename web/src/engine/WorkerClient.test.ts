@@ -12,6 +12,9 @@ class FakeWorker extends EventTarget {
   respond(data: unknown) {
     this.dispatchEvent(new MessageEvent("message", { data }));
   }
+  crash(message = "worker exploded") {
+    this.dispatchEvent(new ErrorEvent("error", { message }));
+  }
 }
 
 describe("WorkerClient", () => {
@@ -50,5 +53,58 @@ describe("WorkerClient", () => {
     client.dispose();
     await expect(pending).rejects.toThrow(/disposed/);
     expect(worker.terminated).toBe(true);
+  });
+
+  it("rejects malformed responses instead of leaking unvalidated state", async () => {
+    const worker = new FakeWorker();
+    const client = new WorkerClient(() => worker as unknown as Worker);
+    const pending = client.send({ type: "initialize", requestId: "one" });
+
+    worker.respond({ type: "ready", requestId: "one", packageVersion: 2 });
+
+    await expect(pending).rejects.toThrow(/Malformed worker response/);
+  });
+
+  it("ignores unrelated request IDs and resolves only the matching response", async () => {
+    const worker = new FakeWorker();
+    const client = new WorkerClient(() => worker as unknown as Worker);
+    const pending = client.send({ type: "initialize", requestId: "one" });
+
+    worker.respond({
+      type: "ready",
+      requestId: "another-request",
+      packageVersion: "2.0.0",
+      sourceCommit: "abc",
+    });
+    worker.respond({
+      type: "ready",
+      requestId: "one",
+      packageVersion: "2.0.0",
+      sourceCommit: "abc",
+    });
+
+    await expect(pending).resolves.toMatchObject({ requestId: "one" });
+  });
+
+  it("reports crashes and can recreate a clean worker", async () => {
+    const first = new FakeWorker();
+    const restarted = new FakeWorker();
+    const workers = [first, restarted];
+    const client = new WorkerClient(() => workers.shift() as unknown as Worker);
+    const pending = client.send({ type: "initialize", requestId: "one" });
+
+    first.crash();
+    await expect(pending).rejects.toThrow(/worker exploded/);
+
+    client.restart();
+    expect(first.terminated).toBe(true);
+    const ready = client.send({ type: "initialize", requestId: "two" });
+    restarted.respond({
+      type: "ready",
+      requestId: "two",
+      packageVersion: "2.0.0",
+      sourceCommit: "abc",
+    });
+    await expect(ready).resolves.toMatchObject({ requestId: "two" });
   });
 });

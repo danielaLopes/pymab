@@ -85,3 +85,70 @@ def test_step_after_completion_is_an_idempotent_snapshot() -> None:
     session = make_session()
     completed = session.run_to_end()
     assert session.step() == completed
+
+
+@pytest.mark.parametrize(
+    ("lesson", "mode", "seed", "parameters", "actions", "rewards", "total", "regret"),
+    [
+        (
+            "epsilon-greedy",
+            "guided",
+            42,
+            {"epsilon": 0.2},
+            [2, 2, 2, 2, 2, 2, 1, 2, 2, 2, 2, 2],
+            [1, 1, 1, 1, 0, 1, 0, 1, 1, 1, 0, 1],
+            9,
+            0.25,
+        ),
+        (
+            "epsilon-greedy",
+            "challenge",
+            7,
+            {"epsilon": 0.2},
+            [1, 1, 1, 1, 1, 1, 1, 0, 1, 2, 2, 2, 2, 2, 0, 2, 2, 2, 2, 2],
+            [0, 1, 1, 0, 0, 1, 0, 0, 0, 1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1],
+            12,
+            3.0,
+        ),
+        (
+            "linucb",
+            "guided",
+            31415,
+            {"alpha": 1.0, "l2": 1.0},
+            [1, 0, 0, 2, 2, 1, 2, 2, 0, 0, 1, 0],
+            [0, 0, 0, 0, 1, 0, 1, 1, 1, 1, 0, 1],
+            6,
+            3.81301474,
+        ),
+        (
+            "linucb",
+            "challenge",
+            20260824,
+            {"alpha": 1.0, "l2": 1.0},
+            [2, 1, 1, 0, 1, 1, 2, 0, 2, 1, 2, 1, 1, 0, 2, 1, 0, 2, 0, 1],
+            [1, 1, 1, 1, 0, 1, 1, 0, 0, 1, 1, 1, 1, 0, 1, 0, 0, 1, 1, 1],
+            14,
+            2.62676647,
+        ),
+    ],
+)
+def test_named_seed_trajectories_are_golden(
+    lesson: str,
+    mode: str,
+    seed: int,
+    parameters: dict[str, float],
+    actions: list[int],
+    rewards: list[int],
+    total: int,
+    regret: float,
+) -> None:
+    """Pin the exact teaching/challenge stories to the checked-out policy code."""
+
+    result = make_session(
+        lesson, mode=mode, seed=seed, parameters=parameters
+    ).run_to_end()
+
+    assert [event["selectedArm"] for event in result["history"]] == actions
+    assert [event["reward"] for event in result["history"]] == rewards
+    assert result["totalReward"] == total
+    assert result["cumulativeExpectedRegret"] == pytest.approx(regret, abs=1e-8)

@@ -333,6 +333,17 @@ export function Debrief({
   onChallenge: () => void;
   onFreePlay: () => void;
 }) {
+  const regretPath = snapshot.history.map((event, index) => ({
+    step: index + 1,
+    selectedArm: event.selectedArm,
+    reward: event.reward,
+    regret: event.instantaneousExpectedRegret,
+    cumulativeRegret: snapshot.history
+      .slice(0, index + 1)
+      .reduce((total, item) => total + item.instantaneousExpectedRegret, 0),
+  }));
+  const probabilities = snapshot.hiddenTruth?.probabilities;
+  const optimalArms = snapshot.hiddenTruth?.optimalArms;
   return (
     <section className={`debrief ${snapshot.passed ? "passed" : "complete"}`}>
       <p className="eyebrow">Expedition complete</p>
@@ -351,6 +362,66 @@ export function Debrief({
         One seeded expedition illustrates behaviour; it does not prove that a parameter is
         universally best.
       </p>
+      <details className="debrief-details">
+        <summary>Reveal the environment and regret path</summary>
+        {snapshot.lessonId === "epsilon-greedy" &&
+          Array.isArray(probabilities) &&
+          probabilities.every((value) => typeof value === "number") && (
+            <dl className="truth-grid" aria-label="Hidden gate success probabilities">
+              {probabilities.map((value, index) => (
+                <div key={gateDetails[index]?.name}>
+                  <dt>{gateDetails[index]?.name}</dt>
+                  <dd>{Math.round(value * 100)}% success</dd>
+                </div>
+              ))}
+            </dl>
+          )}
+        {snapshot.lessonId === "linucb" && (
+          <>
+            <p>
+              The best gate can change with the signals. The optimal gate for each chamber is shown
+              beside the policy's actual choice below.
+            </p>
+            <MatrixTable
+              label="Hidden environment coefficients by gate"
+              value={snapshot.hiddenTruth?.theta}
+            />
+          </>
+        )}
+        <div className="debrief-table-wrap">
+          <table className="debrief-table">
+            <caption>Decision and expected-regret path</caption>
+            <thead>
+              <tr>
+                <th>Chamber</th>
+                <th>Chosen</th>
+                {snapshot.lessonId === "linucb" && <th>Optimal</th>}
+                <th>Reward</th>
+                <th>Regret</th>
+                <th>Total regret</th>
+              </tr>
+            </thead>
+            <tbody>
+              {regretPath.map((event) => (
+                <tr key={event.step}>
+                  <th scope="row">{event.step}</th>
+                  <td>{gateDetails[event.selectedArm]?.name}</td>
+                  {snapshot.lessonId === "linucb" && (
+                    <td>
+                      {Array.isArray(optimalArms) && typeof optimalArms[event.step - 1] === "number"
+                        ? gateDetails[Number(optimalArms[event.step - 1])]?.name
+                        : "—"}
+                    </td>
+                  )}
+                  <td>{event.reward ? "Relic" : "Empty"}</td>
+                  <td>{event.regret.toPrecision(4)}</td>
+                  <td>{event.cumulativeRegret.toPrecision(4)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </details>
       <div className="run-controls">
         <button className="primary-button" onClick={onChallenge}>
           Try the challenge

@@ -105,7 +105,6 @@ export function LessonRoute() {
   useEffect(() => {
     if (lessonRef.current !== lessonId) {
       lessonRef.current = lessonId;
-      sessionRef.current = "";
       const defaultParameter = lessonId === "epsilon-greedy" ? 0.2 : 1.0;
       setParameter(defaultParameter);
       parameterRef.current = defaultParameter;
@@ -139,6 +138,23 @@ export function LessonRoute() {
       autoRef.current = false;
     };
   }, [client, content.guidedSeed, lessonId, startMode]);
+
+  useEffect(
+    () => () => {
+      autoRef.current = false;
+      const sessionId = sessionRef.current;
+      sessionRef.current = "";
+      if (!sessionId) return;
+      void client
+        .send({
+          type: "dispose",
+          requestId: WorkerClient.requestId(),
+          sessionId,
+        })
+        .catch(() => client.restart());
+    },
+    [client],
+  );
 
   const advance = useCallback(async (): Promise<LessonSnapshot | null> => {
     if (!sessionRef.current) return null;

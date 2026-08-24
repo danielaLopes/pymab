@@ -1,8 +1,10 @@
 import { basicSetup } from "codemirror";
 import { python } from "@codemirror/lang-python";
+import { HighlightStyle, syntaxHighlighting } from "@codemirror/language";
 import { EditorState } from "@codemirror/state";
 import { EditorView, keymap } from "@codemirror/view";
 import { defaultKeymap, indentWithTab } from "@codemirror/commands";
+import { tags } from "@lezer/highlight";
 import { useEffect, useRef, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 
@@ -37,6 +39,15 @@ for step in range(8):
     print(step + 1, "signals", feature[1:], "gate", action + 1)
 `;
 
+const labHighlightStyle = HighlightStyle.define([
+  { tag: tags.keyword, color: "#f0a8d3" },
+  { tag: [tags.number, tags.bool, tags.null], color: "#a7dcf4" },
+  { tag: [tags.string, tags.special(tags.string)], color: "#f6ce86" },
+  { tag: tags.comment, color: "#a6bdb7", fontStyle: "italic" },
+  { tag: [tags.variableName, tags.propertyName], color: "#d8eee7" },
+  { tag: tags.function(tags.variableName), color: "#91dfc0" },
+]);
+
 export function LabRoute() {
   const location = useLocation();
   const handedCode = (location.state as { code?: string } | null)?.code;
@@ -63,7 +74,9 @@ export function LabRoute() {
           basicSetup,
           keymap.of([...defaultKeymap, indentWithTab]),
           python(),
+          syntaxHighlighting(labHighlightStyle),
           EditorView.lineWrapping,
+          EditorView.contentAttributes.of({ "aria-label": "Python code editor" }),
         ],
       }),
       parent: editorHost.current,

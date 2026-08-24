@@ -32,6 +32,8 @@ test("real LinUCB decision displays context and score decomposition", async ({ p
   await expect(page.getByRole("list", { name: "Current chamber signals" })).toBeVisible();
   await page.getByRole("button", { name: /Inspect PyMAB/ }).click();
   await expect(page.getByRole("table", { name: "LinUCB score decomposition" })).toBeVisible();
+  const results = await new AxeBuilder({ page }).analyze();
+  expect(results.violations).toEqual([]);
 });
 
 test("Python Lab runs PyMAB and reports output", async ({ page }) => {
@@ -40,6 +42,53 @@ test("Python Lab runs PyMAB and reports output", async ({ page }) => {
   await expect(page.getByText("Run complete.")).toBeVisible({ timeout: 30_000 });
   await expect(page.getByRole("heading", { name: "stdout" })).toBeVisible();
   await expect(page.locator(".console-panel pre").filter({ hasText: "estimates:" })).toBeVisible();
+  const results = await new AxeBuilder({ page }).analyze();
+  expect(results.violations).toEqual([]);
+});
+
+test("completed expedition reveals truth and the full regret path", async ({
+  page,
+  browserName,
+}) => {
+  test.skip(browserName !== "chromium", "Long debrief scenario runs once in Chromium");
+  await page.goto("./#/lesson/epsilon-greedy");
+  const autoRun = page.getByRole("button", { name: "Auto-run" });
+  await expect(autoRun).toBeEnabled({ timeout: 30_000 });
+  await autoRun.click();
+  await expect(page.getByRole("heading", { name: "The map has learned from you" })).toBeVisible({
+    timeout: 30_000,
+  });
+  await page.getByText("Reveal the environment and regret path").click();
+  await expect(page.locator(".truth-grid div").filter({ hasText: "Star Gate" })).toContainText(
+    "75% success",
+  );
+  await expect(
+    page.getByRole("table", { name: "Decision and expected-regret path" }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("table", { name: "Decision and expected-regret path" }).getByRole("row"),
+  ).toHaveCount(13);
+  const results = await new AxeBuilder({ page }).analyze();
+  expect(results.violations).toEqual([]);
+});
+
+test("mode changes preserve progress when reset confirmation is cancelled", async ({
+  page,
+  browserName,
+}) => {
+  test.skip(browserName !== "chromium", "Interaction scenario runs once in Chromium");
+  await page.goto("./#/lesson/epsilon-greedy");
+  const advance = page.getByRole("button", { name: "Advance one chamber" });
+  await expect(advance).toBeEnabled({ timeout: 30_000 });
+  await advance.click();
+  await expect(page.getByText("1 / 12")).toBeVisible();
+  page.once("dialog", (dialog) => dialog.dismiss());
+  await page.getByRole("button", { name: "Challenge" }).click();
+  await expect(page.getByRole("button", { name: "Guided" })).toHaveAttribute(
+    "aria-pressed",
+    "true",
+  );
+  await expect(page.getByText("1 / 12")).toBeVisible();
 });
 
 test("epsilon challenge can be completed by auto-run", async ({ page, browserName }) => {
