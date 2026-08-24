@@ -55,6 +55,7 @@ async function boot(): Promise<void> {
   const pyodideModule = (await import(/* @vite-ignore */ moduleUrl)) as PyodideModule;
   runtime = await pyodideModule.loadPyodide({ indexURL: new URL("pyodide/", baseUrl).href });
   progress("numpy", "Loading NumPy");
+  await fetchVerified(manifest.numpyFilename);
   await runtime.loadPackage("numpy");
   progress("pymab", "Installing the checked-out PyMAB wheel");
   const artifacts = [manifest.pymabFilename, manifest.bridgeFilename];

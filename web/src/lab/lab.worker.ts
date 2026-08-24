@@ -4,6 +4,7 @@ interface RuntimeManifest {
   pymabFilename: string;
   pymabVersion: string;
   bridgeFilename: string;
+  numpyFilename: string;
   assets: Record<string, string>;
 }
 
@@ -48,6 +49,7 @@ async function boot() {
   const module = (await import(/* @vite-ignore */ moduleUrl)) as PyodideModule;
   runtime = await module.loadPyodide({ indexURL: new URL("pyodide/", baseUrl).href });
   scope.postMessage({ type: "progress", message: "Loading NumPy and PyMAB…" });
+  await fetchVerified(manifest.numpyFilename);
   await runtime.loadPackage("numpy");
   const wheel = manifest.pymabFilename;
   const bytes = await fetchVerified(wheel);

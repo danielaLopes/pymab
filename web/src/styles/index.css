@@ -117,6 +117,13 @@ pre,
 .site-header nav a:hover {
   color: var(--ink);
 }
+.motion-toggle {
+  border: 0;
+  padding: 0;
+  color: var(--muted);
+  background: transparent;
+  font-size: 0.72rem;
+}
 .brand {
   display: flex;
   align-items: center;
@@ -1116,6 +1123,9 @@ pre {
   .site-header nav a {
     font-size: 0.7rem;
   }
+  .site-header nav > a:last-child {
+    display: none;
+  }
   .brand {
     font-size: 0.86rem;
   }
@@ -1173,4 +1183,13 @@ pre {
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
+}
+
+:root[data-reduced-motion="true"] *,
+:root[data-reduced-motion="true"] *::before,
+:root[data-reduced-motion="true"] *::after {
+  scroll-behavior: auto !important;
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
 }

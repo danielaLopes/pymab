@@ -3,6 +3,7 @@ import type { CSSProperties, ReactNode } from "react";
 import { Link } from "react-router-dom";
 
 import type { LessonId, LessonSnapshot, RuntimeProgress } from "../../engine/protocol";
+import { loadPersistence, savePersistence } from "../../state/persistence";
 
 const gateDetails = [
   { name: "Moon Gate", symbol: "☾", rune: "Memory" },
@@ -11,6 +12,24 @@ const gateDetails = [
 ];
 
 export function AppShell({ children }: { children: ReactNode }) {
+  const [motionOverride, setMotionOverride] = useState<boolean | null>(
+    () => loadPersistence().preferences.reducedMotion,
+  );
+  useEffect(() => {
+    const systemReduced =
+      typeof window.matchMedia === "function" &&
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    document.documentElement.dataset.reducedMotion = String(motionOverride ?? systemReduced);
+  }, [motionOverride]);
+  const cycleMotion = () => {
+    const next = motionOverride === null ? true : motionOverride ? false : null;
+    setMotionOverride(next);
+    const persisted = loadPersistence();
+    savePersistence({
+      ...persisted,
+      preferences: { ...persisted.preferences, reducedMotion: next },
+    });
+  };
   return (
     <div className="app-shell">
       <header className="site-header">
@@ -25,6 +44,9 @@ export function AppShell({ children }: { children: ReactNode }) {
         <nav aria-label="Primary navigation">
           <Link to="/">Missions</Link>
           <Link to="/lab">Python Lab</Link>
+          <button className="motion-toggle" type="button" onClick={cycleMotion}>
+            Motion: {motionOverride === null ? "system" : motionOverride ? "reduced" : "full"}
+          </button>
           <a href="https://github.com/danielaLopes/pymab">GitHub</a>
         </nav>
       </header>

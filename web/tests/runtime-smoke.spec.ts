@@ -7,6 +7,8 @@ test("home is accessible and mission links are present", async ({ page }) => {
   await expect(page.getByRole("link", { name: /Three Ancient Gates/ })).toBeVisible();
   const results = await new AxeBuilder({ page }).analyze();
   expect(results.violations).toEqual([]);
+  await page.getByRole("button", { name: "Motion: system" }).click();
+  await expect(page.locator("html")).toHaveAttribute("data-reduced-motion", "true");
 });
 
 test("real PyMAB wheel completes a seeded epsilon decision", async ({ page }) => {
