@@ -3,10 +3,12 @@ use std::fs;
 use std::path::PathBuf;
 
 use pymab::policy::action_value::ActionValueState;
+use pymab::policy::adversarial::EXP3Policy;
 use pymab::policy::basic::{GreedyPolicy, RandomPolicy};
 use pymab::policy::bayesian_ucb::{BernoulliBayesianUCBPolicy, GaussianBayesianUCBPolicy};
 use pymab::policy::epsilon_greedy::{DecayingEpsilonGreedyPolicy, EpsilonGreedyPolicy};
 use pymab::policy::gradient::GradientBanditPolicy;
+use pymab::policy::pure_exploration::{MedianEliminationPolicy, SuccessiveEliminationPolicy};
 use pymab::policy::registry::PolicyKind;
 use pymab::policy::softmax::SoftmaxPolicy;
 use pymab::policy::thompson::{
@@ -132,12 +134,17 @@ fn assert_gaussian_state(state: &GaussianPosteriorState, expected: &Value) {
 
 fn apply_updates<P: Policy>(policy: &mut P, fixture: &PolicyFixture) {
     for update in &fixture.updates {
-        policy
-            .update(
-                ActionIndex::new(integer(update, "action") as usize, policy.n_arms()).unwrap(),
-                number(update, "reward"),
-            )
-            .unwrap();
+        let repeat = update
+            .get("repeat")
+            .map_or(1, |value| value.as_u64().unwrap());
+        for _ in 0..repeat {
+            policy
+                .update(
+                    ActionIndex::new(integer(update, "action") as usize, policy.n_arms()).unwrap(),
+                    number(update, "reward"),
+                )
+                .unwrap();
+        }
     }
 }
 
@@ -416,6 +423,106 @@ fn posterior_policy_fixtures_match_rust_state() {
                 assert_gaussian_state(policy.state(), &fixture.reset_state);
             }
             other => panic!("unexpected posterior fixture {other}"),
+        }
+    }
+}
+
+fn bool_values(value: &Value, field: &str) -> Vec<bool> {
+    value[field]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|item| item.as_bool().unwrap())
+        .collect()
+}
+
+fn float_values(value: &Value, field: &str) -> Vec<f64> {
+    value[field]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|item| item.as_f64().unwrap())
+        .collect()
+}
+
+#[test]
+fn exploration_policy_fixtures_match_rust_state() {
+    for name in [
+        "exp3.json",
+        "successive_elimination.json",
+        "median_elimination.json",
+    ] {
+        let fixture = read_policy_fixture(name);
+        let config = &fixture.config;
+        let n_arms = integer(config, "n_arms") as usize;
+        let expected = &fixture.checkpoints.last().unwrap()["state"];
+        match fixture.policy_kind.as_str() {
+            "exp3" => {
+                let mut policy = EXP3Policy::new(
+                    n_arms,
+                    number(config, "gamma"),
+                    Some(number(config, "learning_rate")),
+                )
+                .unwrap();
+                apply_updates(&mut policy, &fixture);
+                assert_action_value_state(policy.state().action_values(), expected);
+                assert_eq!(
+                    policy.state().log_weights(),
+                    float_values(expected, "log_weights")
+                );
+                assert_eq!(
+                    policy.state().last_probabilities(),
+                    float_values(expected, "last_probabilities")
+                );
+                policy.reset();
+                assert_action_value_state(policy.state().action_values(), &fixture.reset_state);
+            }
+            "successive_elimination" => {
+                let mut policy = SuccessiveEliminationPolicy::new(
+                    n_arms,
+                    number(config, "delta"),
+                    number(config, "confidence_scale"),
+                )
+                .unwrap();
+                apply_updates(&mut policy, &fixture);
+                assert_action_value_state(policy.state().action_values(), expected);
+                assert_eq!(policy.state().active(), bool_values(expected, "active"));
+                policy.reset();
+                assert_eq!(
+                    policy.state().active(),
+                    bool_values(&fixture.reset_state, "active")
+                );
+            }
+            "median_elimination" => {
+                let mut policy = MedianEliminationPolicy::new(
+                    n_arms,
+                    number(config, "epsilon"),
+                    number(config, "delta"),
+                )
+                .unwrap();
+                apply_updates(&mut policy, &fixture);
+                assert_action_value_state(policy.state().action_values(), expected);
+                assert_eq!(policy.state().active(), bool_values(expected, "active"));
+                assert_eq!(
+                    policy.state().phase_counts(),
+                    expected["phase_counts"]
+                        .as_array()
+                        .unwrap()
+                        .iter()
+                        .map(|value| value.as_u64().unwrap())
+                        .collect::<Vec<_>>()
+                );
+                assert_eq!(
+                    policy.phase_quota(),
+                    integer(&fixture.checkpoints[0]["scores"], "phase_quota")
+                );
+                policy.reset();
+                assert_eq!(
+                    policy.state().active(),
+                    bool_values(&fixture.reset_state, "active")
+                );
+            }
+            other => panic!("unexpected exploration fixture {other}"),
         }
     }
 }

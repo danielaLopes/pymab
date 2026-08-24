@@ -13,14 +13,17 @@ from pymab.policies import (
     BernoulliThompsonSamplingPolicy,
     DecayingEpsilonGreedyPolicy,
     EpsilonGreedyPolicy,
+    EXP3Policy,
     GaussianBayesianUCBPolicy,
     GaussianThompsonSamplingPolicy,
     GradientBanditPolicy,
     GreedyPolicy,
     KLUCBPolicy,
+    MedianEliminationPolicy,
     MOSSPolicy,
     RandomPolicy,
     SoftmaxPolicy,
+    SuccessiveEliminationPolicy,
     UCBPolicy,
 )
 from pymab.policies.policy import ActionValuePolicy, Policy
@@ -359,6 +362,107 @@ def test_posterior_policy_matches_shared_state_fixture(fixture_name: str) -> Non
 
     policy.reset()
     assert _posterior_state(policy) == fixture["reset_state"]
+
+
+def _build_exploration_policy(fixture: Mapping[str, object]) -> ActionValuePolicy:
+    kind = cast(str, fixture["policy_kind"])
+    config = cast(Mapping[str, object], fixture["config"])
+    n_arms = _integer(config, "n_arms")
+    if kind == "exp3":
+        return EXP3Policy(
+            n_arms=n_arms,
+            gamma=_number(config, "gamma"),
+            learning_rate=_number(config, "learning_rate"),
+        )
+    if kind == "successive_elimination":
+        return SuccessiveEliminationPolicy(
+            n_arms=n_arms,
+            delta=_number(config, "delta"),
+            confidence_scale=_number(config, "confidence_scale"),
+        )
+    if kind == "median_elimination":
+        return MedianEliminationPolicy(
+            n_arms=n_arms,
+            epsilon=_number(config, "epsilon"),
+            delta=_number(config, "delta"),
+        )
+    raise AssertionError(f"unsupported exploration fixture {kind}")
+
+
+def _exploration_state(policy: ActionValuePolicy) -> dict[str, object]:
+    state = policy._parity_state()
+    if isinstance(policy, EXP3Policy):
+        state.update(
+            log_weights=policy.log_weights.tolist(),
+            last_probabilities=policy.last_probabilities.tolist(),
+        )
+    if isinstance(policy, SuccessiveEliminationPolicy):
+        state.update(active=policy.active.tolist())
+    if isinstance(policy, MedianEliminationPolicy):
+        state.update(
+            active=policy.active.tolist(),
+            phase_counts=policy.phase_counts.tolist(),
+            phase_sums=policy.phase_sums.tolist(),
+            phase_epsilon=policy.phase_epsilon,
+            phase_delta=policy.phase_delta,
+        )
+    return state
+
+
+@pytest.mark.parametrize(
+    "fixture_name",
+    ["exp3.json", "successive_elimination.json", "median_elimination.json"],
+    ids=lambda value: Path(value).stem,
+)
+def test_exploration_policy_matches_shared_state_fixture(fixture_name: str) -> None:
+    fixture = load_policy_fixture(
+        Path(__file__).parents[1] / "fixtures" / "policies" / fixture_name
+    )
+    policy = _build_exploration_policy(fixture)
+    updates = cast(list[Mapping[str, object]], fixture["updates"])
+    completed_updates = 0
+    for update in updates:
+        repeat_value = update.get("repeat", 1)
+        if isinstance(repeat_value, bool) or not isinstance(repeat_value, int):
+            raise TypeError("repeat must be an integer")
+        for _ in range(repeat_value):
+            policy.update(
+                action=_integer(update, "action"),
+                reward=_number(update, "reward"),
+            )
+            completed_updates += 1
+
+    checkpoints = cast(list[Mapping[str, object]], fixture["checkpoints"])
+    final = checkpoints[-1]
+    assert final["after_update"] == completed_updates
+    assert _exploration_state(policy) == final["state"]
+    assert policy.recommend_action() == fixture["recommendation"]
+    scores = cast(Mapping[str, object], final["scores"])
+    if isinstance(policy, EXP3Policy):
+        np.testing.assert_allclose(
+            policy.action_probabilities(),
+            _numbers(scores["probabilities"], name="probabilities"),
+            rtol=1e-12,
+            atol=1e-12,
+        )
+        np.testing.assert_allclose(
+            policy.weights,
+            _numbers(scores["weights"], name="weights"),
+            rtol=1e-12,
+            atol=1e-12,
+        )
+    if isinstance(policy, SuccessiveEliminationPolicy):
+        np.testing.assert_allclose(
+            policy._confidence_radii(),
+            _numbers(scores["confidence_radii"], name="confidence radii"),
+            rtol=1e-12,
+            atol=1e-12,
+        )
+    if isinstance(policy, MedianEliminationPolicy):
+        assert policy._phase_quota() == scores["phase_quota"]
+
+    policy.reset()
+    assert _exploration_state(policy) == fixture["reset_state"]
 
 
 @pytest.mark.parametrize("field", sorted(_complete_fixture()))

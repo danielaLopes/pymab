@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "policy_kind": "exp3",
+  "config": {"n_arms": 2, "gamma": 0.2, "learning_rate": 0.1},
+  "updates": [{"action": 0, "reward": 1.0}, {"action": 1, "reward": 0.5}],
+  "checkpoints": [{
+    "after_update": 2,
+    "state": {"step": 2, "total_reward": 1.5, "counts": [1, 1], "estimates": [1.0, 0.5], "log_weights": [0.0, -0.05], "last_probabilities": [0.5, 0.5]},
+    "scores": {"probabilities": [0.5099979171873683, 0.4900020828126318], "weights": [1.0, 0.951229424500714]}
+  }],
+  "recommendation": 0,
+  "reset_state": {"step": 0, "total_reward": 0.0, "counts": [0, 0], "estimates": [0.0, 0.0], "log_weights": [0.0, 0.0], "last_probabilities": [0.5, 0.5]},
+  "expected_error": null
+}

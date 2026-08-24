@@ -7,10 +7,12 @@ use crate::rng::NativeRng;
 use crate::types::{ActionIndex, ContextShape, PolicyCapabilities};
 
 pub mod action_value;
+pub mod adversarial;
 pub mod basic;
 pub mod bayesian_ucb;
 pub mod epsilon_greedy;
 pub mod gradient;
+pub mod pure_exploration;
 pub mod registry;
 pub mod softmax;
 pub mod thompson;
@@ -108,6 +110,9 @@ pub(crate) enum BuiltInPolicy {
     GaussianThompson(thompson::GaussianThompsonSamplingPolicy),
     BernoulliBayesianUcb(bayesian_ucb::BernoulliBayesianUCBPolicy),
     GaussianBayesianUcb(bayesian_ucb::GaussianBayesianUCBPolicy),
+    Exp3(adversarial::EXP3Policy),
+    SuccessiveElimination(pure_exploration::SuccessiveEliminationPolicy),
+    MedianElimination(pure_exploration::MedianEliminationPolicy),
 }
 
 #[allow(dead_code)]
