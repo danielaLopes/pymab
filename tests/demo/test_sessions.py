@@ -110,26 +110,6 @@ def test_step_after_completion_is_an_idempotent_snapshot() -> None:
             12,
             3.0,
         ),
-        (
-            "linucb",
-            "guided",
-            31415,
-            {"alpha": 1.0, "l2": 1.0},
-            [1, 0, 0, 2, 2, 1, 2, 2, 0, 0, 1, 0],
-            [0, 0, 0, 0, 1, 0, 1, 1, 1, 1, 0, 1],
-            6,
-            3.81301474,
-        ),
-        (
-            "linucb",
-            "challenge",
-            20260824,
-            {"alpha": 1.0, "l2": 1.0},
-            [2, 1, 1, 0, 1, 1, 2, 0, 2, 1, 2, 1, 1, 0, 2, 1, 0, 2, 0, 1],
-            [1, 1, 1, 1, 0, 1, 1, 0, 0, 1, 1, 1, 1, 0, 1, 0, 0, 1, 1, 1],
-            14,
-            2.62676647,
-        ),
     ],
 )
 def test_named_seed_trajectories_are_golden(
@@ -152,3 +132,74 @@ def test_named_seed_trajectories_are_golden(
     assert [event["reward"] for event in result["history"]] == rewards
     assert result["totalReward"] == total
     assert result["cumulativeExpectedRegret"] == pytest.approx(regret, abs=1e-8)
+
+
+@pytest.mark.parametrize(
+    ("mode", "seed", "first_action", "cues"),
+    [
+        (
+            "guided",
+            31415,
+            1,
+            [
+                [-1, 1, -1],
+                [1, -1, -1],
+                [1, 1, 1],
+                [1, 1, 1],
+                [-1, -1, -1],
+                [-1, -1, -1],
+                [-1, 1, 1],
+                [-1, -1, -1],
+                [-1, -1, -1],
+                [-1, 1, 1],
+                [1, 1, -1],
+                [-1, -1, -1],
+            ],
+        ),
+        (
+            "challenge",
+            20260824,
+            2,
+            [
+                [-1, 1, -1],
+                [1, 1, 1],
+                [1, -1, 1],
+                [-1, 1, -1],
+                [1, -1, -1],
+                [1, -1, 1],
+                [-1, -1, -1],
+                [1, 1, -1],
+                [1, -1, -1],
+                [1, -1, 1],
+                [-1, 1, -1],
+                [1, 1, 1],
+                [1, 1, 1],
+                [-1, 1, 1],
+                [-1, -1, 1],
+                [-1, -1, 1],
+                [1, -1, -1],
+                [-1, -1, 1],
+                [-1, -1, -1],
+                [1, 1, 1],
+            ],
+        ),
+    ],
+)
+def test_linucb_named_seed_contexts_are_golden(
+    mode: str, seed: int, first_action: int, cues: list[list[int]]
+) -> None:
+    """Pin stable fixtures without assuming LAPACK solves are bitwise portable."""
+
+    result = make_session(
+        "linucb",
+        mode=mode,
+        seed=seed,
+        parameters={"alpha": 1.0, "l2": 1.0},
+    ).run_to_end()
+
+    assert result["parameters"] == {"alpha": 1.0, "l2": 1.0}
+    assert result["step"] == len(cues)
+    assert result["history"][0]["selectedArm"] == first_action
+    assert [
+        [cue["value"] for cue in event["visibleCues"]] for event in result["history"]
+    ] == cues
