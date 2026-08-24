@@ -162,13 +162,31 @@ class EpsilonLessonSession(LessonSession):
                 "estimatesAfter": self.policy.estimates.copy(),
             }
         )
+        step_number = len(self.history) + 1
+        if self.mode == "guided" and step_number == 1:
+            explanation_key = "epsilon.firstObservation"
+        elif (
+            self.mode == "guided"
+            and diagnostic["selectionBranch"] == "explore"
+            and not any(
+                event["diagnostic"]["selectionBranch"] == "explore"
+                for event in self.history
+            )
+        ):
+            explanation_key = "epsilon.firstExploration"
+        elif self.mode == "guided" and step_number == self.horizon:
+            explanation_key = "epsilon.cumulativeRegret"
+        elif self.mode == "guided" and step_number == 4:
+            explanation_key = "epsilon.estimateUpdate"
+        else:
+            explanation_key = f"epsilon.{diagnostic['selectionBranch']}"
         return {
             "selectedArm": action,
             "reward": reward,
             "instantaneousExpectedRegret": regret,
             "visibleCues": [],
             "publicContext": None,
-            "explanationKey": f"epsilon.{diagnostic['selectionBranch']}",
+            "explanationKey": explanation_key,
             "diagnostic": diagnostic,
         }
 
@@ -221,13 +239,25 @@ class LinUCBLessonSession(LessonSession):
             }
             for name, value in zip(CUE_NAMES, cue_values, strict=True)
         ]
+        step_number = len(self.history) + 1
+        guided_keys = {
+            1: "linucb.initialUncertainty",
+            2: "linucb.contextPrediction",
+            3: "linucb.confidenceBonus",
+            4: "linucb.update",
+            6: "linucb.changedContext",
+        }
         return {
             "selectedArm": action,
             "reward": reward,
             "instantaneousExpectedRegret": regret,
             "visibleCues": cues,
             "publicContext": context,
-            "explanationKey": "linucb.decision",
+            "explanationKey": (
+                guided_keys.get(step_number, "linucb.decision")
+                if self.mode == "guided"
+                else "linucb.decision"
+            ),
             "diagnostic": diagnostic,
         }
 

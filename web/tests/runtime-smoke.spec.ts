@@ -66,12 +66,48 @@ test("Python Lab reports syntax errors, times out, and recovers cleanly", async 
   await expect(page.getByText("Run ended: syntax.")).toBeVisible({ timeout: 30_000 });
   await expect(page.locator(".stderr")).toContainText("SyntaxError");
 
+  await editor.fill('print("x" * 70000)');
+  await page.getByRole("button", { name: "Run Python" }).click();
+  await expect(page.getByText("Output was truncated at 64 KiB.")).toBeVisible({ timeout: 15_000 });
+
   await editor.fill("while True:\n    pass");
   await page.getByRole("button", { name: "Run Python" }).click();
   await expect(page.getByText("Run ended: timeout.")).toBeVisible({ timeout: 15_000 });
   await page.getByRole("button", { name: "ε-greedy example" }).click();
   await page.getByRole("button", { name: "Run Python" }).click();
   await expect(page.getByText("Run complete.")).toBeVisible({ timeout: 30_000 });
+
+  await editor.fill("while True:\n    pass");
+  await page.getByRole("button", { name: "Run Python" }).click();
+  await page.waitForTimeout(200);
+  await page.getByRole("button", { name: "Stop" }).click();
+  await expect(page.getByRole("status")).toContainText(/stopped/i);
+});
+
+test("warm lesson switching stays responsive", async ({ page, browserName }) => {
+  test.skip(browserName !== "chromium", "Performance profile is calibrated for Chromium");
+  await page.addInitScript(() => {
+    const durations: number[] = [];
+    Object.defineProperty(window, "__pymabLongTasks", { value: durations });
+    new PerformanceObserver((list) => {
+      durations.push(...list.getEntries().map((entry) => entry.duration));
+    }).observe({ type: "longtask", buffered: true });
+  });
+  await page.goto("./#/lesson/epsilon-greedy");
+  await expect(page.getByRole("button", { name: "Advance one chamber" })).toBeEnabled({
+    timeout: 30_000,
+  });
+  const started = Date.now();
+  await page.goto("./#/lesson/linucb");
+  await expect(page.getByRole("button", { name: "Advance one chamber" })).toBeEnabled({
+    timeout: 2_000,
+  });
+  expect(Date.now() - started).toBeLessThan(2_000);
+  await expect(page.getByRole("heading", { name: "The Labyrinth of Signals" })).toBeFocused();
+  const longestTask = await page.evaluate(() =>
+    Math.max(0, ...((window as Window & { __pymabLongTasks?: number[] }).__pymabLongTasks ?? [])),
+  );
+  expect(longestTask).toBeLessThanOrEqual(100);
 });
 
 test("narrow layout has no horizontal overflow", async ({ page }) => {

@@ -44,6 +44,24 @@ export const explanationCopy: Record<string, string> = {
   ready: "The policy is ready. Advance to let PyMAB choose a gate.",
   "epsilon.explore": "Exploration: ε opened the door to a deliberate experiment.",
   "epsilon.exploit": "Exploitation: PyMAB chose among the gates with the highest current estimate.",
+  "epsilon.firstObservation":
+    "First observation: one reward is evidence, not certainty. The selected gate's estimate now moves toward what happened.",
+  "epsilon.firstExploration":
+    "First definite exploration: the ε draw deliberately tested a gate instead of following the current favourite.",
+  "epsilon.estimateUpdate":
+    "Estimate update: only the opened gate learns from this reward; the other estimates stay unchanged.",
+  "epsilon.cumulativeRegret":
+    "Cumulative expected regret totals the reward probability forgone by every choice in this expedition.",
   "linucb.decision":
     "LinUCB combined its predicted reward with an uncertainty bonus for these signals.",
+  "linucb.initialUncertainty":
+    "Initial uncertainty: with no evidence yet, every gate receives the same optimism bonus.",
+  "linucb.contextPrediction":
+    "Context-dependent prediction: the same learned coefficients produce new scores when light, echo, and tide change.",
+  "linucb.confidenceBonus":
+    "Confidence bonus: α scales how strongly LinUCB values evidence it has not gathered yet.",
+  "linucb.update":
+    "Learning update: only the chosen gate's coefficient vector and confidence matrix change.",
+  "linucb.changedContext":
+    "A different signal pattern can recommend a different gate without any path or navigation state.",
 };

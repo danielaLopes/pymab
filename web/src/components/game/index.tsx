@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { CSSProperties, ReactNode } from "react";
 import { Link } from "react-router-dom";
 
@@ -68,13 +68,17 @@ export function MissionHeader({
   title: string;
   intro: string;
 }) {
+  const heading = useRef<HTMLHeadingElement>(null);
+  useEffect(() => heading.current?.focus(), [title]);
   return (
     <header className="mission-header">
       <Link to="/" className="back-link">
         ← Mission map
       </Link>
       <p className="eyebrow">{eyebrow}</p>
-      <h1 tabIndex={-1}>{title}</h1>
+      <h1 ref={heading} tabIndex={-1}>
+        {title}
+      </h1>
       <p>{intro}</p>
     </header>
   );
@@ -495,6 +499,16 @@ export function InspectPanel({
                 <div>
                   <dt>Seed</dt>
                   <dd>{snapshot.seed}</dd>
+                </div>
+                <div>
+                  <dt>Constructor</dt>
+                  <dd>
+                    <code>
+                      {snapshot.lessonId === "epsilon-greedy"
+                        ? `EpsilonGreedyPolicy(n_arms=3, epsilon=${snapshot.parameters.epsilon})`
+                        : `LinUCBPolicy(n_arms=3, n_features=4, alpha=${snapshot.parameters.alpha}, l2=${snapshot.parameters.l2})`}
+                    </code>
+                  </dd>
                 </div>
                 <div>
                   <dt>Commit</dt>
