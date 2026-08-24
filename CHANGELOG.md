@@ -24,6 +24,47 @@
 - `SimulationResult` is no longer re-exported from `pymab.simulation`. Import it
   from `pymab.results` or the package root.
 
+## [1.0.0](https://github.com/danielaLopes/pymab/compare/v2.0.0...v1.0.0) (2026-08-24)
+
+
+### ⚠ BREAKING CHANGES
+
+* separate simulation result persistence boundaries
+* consolidate statistical analysis APIs
+* harden v2 reliability and architecture
+
+### Features
+
+* add benchmarking and real-world examples ([b4a3dec](https://github.com/danielaLopes/pymab/commit/b4a3dec596e611878a2a1c7f3a6f4b45d387e069))
+* add benchmarking and real-world examples ([28e0c53](https://github.com/danielaLopes/pymab/commit/28e0c53d764ec397e3c1f27d2107caa0f204183e))
+* add contextual, adversarial, non-stationary, and pure-exploration policies ([b4a3dec](https://github.com/danielaLopes/pymab/commit/b4a3dec596e611878a2a1c7f3a6f4b45d387e069))
+* add contextual, adversarial, non-stationary, and pure-exploration policies ([28e0c53](https://github.com/danielaLopes/pymab/commit/28e0c53d764ec397e3c1f27d2107caa0f204183e))
+* automate releases with Release Please ([b4a3dec](https://github.com/danielaLopes/pymab/commit/b4a3dec596e611878a2a1c7f3a6f4b45d387e069))
+* automate releases with Release Please ([28e0c53](https://github.com/danielaLopes/pymab/commit/28e0c53d764ec397e3c1f27d2107caa0f204183e))
+* consolidate statistical analysis APIs ([72f362f](https://github.com/danielaLopes/pymab/commit/72f362f14aa80b251235378566d359d4ab0bf663))
+* harden v2 reliability and architecture ([83eaff8](https://github.com/danielaLopes/pymab/commit/83eaff8dc8a1ca906672cb4ac15f9a4e5ab7b5bd))
+* revamp simulation APIs and policy implementations ([b4a3dec](https://github.com/danielaLopes/pymab/commit/b4a3dec596e611878a2a1c7f3a6f4b45d387e069))
+* revamp simulation APIs and policy implementations ([28e0c53](https://github.com/danielaLopes/pymab/commit/28e0c53d764ec397e3c1f27d2107caa0f204183e))
+
+
+### Bug Fixes
+
+* upgrade vulnerable cryptography dependency ([bcad926](https://github.com/danielaLopes/pymab/commit/bcad926f3697134fd5c6da8d6f07630975540a54))
+* upgrade vulnerable cryptography dependency ([8a63d48](https://github.com/danielaLopes/pymab/commit/8a63d487629096b6a018a0226024991bd8f2959d))
+
+
+### Documentation
+
+* approve breaking v2 reliability design ([75dd897](https://github.com/danielaLopes/pymab/commit/75dd8970cfa85fb506f0a240ef3f0811d27148dd))
+* define simulation result persistence architecture ([6a1a544](https://github.com/danielaLopes/pymab/commit/6a1a544aa86923d9d2ab0f85ff29c3f72c943d5c))
+* define statistical core design ([11c0012](https://github.com/danielaLopes/pymab/commit/11c001295dd9aca5ec9de3ca917f0a79a37a963e))
+* specify reliability remediation design ([40da1ba](https://github.com/danielaLopes/pymab/commit/40da1ba3ec470a044e27e9853b874acf1e45f61c))
+
+
+### Code Refactoring
+
+* separate simulation result persistence boundaries ([fe7484a](https://github.com/danielaLopes/pymab/commit/fe7484a72eeb9f2328217c97d143cd9c9f788aba))
+
 ## [2.0.0] - 2026-08-09
 
 ### Added
