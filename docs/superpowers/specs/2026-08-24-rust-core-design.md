@@ -4,7 +4,7 @@
 
 **Target release:** Unscheduled; version selected by the normal release process
 
-**Status:** Revised; pending user review
+**Status:** Approved for implementation planning
 
 ## Summary
 
