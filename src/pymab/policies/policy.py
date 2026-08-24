@@ -160,6 +160,16 @@ class ActionValuePolicy(Policy):
     def recommend_action(self) -> int:
         return int(np.argmax(self.estimates))
 
+    def _parity_state(self) -> dict[str, object]:
+        """Return learned state in the language-neutral fixture shape."""
+
+        return {
+            "step": self.step,
+            "total_reward": self.total_reward,
+            "counts": self.counts.tolist(),
+            "estimates": self.estimates.tolist(),
+        }
+
 
 def softmax(values: FloatArray, temperature: float = 1.0) -> FloatArray:
     """Numerically stable softmax."""

@@ -16,6 +16,8 @@ fn finite_numbers_and_positive_configuration_are_checked() {
     }
     let error = strictly_positive("temperature", 0.0).expect_err("zero rejected");
     assert_eq!(error.code(), ErrorCode::Configuration);
+    let error = strictly_positive("temperature", f64::NAN).expect_err("nan rejected");
+    assert_eq!(error.code(), ErrorCode::Configuration);
 }
 
 #[test]

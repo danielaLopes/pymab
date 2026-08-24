@@ -4,6 +4,7 @@
 //! modules are added incrementally during the native-core migration.
 
 pub mod error;
+pub mod policy;
 pub mod rng;
 pub mod types;
 pub mod validation;
