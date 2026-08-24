@@ -10,8 +10,10 @@ pub mod action_value;
 pub mod adversarial;
 pub mod basic;
 pub mod bayesian_ucb;
+pub mod change_detection;
 pub mod epsilon_greedy;
 pub mod gradient;
+pub mod nonstationary;
 pub mod pure_exploration;
 pub mod registry;
 pub mod softmax;
@@ -113,6 +115,13 @@ pub(crate) enum BuiltInPolicy {
     Exp3(adversarial::EXP3Policy),
     SuccessiveElimination(pure_exploration::SuccessiveEliminationPolicy),
     MedianElimination(pure_exploration::MedianEliminationPolicy),
+    SlidingWindowUcb(nonstationary::SlidingWindowUCBPolicy),
+    DiscountedUcb(nonstationary::DiscountedUCBPolicy),
+    SlidingWindowBernoulliThompson(nonstationary::SlidingWindowBernoulliThompsonSamplingPolicy),
+    DiscountedBernoulliThompson(nonstationary::DiscountedBernoulliThompsonSamplingPolicy),
+    ChangePointUcb(change_detection::ChangePointUCBPolicy),
+    CusumUcb(change_detection::CUSUMUCBPolicy),
+    PageHinkleyUcb(change_detection::PageHinkleyUCBPolicy),
 }
 
 #[allow(dead_code)]

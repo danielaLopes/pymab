@@ -124,6 +124,24 @@ impl ActionValueState {
         Ok(())
     }
 
+    /// Restart the learned statistics for one arm after detecting a change.
+    ///
+    /// The triggering observation becomes the first sample in the new regime.
+    /// Global step and reward totals deliberately remain cumulative.
+    pub(crate) fn reset_arm(&mut self, action: ActionIndex, reward: f64) -> Result<()> {
+        finite("reward", reward)?;
+        let index = action.get();
+        if index >= self.n_arms() {
+            return Err(PyMabError::validation(
+                "action",
+                format!("index {index} is outside [0, {})", self.n_arms()),
+            ));
+        }
+        self.counts[index] = 1;
+        self.estimates[index] = reward;
+        Ok(())
+    }
+
     /// Reset all learned values and retain allocated buffers.
     pub fn reset(&mut self) {
         self.step = 0;

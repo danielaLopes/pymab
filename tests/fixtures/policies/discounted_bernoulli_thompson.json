@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "policy_kind": "discounted_bernoulli_thompson",
+  "config": {"n_arms": 2, "alpha_prior": 2.0, "beta_prior": 3.0, "discount_factor": 0.5},
+  "updates": [
+    {"action": 0, "reward": 1.0},
+    {"action": 1, "reward": 0.0},
+    {"action": 0, "reward": 0.0},
+    {"action": 1, "reward": 1.0}
+  ],
+  "checkpoints": [{
+    "after_update": 4,
+    "state": {"step": 4, "total_reward": 2.0, "counts": [0.625, 1.25], "estimates": [0.2, 0.8], "successes": [0.125, 1.0], "failures": [0.5, 0.25]},
+    "scores": {}
+  }],
+  "recommendation": 1,
+  "reset_state": {"step": 0, "total_reward": 0.0, "counts": [0.0, 0.0], "estimates": [0.0, 0.0], "successes": [0.0, 0.0], "failures": [0.0, 0.0]},
+  "expected_error": null
+}

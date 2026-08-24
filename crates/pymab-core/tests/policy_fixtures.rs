@@ -6,8 +6,16 @@ use pymab::policy::action_value::ActionValueState;
 use pymab::policy::adversarial::EXP3Policy;
 use pymab::policy::basic::{GreedyPolicy, RandomPolicy};
 use pymab::policy::bayesian_ucb::{BernoulliBayesianUCBPolicy, GaussianBayesianUCBPolicy};
+use pymab::policy::change_detection::{
+    CUSUMUCBPolicy, ChangeDetector, ChangePointState, ChangePointUCBPolicy, PageHinkleyUCBPolicy,
+};
 use pymab::policy::epsilon_greedy::{DecayingEpsilonGreedyPolicy, EpsilonGreedyPolicy};
 use pymab::policy::gradient::GradientBanditPolicy;
+use pymab::policy::nonstationary::{
+    DiscountedBernoulliState, DiscountedBernoulliThompsonSamplingPolicy, DiscountedUCBPolicy,
+    DiscountedUCBState, SlidingWindowBernoulliState, SlidingWindowBernoulliThompsonSamplingPolicy,
+    SlidingWindowUCBPolicy, SlidingWindowUCBState,
+};
 use pymab::policy::pure_exploration::{MedianEliminationPolicy, SuccessiveEliminationPolicy};
 use pymab::policy::registry::PolicyKind;
 use pymab::policy::softmax::SoftmaxPolicy;
@@ -445,6 +453,25 @@ fn float_values(value: &Value, field: &str) -> Vec<f64> {
         .collect()
 }
 
+fn integer_values(value: &Value, field: &str) -> Vec<u64> {
+    value[field]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|item| item.as_u64().unwrap())
+        .collect()
+}
+
+fn assert_float_slices_close(actual: &[f64], expected: &[f64]) {
+    assert_eq!(actual.len(), expected.len());
+    for (actual, expected) in actual.iter().zip(expected) {
+        assert!(
+            (actual - expected).abs() <= 1e-12,
+            "{actual} does not match {expected}"
+        );
+    }
+}
+
 #[test]
 fn exploration_policy_fixtures_match_rust_state() {
     for name in [
@@ -523,6 +550,235 @@ fn exploration_policy_fixtures_match_rust_state() {
                 );
             }
             other => panic!("unexpected exploration fixture {other}"),
+        }
+    }
+}
+
+fn assert_sliding_ucb_state(state: &SlidingWindowUCBState, expected: &Value) {
+    assert_eq!(state.step(), integer(expected, "step"));
+    assert_eq!(state.total_reward(), number(expected, "total_reward"));
+    assert_eq!(state.counts(), integer_values(expected, "counts"));
+    assert_eq!(state.estimates(), float_values(expected, "estimates"));
+    assert_eq!(state.history_len() as u64, integer(expected, "history_len"));
+}
+
+fn assert_discounted_ucb_state(state: &DiscountedUCBState, expected: &Value) {
+    assert_eq!(state.step(), integer(expected, "step"));
+    assert_eq!(state.total_reward(), number(expected, "total_reward"));
+    assert_eq!(state.counts(), integer_values(expected, "counts"));
+    assert_eq!(state.estimates(), float_values(expected, "estimates"));
+    assert_eq!(
+        state.discounted_counts(),
+        float_values(expected, "discounted_counts")
+    );
+    assert_eq!(
+        state.discounted_sums(),
+        float_values(expected, "discounted_sums")
+    );
+}
+
+fn assert_sliding_bernoulli_state(state: &SlidingWindowBernoulliState, expected: &Value) {
+    assert_eq!(state.step(), integer(expected, "step"));
+    assert_eq!(state.total_reward(), number(expected, "total_reward"));
+    assert_eq!(state.counts(), integer_values(expected, "counts"));
+    assert_eq!(state.estimates(), float_values(expected, "estimates"));
+    assert_eq!(state.successes(), integer_values(expected, "successes"));
+    assert_eq!(state.failures(), integer_values(expected, "failures"));
+    assert_eq!(state.history_len() as u64, integer(expected, "history_len"));
+}
+
+fn assert_discounted_bernoulli_state(state: &DiscountedBernoulliState, expected: &Value) {
+    assert_eq!(state.step(), integer(expected, "step"));
+    assert_eq!(state.total_reward(), number(expected, "total_reward"));
+    assert_eq!(state.counts(), float_values(expected, "counts"));
+    assert_eq!(state.estimates(), float_values(expected, "estimates"));
+    assert_eq!(state.successes(), float_values(expected, "successes"));
+    assert_eq!(state.failures(), float_values(expected, "failures"));
+}
+
+fn assert_change_state(state: &ChangePointState, expected: &Value) {
+    assert_action_value_state(state.action_values(), expected);
+    assert_eq!(
+        state.detector_counts(),
+        integer_values(expected, "detector_counts")
+    );
+    assert_eq!(
+        state.detector_means(),
+        float_values(expected, "detector_means")
+    );
+    assert_eq!(
+        state.positive_cusum(),
+        float_values(expected, "positive_cusum")
+    );
+    assert_eq!(
+        state.negative_cusum(),
+        float_values(expected, "negative_cusum")
+    );
+    assert_eq!(
+        state.ph_cumulative(),
+        float_values(expected, "ph_cumulative")
+    );
+    assert_eq!(state.ph_minimum(), float_values(expected, "ph_minimum"));
+    assert_eq!(
+        state.change_counts(),
+        integer_values(expected, "change_counts")
+    );
+}
+
+fn assert_recommendation<P: Policy>(policy: &P, fixture: &PolicyFixture) {
+    assert_eq!(
+        policy.recommend_action().unwrap().get() as u64,
+        fixture.recommendation.as_u64().unwrap()
+    );
+}
+
+#[test]
+fn adaptive_policy_fixtures_match_rust_state() {
+    for name in [
+        "sliding_window_ucb.json",
+        "discounted_ucb.json",
+        "sliding_window_bernoulli_thompson.json",
+        "discounted_bernoulli_thompson.json",
+        "change_point_ucb.json",
+        "cusum_ucb.json",
+        "page_hinkley_ucb.json",
+    ] {
+        let fixture = read_policy_fixture(name);
+        let config = &fixture.config;
+        let n_arms = integer(config, "n_arms") as usize;
+        let expected = &fixture.checkpoints.last().unwrap()["state"];
+        match fixture.policy_kind.as_str() {
+            "sliding_window_ucb" => {
+                let mut policy = SlidingWindowUCBPolicy::new(
+                    n_arms,
+                    number(config, "initial_value"),
+                    number(config, "c"),
+                    number(config, "reward_scale"),
+                    integer(config, "window_size") as usize,
+                )
+                .unwrap();
+                apply_updates(&mut policy, &fixture);
+                assert_sliding_ucb_state(policy.state(), expected);
+                assert_recommendation(&policy, &fixture);
+                let bonuses = &fixture.checkpoints.last().unwrap()["scores"]["bonuses"];
+                let bonuses = bonuses
+                    .as_array()
+                    .unwrap()
+                    .iter()
+                    .map(|value| value.as_f64().unwrap())
+                    .collect::<Vec<_>>();
+                assert_float_slices_close(&policy.confidence_bonus(), &bonuses);
+                policy.reset();
+                assert_sliding_ucb_state(policy.state(), &fixture.reset_state);
+            }
+            "discounted_ucb" => {
+                let mut policy = DiscountedUCBPolicy::new(
+                    n_arms,
+                    number(config, "initial_value"),
+                    number(config, "c"),
+                    number(config, "reward_scale"),
+                    number(config, "discount_factor"),
+                )
+                .unwrap();
+                apply_updates(&mut policy, &fixture);
+                assert_discounted_ucb_state(policy.state(), expected);
+                assert_recommendation(&policy, &fixture);
+                let bonuses = fixture.checkpoints.last().unwrap()["scores"]["bonuses"]
+                    .as_array()
+                    .unwrap()
+                    .iter()
+                    .map(|value| value.as_f64().unwrap())
+                    .collect::<Vec<_>>();
+                assert_float_slices_close(&policy.confidence_bonus(), &bonuses);
+                policy.reset();
+                assert_discounted_ucb_state(policy.state(), &fixture.reset_state);
+            }
+            "sliding_window_bernoulli_thompson" => {
+                let mut policy = SlidingWindowBernoulliThompsonSamplingPolicy::new(
+                    n_arms,
+                    number(config, "alpha_prior"),
+                    number(config, "beta_prior"),
+                    integer(config, "window_size") as usize,
+                )
+                .unwrap();
+                apply_updates(&mut policy, &fixture);
+                assert_sliding_bernoulli_state(policy.state(), expected);
+                assert_recommendation(&policy, &fixture);
+                policy.reset();
+                assert_sliding_bernoulli_state(policy.state(), &fixture.reset_state);
+            }
+            "discounted_bernoulli_thompson" => {
+                let mut policy = DiscountedBernoulliThompsonSamplingPolicy::new(
+                    n_arms,
+                    number(config, "alpha_prior"),
+                    number(config, "beta_prior"),
+                    number(config, "discount_factor"),
+                )
+                .unwrap();
+                apply_updates(&mut policy, &fixture);
+                assert_discounted_bernoulli_state(policy.state(), expected);
+                assert_recommendation(&policy, &fixture);
+                policy.reset();
+                assert_discounted_bernoulli_state(policy.state(), &fixture.reset_state);
+            }
+            "change_point_ucb" => {
+                let detector = match config["detector"].as_str().unwrap() {
+                    "cusum" => ChangeDetector::Cusum,
+                    "page_hinkley" => ChangeDetector::PageHinkley,
+                    other => panic!("unexpected detector {other}"),
+                };
+                let mut policy = ChangePointUCBPolicy::new(
+                    n_arms,
+                    number(config, "initial_value"),
+                    number(config, "c"),
+                    number(config, "reward_scale"),
+                    detector,
+                    number(config, "threshold"),
+                    number(config, "drift"),
+                    integer(config, "min_observations"),
+                )
+                .unwrap();
+                apply_updates(&mut policy, &fixture);
+                assert_change_state(policy.state(), expected);
+                assert_recommendation(&policy, &fixture);
+                policy.reset();
+                assert_change_state(policy.state(), &fixture.reset_state);
+            }
+            "cusum_ucb" => {
+                let mut policy = CUSUMUCBPolicy::new(
+                    n_arms,
+                    number(config, "initial_value"),
+                    number(config, "c"),
+                    number(config, "reward_scale"),
+                    number(config, "threshold"),
+                    number(config, "drift"),
+                    integer(config, "min_observations"),
+                )
+                .unwrap();
+                apply_updates(&mut policy, &fixture);
+                assert_change_state(policy.state(), expected);
+                assert_recommendation(&policy, &fixture);
+                policy.reset();
+                assert_change_state(policy.state(), &fixture.reset_state);
+            }
+            "page_hinkley_ucb" => {
+                let mut policy = PageHinkleyUCBPolicy::new(
+                    n_arms,
+                    number(config, "initial_value"),
+                    number(config, "c"),
+                    number(config, "reward_scale"),
+                    number(config, "threshold"),
+                    number(config, "drift"),
+                    integer(config, "min_observations"),
+                )
+                .unwrap();
+                apply_updates(&mut policy, &fixture);
+                assert_change_state(policy.state(), expected);
+                assert_recommendation(&policy, &fixture);
+                policy.reset();
+                assert_change_state(policy.state(), &fixture.reset_state);
+            }
+            other => panic!("unexpected adaptive policy fixture {other}"),
         }
     }
 }

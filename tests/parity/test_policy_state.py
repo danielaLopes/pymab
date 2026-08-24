@@ -11,7 +11,11 @@ import pytest
 from pymab.policies import (
     BernoulliBayesianUCBPolicy,
     BernoulliThompsonSamplingPolicy,
+    CUSUMUCBPolicy,
+    ChangePointUCBPolicy,
     DecayingEpsilonGreedyPolicy,
+    DiscountedBernoulliThompsonSamplingPolicy,
+    DiscountedUCBPolicy,
     EpsilonGreedyPolicy,
     EXP3Policy,
     GaussianBayesianUCBPolicy,
@@ -22,6 +26,9 @@ from pymab.policies import (
     MedianEliminationPolicy,
     MOSSPolicy,
     RandomPolicy,
+    PageHinkleyUCBPolicy,
+    SlidingWindowBernoulliThompsonSamplingPolicy,
+    SlidingWindowUCBPolicy,
     SoftmaxPolicy,
     SuccessiveEliminationPolicy,
     UCBPolicy,
@@ -88,6 +95,13 @@ def _boolean(config: Mapping[str, object], name: str) -> bool:
     value = config[name]
     if not isinstance(value, bool):
         raise TypeError(f"{name} must be a boolean")
+    return value
+
+
+def _string(config: Mapping[str, object], name: str) -> str:
+    value = config[name]
+    if not isinstance(value, str):
+        raise TypeError(f"{name} must be a string")
     return value
 
 
@@ -463,6 +477,157 @@ def test_exploration_policy_matches_shared_state_fixture(fixture_name: str) -> N
 
     policy.reset()
     assert _exploration_state(policy) == fixture["reset_state"]
+
+
+def _build_adaptive_policy(fixture: Mapping[str, object]) -> ActionValuePolicy:
+    kind = cast(str, fixture["policy_kind"])
+    config = cast(Mapping[str, object], fixture["config"])
+    common = {
+        "n_arms": _integer(config, "n_arms"),
+    }
+    if kind == "sliding_window_ucb":
+        return SlidingWindowUCBPolicy(
+            **common,
+            initial_value=_number(config, "initial_value"),
+            c=_number(config, "c"),
+            reward_scale=_number(config, "reward_scale"),
+            window_size=_integer(config, "window_size"),
+        )
+    if kind == "discounted_ucb":
+        return DiscountedUCBPolicy(
+            **common,
+            initial_value=_number(config, "initial_value"),
+            c=_number(config, "c"),
+            reward_scale=_number(config, "reward_scale"),
+            discount_factor=_number(config, "discount_factor"),
+        )
+    if kind == "sliding_window_bernoulli_thompson":
+        return SlidingWindowBernoulliThompsonSamplingPolicy(
+            **common,
+            alpha_prior=_number(config, "alpha_prior"),
+            beta_prior=_number(config, "beta_prior"),
+            window_size=_integer(config, "window_size"),
+        )
+    if kind == "discounted_bernoulli_thompson":
+        return DiscountedBernoulliThompsonSamplingPolicy(
+            **common,
+            alpha_prior=_number(config, "alpha_prior"),
+            beta_prior=_number(config, "beta_prior"),
+            discount_factor=_number(config, "discount_factor"),
+        )
+    initial_value = _number(config, "initial_value")
+    c = _number(config, "c")
+    reward_scale = _number(config, "reward_scale")
+    threshold = _number(config, "threshold")
+    drift = _number(config, "drift")
+    min_observations = _integer(config, "min_observations")
+    if kind == "change_point_ucb":
+        return ChangePointUCBPolicy(
+            n_arms=common["n_arms"],
+            initial_value=initial_value,
+            c=c,
+            reward_scale=reward_scale,
+            detector=_string(config, "detector"),
+            threshold=threshold,
+            drift=drift,
+            min_observations=min_observations,
+        )
+    if kind == "cusum_ucb":
+        return CUSUMUCBPolicy(
+            n_arms=common["n_arms"],
+            initial_value=initial_value,
+            c=c,
+            reward_scale=reward_scale,
+            threshold=threshold,
+            drift=drift,
+            min_observations=min_observations,
+        )
+    if kind == "page_hinkley_ucb":
+        return PageHinkleyUCBPolicy(
+            n_arms=common["n_arms"],
+            initial_value=initial_value,
+            c=c,
+            reward_scale=reward_scale,
+            threshold=threshold,
+            drift=drift,
+            min_observations=min_observations,
+        )
+    raise AssertionError(f"unsupported adaptive fixture {kind}")
+
+
+def _adaptive_state(policy: ActionValuePolicy) -> dict[str, object]:
+    state = policy._parity_state()
+    if isinstance(policy, SlidingWindowUCBPolicy):
+        state["history_len"] = len(policy._history)
+    if isinstance(policy, DiscountedUCBPolicy):
+        state.update(
+            discounted_counts=policy.discounted_counts.tolist(),
+            discounted_sums=policy.discounted_sums.tolist(),
+        )
+    if isinstance(policy, SlidingWindowBernoulliThompsonSamplingPolicy):
+        state.update(
+            successes=policy.successes.tolist(),
+            failures=policy.failures.tolist(),
+            history_len=len(policy._history),
+        )
+    if isinstance(policy, DiscountedBernoulliThompsonSamplingPolicy):
+        state.update(
+            successes=policy.successes.tolist(),
+            failures=policy.failures.tolist(),
+        )
+    if isinstance(policy, ChangePointUCBPolicy):
+        state.update(
+            detector_counts=policy.detector_counts.tolist(),
+            detector_means=policy.detector_means.tolist(),
+            positive_cusum=policy.positive_cusum.tolist(),
+            negative_cusum=policy.negative_cusum.tolist(),
+            ph_cumulative=policy.ph_cumulative.tolist(),
+            ph_minimum=policy.ph_minimum.tolist(),
+            change_counts=policy.change_counts.tolist(),
+        )
+    return state
+
+
+@pytest.mark.parametrize(
+    "fixture_name",
+    [
+        "sliding_window_ucb.json",
+        "discounted_ucb.json",
+        "sliding_window_bernoulli_thompson.json",
+        "discounted_bernoulli_thompson.json",
+        "change_point_ucb.json",
+        "cusum_ucb.json",
+        "page_hinkley_ucb.json",
+    ],
+    ids=lambda value: Path(value).stem,
+)
+def test_adaptive_policy_matches_shared_state_fixture(fixture_name: str) -> None:
+    fixture = load_policy_fixture(
+        Path(__file__).parents[1] / "fixtures" / "policies" / fixture_name
+    )
+    policy = _build_adaptive_policy(fixture)
+    updates = cast(list[Mapping[str, object]], fixture["updates"])
+    for update in updates:
+        policy.update(
+            action=_integer(update, "action"),
+            reward=_number(update, "reward"),
+        )
+
+    final = cast(list[Mapping[str, object]], fixture["checkpoints"])[-1]
+    assert final["after_update"] == len(updates)
+    assert _adaptive_state(policy) == final["state"]
+    assert policy.recommend_action() == fixture["recommendation"]
+    if isinstance(policy, (SlidingWindowUCBPolicy, DiscountedUCBPolicy)):
+        scores = cast(Mapping[str, object], final["scores"])
+        np.testing.assert_allclose(
+            policy._confidence_bonus(),
+            _numbers(scores["bonuses"], name="bonuses"),
+            rtol=1e-12,
+            atol=1e-12,
+        )
+
+    policy.reset()
+    assert _adaptive_state(policy) == fixture["reset_state"]
 
 
 @pytest.mark.parametrize("field", sorted(_complete_fixture()))
