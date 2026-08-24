@@ -17,6 +17,7 @@ path = "src/lib.rs"
 
 [dependencies]
 blake2.workspace = true
+nalgebra.workspace = true
 rand.workspace = true
 rand_chacha.workspace = true
 rand_distr.workspace = true

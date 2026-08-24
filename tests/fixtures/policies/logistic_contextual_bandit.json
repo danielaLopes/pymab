@@ -1,0 +1,18 @@
+{
+  "schema_version": 1,
+  "policy_kind": "logistic_contextual_bandit",
+  "config": {"n_arms": 2, "n_features": 2, "epsilon": 0.1, "learning_rate": 0.2, "l2": 0.05},
+  "updates": [
+    {"action": 0, "reward": 1.0, "context": [1.0, 2.0, 0.0, 1.0]},
+    {"action": 1, "reward": 0.0, "context": [2.0, 0.0, 1.0, -1.0]},
+    {"action": 0, "reward": 1.0, "context": [1.0, 0.0, 0.0, 2.0]}
+  ],
+  "checkpoints": [{
+    "after_update": 3,
+    "state": {"theta": [0.194004162504212, 0.198, -0.1, 0.1]},
+    "scores": {"context": [1.0, 0.5, -1.0, 2.0], "values": [0.5727314420603813, 0.574442516811659]}
+  }],
+  "recommendation": {"context": [1.0, 0.5, -1.0, 2.0], "action": 1},
+  "reset_state": {"theta": [0.0, 0.0, 0.0, 0.0]},
+  "expected_error": null
+}

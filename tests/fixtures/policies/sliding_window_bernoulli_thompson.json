@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "policy_kind": "sliding_window_bernoulli_thompson",
+  "policy_kind": "sliding_window_bernoulli_thompson_sampling",
   "config": {"n_arms": 2, "alpha_prior": 2.0, "beta_prior": 3.0, "window_size": 3},
   "updates": [
     {"action": 0, "reward": 1.0},

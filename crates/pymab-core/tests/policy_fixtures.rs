@@ -9,6 +9,10 @@ use pymab::policy::bayesian_ucb::{BernoulliBayesianUCBPolicy, GaussianBayesianUC
 use pymab::policy::change_detection::{
     CUSUMUCBPolicy, ChangeDetector, ChangePointState, ChangePointUCBPolicy, PageHinkleyUCBPolicy,
 };
+use pymab::policy::contextual::{
+    LinUCBPolicy, LinearEpsilonGreedyPolicy, LinearPosteriorState, LinearThetaState,
+    LinearThompsonSamplingPolicy, LogisticContextualBanditPolicy,
+};
 use pymab::policy::epsilon_greedy::{DecayingEpsilonGreedyPolicy, EpsilonGreedyPolicy};
 use pymab::policy::gradient::GradientBanditPolicy;
 use pymab::policy::nonstationary::{
@@ -24,7 +28,7 @@ use pymab::policy::thompson::{
     GaussianThompsonSamplingPolicy,
 };
 use pymab::policy::ucb::{KLUCBPolicy, MOSSPolicy, UCBPolicy};
-use pymab::policy::Policy;
+use pymab::policy::{ContextualPolicy, Policy};
 use pymab::types::ActionIndex;
 use serde::Deserialize;
 use serde_json::Value;
@@ -693,7 +697,7 @@ fn adaptive_policy_fixtures_match_rust_state() {
                 policy.reset();
                 assert_discounted_ucb_state(policy.state(), &fixture.reset_state);
             }
-            "sliding_window_bernoulli_thompson" => {
+            "sliding_window_bernoulli_thompson_sampling" => {
                 let mut policy = SlidingWindowBernoulliThompsonSamplingPolicy::new(
                     n_arms,
                     number(config, "alpha_prior"),
@@ -707,7 +711,7 @@ fn adaptive_policy_fixtures_match_rust_state() {
                 policy.reset();
                 assert_sliding_bernoulli_state(policy.state(), &fixture.reset_state);
             }
-            "discounted_bernoulli_thompson" => {
+            "discounted_bernoulli_thompson_sampling" => {
                 let mut policy = DiscountedBernoulliThompsonSamplingPolicy::new(
                     n_arms,
                     number(config, "alpha_prior"),
@@ -779,6 +783,143 @@ fn adaptive_policy_fixtures_match_rust_state() {
                 assert_change_state(policy.state(), &fixture.reset_state);
             }
             other => panic!("unexpected adaptive policy fixture {other}"),
+        }
+    }
+}
+
+fn context_values(value: &Value) -> Vec<f64> {
+    value
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|item| item.as_f64().unwrap())
+        .collect()
+}
+
+fn apply_contextual_updates<P: ContextualPolicy>(policy: &mut P, fixture: &PolicyFixture) {
+    for update in &fixture.updates {
+        policy
+            .update(
+                ActionIndex::new(
+                    integer(update, "action") as usize,
+                    policy.context_shape().n_arms(),
+                )
+                .unwrap(),
+                number(update, "reward"),
+                &context_values(&update["context"]),
+            )
+            .unwrap();
+    }
+}
+
+fn assert_theta_state(state: &LinearThetaState, expected: &Value) {
+    assert_eq!(state.theta(), float_values(expected, "theta"));
+}
+
+fn assert_linear_posterior_state(state: &LinearPosteriorState, expected: &Value) {
+    assert_eq!(state.a(), float_values(expected, "a"));
+    assert_eq!(state.b(), float_values(expected, "b"));
+}
+
+fn contextual_recommendation<P: ContextualPolicy>(policy: &P, fixture: &PolicyFixture) {
+    let context = context_values(&fixture.recommendation["context"]);
+    assert_eq!(
+        policy.recommend_action(&context).unwrap().get() as u64,
+        integer(&fixture.recommendation, "action")
+    );
+}
+
+#[test]
+fn contextual_policy_fixtures_match_rust_state() {
+    for name in [
+        "linear_epsilon_greedy.json",
+        "lin_ucb.json",
+        "linear_thompson_sampling.json",
+        "logistic_contextual_bandit.json",
+    ] {
+        let fixture = read_policy_fixture(name);
+        let config = &fixture.config;
+        let n_arms = integer(config, "n_arms") as usize;
+        let n_features = integer(config, "n_features") as usize;
+        let final_checkpoint = fixture.checkpoints.last().unwrap();
+        let expected = &final_checkpoint["state"];
+        let score_context = context_values(&final_checkpoint["scores"]["context"]);
+        let expected_scores = context_values(&final_checkpoint["scores"]["values"]);
+        match fixture.policy_kind.as_str() {
+            "linear_epsilon_greedy" => {
+                let mut policy = LinearEpsilonGreedyPolicy::new(
+                    n_arms,
+                    n_features,
+                    number(config, "epsilon"),
+                    number(config, "learning_rate"),
+                )
+                .unwrap();
+                apply_contextual_updates(&mut policy, &fixture);
+                assert_theta_state(policy.state(), expected);
+                assert_float_slices_close(
+                    &policy.scores(&score_context).unwrap(),
+                    &expected_scores,
+                );
+                contextual_recommendation(&policy, &fixture);
+                policy.reset();
+                assert_theta_state(policy.state(), &fixture.reset_state);
+            }
+            "lin_ucb" => {
+                let mut policy = LinUCBPolicy::new(
+                    n_arms,
+                    n_features,
+                    number(config, "alpha"),
+                    number(config, "l2"),
+                )
+                .unwrap();
+                apply_contextual_updates(&mut policy, &fixture);
+                assert_linear_posterior_state(policy.state(), expected);
+                assert_float_slices_close(
+                    &policy.upper_confidence_bounds(&score_context).unwrap(),
+                    &expected_scores,
+                );
+                contextual_recommendation(&policy, &fixture);
+                policy.reset();
+                assert_linear_posterior_state(policy.state(), &fixture.reset_state);
+            }
+            "linear_thompson_sampling" => {
+                let mut policy = LinearThompsonSamplingPolicy::new(
+                    n_arms,
+                    n_features,
+                    number(config, "exploration_scale"),
+                    number(config, "l2"),
+                )
+                .unwrap();
+                apply_contextual_updates(&mut policy, &fixture);
+                assert_linear_posterior_state(policy.state(), expected);
+                assert_float_slices_close(
+                    &policy.posterior_means(&score_context).unwrap(),
+                    &expected_scores,
+                );
+                contextual_recommendation(&policy, &fixture);
+                policy.reset();
+                assert_linear_posterior_state(policy.state(), &fixture.reset_state);
+            }
+            "logistic_contextual_bandit" => {
+                let mut policy = LogisticContextualBanditPolicy::new(
+                    n_arms,
+                    n_features,
+                    number(config, "epsilon"),
+                    number(config, "learning_rate"),
+                    number(config, "l2"),
+                )
+                .unwrap();
+                apply_contextual_updates(&mut policy, &fixture);
+                assert_theta_state(policy.state(), expected);
+                assert_float_slices_close(
+                    &policy.predicted_probabilities(&score_context).unwrap(),
+                    &expected_scores,
+                );
+                contextual_recommendation(&policy, &fixture);
+                policy.reset();
+                assert_theta_state(policy.state(), &fixture.reset_state);
+            }
+            other => panic!("unexpected contextual fixture {other}"),
         }
     }
 }

@@ -11,6 +11,7 @@ pub mod adversarial;
 pub mod basic;
 pub mod bayesian_ucb;
 pub mod change_detection;
+pub mod contextual;
 pub mod epsilon_greedy;
 pub mod gradient;
 pub mod nonstationary;
@@ -125,4 +126,9 @@ pub(crate) enum BuiltInPolicy {
 }
 
 #[allow(dead_code)]
-pub(crate) enum BuiltInContextualPolicy {}
+pub(crate) enum BuiltInContextualPolicy {
+    LinearEpsilonGreedy(contextual::LinearEpsilonGreedyPolicy),
+    LinUcb(contextual::LinUCBPolicy),
+    LinearThompson(contextual::LinearThompsonSamplingPolicy),
+    Logistic(contextual::LogisticContextualBanditPolicy),
+}

@@ -13,6 +13,7 @@ homepage = "https://github.com/danielaLopes/pymab"
 
 [workspace.dependencies]
 blake2 = "0.10.6"
+nalgebra = { version = "0.33.2", default-features = false, features = ["std"] }
 numpy = "0.29.0"
 pyo3 = "0.29.2"
 rand = "0.9.2"

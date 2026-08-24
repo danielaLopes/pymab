@@ -23,6 +23,10 @@ from pymab.policies import (
     GradientBanditPolicy,
     GreedyPolicy,
     KLUCBPolicy,
+    LinUCBPolicy,
+    LinearEpsilonGreedyPolicy,
+    LinearThompsonSamplingPolicy,
+    LogisticContextualBanditPolicy,
     MedianEliminationPolicy,
     MOSSPolicy,
     RandomPolicy,
@@ -33,7 +37,7 @@ from pymab.policies import (
     SuccessiveEliminationPolicy,
     UCBPolicy,
 )
-from pymab.policies.policy import ActionValuePolicy, Policy
+from pymab.policies.policy import ActionValuePolicy, ContextualPolicy, Policy
 from tests.parity.conftest import load_policy_fixture, validate_policy_fixture
 
 
@@ -501,14 +505,14 @@ def _build_adaptive_policy(fixture: Mapping[str, object]) -> ActionValuePolicy:
             reward_scale=_number(config, "reward_scale"),
             discount_factor=_number(config, "discount_factor"),
         )
-    if kind == "sliding_window_bernoulli_thompson":
+    if kind == "sliding_window_bernoulli_thompson_sampling":
         return SlidingWindowBernoulliThompsonSamplingPolicy(
             **common,
             alpha_prior=_number(config, "alpha_prior"),
             beta_prior=_number(config, "beta_prior"),
             window_size=_integer(config, "window_size"),
         )
-    if kind == "discounted_bernoulli_thompson":
+    if kind == "discounted_bernoulli_thompson_sampling":
         return DiscountedBernoulliThompsonSamplingPolicy(
             **common,
             alpha_prior=_number(config, "alpha_prior"),
@@ -628,6 +632,130 @@ def test_adaptive_policy_matches_shared_state_fixture(fixture_name: str) -> None
 
     policy.reset()
     assert _adaptive_state(policy) == fixture["reset_state"]
+
+
+def _build_contextual_policy(fixture: Mapping[str, object]) -> ContextualPolicy:
+    kind = cast(str, fixture["policy_kind"])
+    config = cast(Mapping[str, object], fixture["config"])
+    n_arms = _integer(config, "n_arms")
+    n_features = _integer(config, "n_features")
+    if kind == "linear_epsilon_greedy":
+        return LinearEpsilonGreedyPolicy(
+            n_arms=n_arms,
+            n_features=n_features,
+            epsilon=_number(config, "epsilon"),
+            learning_rate=_number(config, "learning_rate"),
+        )
+    if kind == "lin_ucb":
+        return LinUCBPolicy(
+            n_arms=n_arms,
+            n_features=n_features,
+            alpha=_number(config, "alpha"),
+            l2=_number(config, "l2"),
+        )
+    if kind == "linear_thompson_sampling":
+        return LinearThompsonSamplingPolicy(
+            n_arms=n_arms,
+            n_features=n_features,
+            exploration_scale=_number(config, "exploration_scale"),
+            l2=_number(config, "l2"),
+        )
+    if kind == "logistic_contextual_bandit":
+        return LogisticContextualBanditPolicy(
+            n_arms=n_arms,
+            n_features=n_features,
+            epsilon=_number(config, "epsilon"),
+            learning_rate=_number(config, "learning_rate"),
+            l2=_number(config, "l2"),
+        )
+    raise AssertionError(f"unsupported contextual fixture {kind}")
+
+
+def _context(value: object, *, n_arms: int, n_features: int) -> np.ndarray:
+    return np.asarray(_numbers(value, name="context"), dtype=float).reshape(
+        n_arms, n_features
+    )
+
+
+def _contextual_state(policy: ContextualPolicy) -> dict[str, object]:
+    if isinstance(
+        policy, (LinearEpsilonGreedyPolicy, LogisticContextualBanditPolicy)
+    ):
+        return {"theta": policy.theta.reshape(-1).tolist()}
+    if isinstance(policy, (LinUCBPolicy, LinearThompsonSamplingPolicy)):
+        return {
+            "a": policy.a.reshape(-1).tolist(),
+            "b": policy.b.reshape(-1).tolist(),
+        }
+    raise AssertionError("unexpected contextual policy")
+
+
+@pytest.mark.parametrize(
+    "fixture_name",
+    [
+        "linear_epsilon_greedy.json",
+        "lin_ucb.json",
+        "linear_thompson_sampling.json",
+        "logistic_contextual_bandit.json",
+    ],
+    ids=lambda value: Path(value).stem,
+)
+def test_contextual_policy_matches_shared_state_fixture(fixture_name: str) -> None:
+    fixture = load_policy_fixture(
+        Path(__file__).parents[1] / "fixtures" / "policies" / fixture_name
+    )
+    config = cast(Mapping[str, object], fixture["config"])
+    n_arms = _integer(config, "n_arms")
+    n_features = _integer(config, "n_features")
+    policy = _build_contextual_policy(fixture)
+    updates = cast(list[Mapping[str, object]], fixture["updates"])
+    for update in updates:
+        policy.update(
+            action=_integer(update, "action"),
+            reward=_number(update, "reward"),
+            context=_context(
+                update["context"], n_arms=n_arms, n_features=n_features
+            ),
+        )
+
+    final = cast(list[Mapping[str, object]], fixture["checkpoints"])[-1]
+    assert final["after_update"] == len(updates)
+    assert _contextual_state(policy) == final["state"]
+    scores = cast(Mapping[str, object], final["scores"])
+    score_context = _context(
+        scores["context"], n_arms=n_arms, n_features=n_features
+    )
+    if isinstance(policy, LinearEpsilonGreedyPolicy):
+        actual_scores = policy.scores(score_context)
+    elif isinstance(policy, LinUCBPolicy):
+        actual_scores = policy.upper_confidence_bounds(score_context)
+    elif isinstance(policy, LinearThompsonSamplingPolicy):
+        actual_scores = np.asarray(
+            [
+                np.linalg.solve(policy.a[arm], policy.b[arm]) @ score_context[arm]
+                for arm in range(n_arms)
+            ]
+        )
+    elif isinstance(policy, LogisticContextualBanditPolicy):
+        actual_scores = policy.predicted_probabilities(score_context)
+    else:
+        raise AssertionError("unexpected contextual policy")
+    np.testing.assert_allclose(
+        actual_scores,
+        _numbers(scores["values"], name="contextual scores"),
+        rtol=1e-12,
+        atol=1e-12,
+    )
+    recommendation = cast(Mapping[str, object], fixture["recommendation"])
+    recommendation_context = _context(
+        recommendation["context"], n_arms=n_arms, n_features=n_features
+    )
+    assert policy.recommend_action(context=recommendation_context) == _integer(
+        recommendation, "action"
+    )
+
+    policy.reset()
+    assert _contextual_state(policy) == fixture["reset_state"]
 
 
 @pytest.mark.parametrize("field", sorted(_complete_fixture()))
