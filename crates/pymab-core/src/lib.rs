@@ -3,6 +3,11 @@
 //! This crate is the Python-independent core of PyMAB. Policy and experiment
 //! modules are added incrementally during the native-core migration.
 
+pub mod error;
+pub mod rng;
+pub mod types;
+pub mod validation;
+
 /// Version of the Rust core crate.
 pub const VERSION: &str = env!("CARGO_PKG_VERSION");
 

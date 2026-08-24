@@ -55,6 +55,7 @@ def test_reference_result_array_and_provenance_contract() -> None:
         "pymab_version",
         "python_version",
         "numpy_version",
+        "backend",
         "rng_scheme",
         "environment",
         "policies",

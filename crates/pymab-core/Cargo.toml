@@ -14,3 +14,8 @@ categories = ["algorithms", "science"]
 [lib]
 name = "pymab"
 path = "src/lib.rs"
+
+[dependencies]
+blake2.workspace = true
+rand.workspace = true
+rand_chacha.workspace = true
