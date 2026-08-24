@@ -82,10 +82,11 @@ python_version = "3.11"
 strict = true
 warn_unused_configs = true
 ignore_missing_imports = true
-mypy_path = "src"
+mypy_path = ["src", "web/python"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+pythonpath = ["web/python"]
 addopts = "--cov=pymab --cov-branch --cov-report=term-missing"
 markers = [
     "optional: requires one or more optional dependencies",
