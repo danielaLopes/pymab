@@ -11,8 +11,11 @@ from pymab.policies import (
     DecayingEpsilonGreedyPolicy,
     EpsilonGreedyPolicy,
     GreedyPolicy,
+    KLUCBPolicy,
+    MOSSPolicy,
     RandomPolicy,
     SoftmaxPolicy,
+    UCBPolicy,
 )
 from pymab.policies.policy import ActionValuePolicy
 from tests.parity.conftest import load_policy_fixture, validate_policy_fixture
@@ -143,6 +146,79 @@ def test_basic_policy_matches_shared_state_fixture(fixture_name: str) -> None:
             rtol=1e-15,
             atol=1e-15,
         )
+
+    policy.reset()
+    assert policy._parity_state() == fixture["reset_state"]
+
+
+def _build_ucb_policy(fixture: Mapping[str, object]) -> ActionValuePolicy:
+    kind = cast(str, fixture["policy_kind"])
+    config = cast(Mapping[str, object], fixture["config"])
+    n_arms = _integer(config, "n_arms")
+    initial_value = _number(config, "initial_value")
+    c = _number(config, "c")
+    if kind == "ucb":
+        return UCBPolicy(
+            n_arms=n_arms,
+            initial_value=initial_value,
+            c=c,
+            reward_scale=_number(config, "reward_scale"),
+        )
+    if kind == "kl_ucb":
+        return KLUCBPolicy(
+            n_arms=n_arms,
+            initial_value=initial_value,
+            c=c,
+            tolerance=_number(config, "tolerance"),
+            max_iterations=_integer(config, "max_iterations"),
+        )
+    if kind == "moss":
+        return MOSSPolicy(
+            n_arms=n_arms,
+            initial_value=initial_value,
+            horizon=_integer(config, "horizon"),
+            c=c,
+            reward_scale=_number(config, "reward_scale"),
+        )
+    raise AssertionError(f"unsupported UCB fixture {kind}")
+
+
+@pytest.mark.parametrize(
+    "fixture_name",
+    ["ucb.json", "kl_ucb.json", "moss.json"],
+    ids=lambda value: Path(value).stem,
+)
+def test_ucb_policy_matches_shared_state_fixture(fixture_name: str) -> None:
+    fixture = load_policy_fixture(
+        Path(__file__).parents[1] / "fixtures" / "policies" / fixture_name
+    )
+    policy = _build_ucb_policy(fixture)
+    updates = cast(list[Mapping[str, object]], fixture["updates"])
+    for update in updates:
+        policy.update(
+            action=_integer(update, "action"),
+            reward=_number(update, "reward"),
+        )
+
+    checkpoints = cast(list[Mapping[str, object]], fixture["checkpoints"])
+    final = checkpoints[-1]
+    assert policy._parity_state() == final["state"]
+    assert policy.recommend_action() == fixture["recommendation"]
+    scores = cast(Mapping[str, object], final["scores"])
+    if isinstance(policy, KLUCBPolicy):
+        actual_scores = policy.indices()
+        expected_scores = scores["indices"]
+    elif isinstance(policy, (UCBPolicy, MOSSPolicy)):
+        actual_scores = policy._confidence_bonus()
+        expected_scores = scores["bonuses"]
+    else:
+        raise AssertionError("unexpected UCB policy type")
+    np.testing.assert_allclose(
+        actual_scores,
+        _numbers(expected_scores, name="UCB scores"),
+        rtol=1e-12,
+        atol=1e-12,
+    )
 
     policy.reset()
     assert policy._parity_state() == fixture["reset_state"]

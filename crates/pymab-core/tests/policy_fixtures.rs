@@ -7,6 +7,7 @@ use pymab::policy::basic::{GreedyPolicy, RandomPolicy};
 use pymab::policy::epsilon_greedy::{DecayingEpsilonGreedyPolicy, EpsilonGreedyPolicy};
 use pymab::policy::registry::PolicyKind;
 use pymab::policy::softmax::SoftmaxPolicy;
+use pymab::policy::ucb::{KLUCBPolicy, MOSSPolicy, UCBPolicy};
 use pymab::policy::Policy;
 use pymab::types::ActionIndex;
 use serde::Deserialize;
@@ -200,6 +201,46 @@ fn basic_policy_fixtures_match_rust_state() {
                 &fixture,
             ),
             other => panic!("unexpected basic policy fixture {other}"),
+        }
+    }
+}
+
+#[test]
+fn ucb_policy_fixtures_match_rust_state() {
+    for name in ["ucb.json", "kl_ucb.json", "moss.json"] {
+        let fixture = read_policy_fixture(name);
+        let config = &fixture.config;
+        let n_arms = integer(config, "n_arms") as usize;
+        let initial_value = number(config, "initial_value");
+        let c = number(config, "c");
+        match fixture.policy_kind.as_str() {
+            "ucb" => assert_basic_fixture(
+                UCBPolicy::new(n_arms, initial_value, c, number(config, "reward_scale")).unwrap(),
+                &fixture,
+            ),
+            "kl_ucb" => assert_basic_fixture(
+                KLUCBPolicy::new(
+                    n_arms,
+                    initial_value,
+                    c,
+                    number(config, "tolerance"),
+                    integer(config, "max_iterations") as usize,
+                )
+                .unwrap(),
+                &fixture,
+            ),
+            "moss" => assert_basic_fixture(
+                MOSSPolicy::new(
+                    n_arms,
+                    initial_value,
+                    integer(config, "horizon"),
+                    c,
+                    number(config, "reward_scale"),
+                )
+                .unwrap(),
+                &fixture,
+            ),
+            other => panic!("unexpected UCB policy fixture {other}"),
         }
     }
 }

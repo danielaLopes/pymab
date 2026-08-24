@@ -11,6 +11,7 @@ pub mod basic;
 pub mod epsilon_greedy;
 pub mod registry;
 pub mod softmax;
+pub mod ucb;
 
 /// Contract implemented by non-contextual policies.
 pub trait Policy: Clone {
@@ -96,6 +97,9 @@ pub(crate) enum BuiltInPolicy {
     EpsilonGreedy(epsilon_greedy::EpsilonGreedyPolicy),
     DecayingEpsilonGreedy(epsilon_greedy::DecayingEpsilonGreedyPolicy),
     Softmax(softmax::SoftmaxPolicy),
+    Ucb(ucb::UCBPolicy),
+    KlUcb(ucb::KLUCBPolicy),
+    Moss(ucb::MOSSPolicy),
 }
 
 #[allow(dead_code)]
