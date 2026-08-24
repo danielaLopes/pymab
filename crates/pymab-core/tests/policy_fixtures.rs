@@ -2,7 +2,13 @@ use std::collections::BTreeSet;
 use std::fs;
 use std::path::PathBuf;
 
+use pymab::policy::action_value::ActionValueState;
+use pymab::policy::basic::{GreedyPolicy, RandomPolicy};
+use pymab::policy::epsilon_greedy::{DecayingEpsilonGreedyPolicy, EpsilonGreedyPolicy};
 use pymab::policy::registry::PolicyKind;
+use pymab::policy::softmax::SoftmaxPolicy;
+use pymab::policy::Policy;
+use pymab::types::ActionIndex;
 use serde::Deserialize;
 use serde_json::Value;
 
@@ -20,7 +26,6 @@ struct RegistryEntry {
     rust_kind: String,
 }
 
-#[allow(dead_code)]
 #[derive(Debug, Deserialize)]
 #[serde(deny_unknown_fields)]
 struct PolicyFixture {
@@ -38,6 +43,72 @@ fn fixture_path(name: &str) -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../../tests/fixtures/policies")
         .join(name)
+}
+
+fn read_policy_fixture(name: &str) -> PolicyFixture {
+    let payload = fs::read_to_string(fixture_path(name)).expect("fixture exists");
+    serde_json::from_str(&payload).expect("strict policy fixture")
+}
+
+fn integer(value: &Value, field: &str) -> u64 {
+    value[field]
+        .as_u64()
+        .unwrap_or_else(|| panic!("{field} is an unsigned integer"))
+}
+
+fn number(value: &Value, field: &str) -> f64 {
+    value[field]
+        .as_f64()
+        .unwrap_or_else(|| panic!("{field} is numeric"))
+}
+
+fn assert_action_value_state(state: &ActionValueState, expected: &Value) {
+    assert_eq!(state.step(), integer(expected, "step"));
+    assert_eq!(state.total_reward(), number(expected, "total_reward"));
+    let counts: Vec<_> = expected["counts"]
+        .as_array()
+        .expect("counts array")
+        .iter()
+        .map(|value| value.as_u64().expect("integer count"))
+        .collect();
+    let estimates: Vec<_> = expected["estimates"]
+        .as_array()
+        .expect("estimates array")
+        .iter()
+        .map(|value| value.as_f64().expect("numeric estimate"))
+        .collect();
+    assert_eq!(state.counts(), counts);
+    assert_eq!(state.estimates(), estimates);
+}
+
+fn assert_basic_fixture<P>(mut policy: P, fixture: &PolicyFixture)
+where
+    P: Policy<State = ActionValueState>,
+{
+    assert_eq!(fixture.schema_version, 1);
+    assert!(fixture.expected_error.is_none());
+    for update in &fixture.updates {
+        let action = integer(update, "action") as usize;
+        policy
+            .update(
+                ActionIndex::new(action, policy.n_arms()).expect("valid fixture action"),
+                number(update, "reward"),
+            )
+            .expect("valid fixture update");
+    }
+    let checkpoint = fixture.checkpoints.last().expect("final checkpoint");
+    assert_eq!(
+        integer(checkpoint, "after_update") as usize,
+        fixture.updates.len()
+    );
+    assert_action_value_state(policy.state(), &checkpoint["state"]);
+    assert_eq!(
+        policy.recommend_action().unwrap().get() as u64,
+        fixture.recommendation.as_u64().expect("recommendation")
+    );
+
+    policy.reset();
+    assert_action_value_state(policy.state(), &fixture.reset_state);
 }
 
 #[test]
@@ -79,4 +150,56 @@ fn policy_fixture_loader_rejects_unknown_and_incomplete_fields() {
 
     let incomplete = complete.replace("\"updates\": [],", "");
     assert!(serde_json::from_str::<PolicyFixture>(&incomplete).is_err());
+}
+
+#[test]
+fn basic_policy_fixtures_match_rust_state() {
+    for name in [
+        "random.json",
+        "greedy.json",
+        "epsilon_greedy.json",
+        "decaying_epsilon_greedy.json",
+        "softmax.json",
+    ] {
+        let fixture = read_policy_fixture(name);
+        let config = &fixture.config;
+        let n_arms = integer(config, "n_arms") as usize;
+        match fixture.policy_kind.as_str() {
+            "random" => assert_basic_fixture(RandomPolicy::new(n_arms).unwrap(), &fixture),
+            "greedy" => assert_basic_fixture(
+                GreedyPolicy::new(n_arms, number(config, "initial_value")).unwrap(),
+                &fixture,
+            ),
+            "epsilon_greedy" => assert_basic_fixture(
+                EpsilonGreedyPolicy::new(
+                    n_arms,
+                    number(config, "initial_value"),
+                    number(config, "epsilon"),
+                )
+                .unwrap(),
+                &fixture,
+            ),
+            "decaying_epsilon_greedy" => assert_basic_fixture(
+                DecayingEpsilonGreedyPolicy::new(
+                    n_arms,
+                    number(config, "initial_value"),
+                    number(config, "initial_epsilon"),
+                    number(config, "min_epsilon"),
+                    number(config, "decay_rate"),
+                )
+                .unwrap(),
+                &fixture,
+            ),
+            "softmax" => assert_basic_fixture(
+                SoftmaxPolicy::new(
+                    n_arms,
+                    number(config, "initial_value"),
+                    number(config, "temperature"),
+                )
+                .unwrap(),
+                &fixture,
+            ),
+            other => panic!("unexpected basic policy fixture {other}"),
+        }
+    }
 }

@@ -7,7 +7,10 @@ use crate::rng::NativeRng;
 use crate::types::{ActionIndex, ContextShape, PolicyCapabilities};
 
 pub mod action_value;
+pub mod basic;
+pub mod epsilon_greedy;
 pub mod registry;
+pub mod softmax;
 
 /// Contract implemented by non-contextual policies.
 pub trait Policy: Clone {
@@ -87,7 +90,13 @@ pub trait ContextualPolicy: Clone {
 // and contextual dispatch separate makes invalid runner combinations
 // unrepresentable without imposing virtual dispatch on the hot loop.
 #[allow(dead_code)]
-pub(crate) enum BuiltInPolicy {}
+pub(crate) enum BuiltInPolicy {
+    Random(basic::RandomPolicy),
+    Greedy(basic::GreedyPolicy),
+    EpsilonGreedy(epsilon_greedy::EpsilonGreedyPolicy),
+    DecayingEpsilonGreedy(epsilon_greedy::DecayingEpsilonGreedyPolicy),
+    Softmax(softmax::SoftmaxPolicy),
+}
 
 #[allow(dead_code)]
 pub(crate) enum BuiltInContextualPolicy {}

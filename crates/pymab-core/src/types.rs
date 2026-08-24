@@ -15,6 +15,13 @@ pub enum RewardDomain {
     Binary,
 }
 
+/// All reward domains accepted by general-purpose policies.
+pub const ALL_REWARD_DOMAINS: &[RewardDomain] = &[
+    RewardDomain::Real,
+    RewardDomain::UnitInterval,
+    RewardDomain::Binary,
+];
+
 /// Primary objective optimized by a policy.
 #[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
 #[non_exhaustive]

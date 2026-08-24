@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "policy_kind": "decaying_epsilon_greedy",
+  "config": {"n_arms": 2, "initial_value": 0.5, "initial_epsilon": 1.0, "min_epsilon": 0.1, "decay_rate": 0.5},
+  "updates": [
+    {"action": 0, "reward": 1.0},
+    {"action": 1, "reward": 0.0}
+  ],
+  "checkpoints": [
+    {
+      "after_update": 2,
+      "state": {"step": 2, "total_reward": 1.0, "counts": [1, 1], "estimates": [1.0, 0.0]},
+      "scores": {"epsilon": 0.55}
+    }
+  ],
+  "recommendation": 0,
+  "reset_state": {"step": 0, "total_reward": 0.0, "counts": [0, 0], "estimates": [0.5, 0.5]},
+  "expected_error": null
+}

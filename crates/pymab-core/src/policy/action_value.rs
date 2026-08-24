@@ -134,9 +134,13 @@ impl ActionValueState {
     /// Estimate this state and its allocated buffers in bytes.
     #[must_use]
     pub fn estimated_state_bytes(&self) -> usize {
-        size_of::<Self>()
-            + self.counts.capacity() * size_of::<u64>()
-            + self.estimates.capacity() * size_of::<f64>()
+        size_of::<Self>() + self.estimated_heap_bytes()
+    }
+
+    /// Estimate bytes reserved by owned heap buffers.
+    #[must_use]
+    pub fn estimated_heap_bytes(&self) -> usize {
+        self.counts.capacity() * size_of::<u64>() + self.estimates.capacity() * size_of::<f64>()
     }
 }
 
