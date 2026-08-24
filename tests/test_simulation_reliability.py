@@ -7,12 +7,14 @@ from pathlib import Path
 import numpy as np
 import pytest
 
+import pymab.simulation as simulation_module
 from pymab.distributions import BernoulliReward, GaussianReward, RewardModel
 from pymab.environments import BanditEnvironment, EnvironmentDynamics, GradualDrift
-from pymab.errors import SerializationError
+from pymab.errors import CompatibilityError, SerializationError
 from pymab.policies import RandomPolicy, UCBPolicy
-from pymab.policies.policy import Policy
-from pymab.simulation import Experiment, ExperimentConfig, SimulationResult
+from pymab.policies.policy import ContextualPolicy, Policy
+from pymab.results import SimulationResult
+from pymab.simulation import Experiment, ExperimentConfig
 from pymab.types import RewardDomain
 
 
@@ -199,6 +201,105 @@ def test_experiment_rejects_invalid_action() -> None:
         ).run()
 
 
+def test_experiment_rejects_noninteger_action() -> None:
+    class NonIntegerPolicy(FixedPolicy):
+        def select_action(self, *, rng):
+            return 0.5
+
+    with pytest.raises(ValueError, match="must be an integer"):
+        Experiment(
+            environment=BanditEnvironment(means=np.array([0.0, 1.0])),
+            policies={"bad": NonIntegerPolicy(2)},
+            config=ExperimentConfig(horizon=1, n_replicates=1, seed=1),
+        ).run()
+
+
+@pytest.mark.parametrize(
+    ("sample", "message"),
+    [
+        (np.array([np.nan, 0.0]), "invalid reward sample"),
+        (np.array([0.0]), "returned shape"),
+    ],
+)
+def test_experiment_validates_reward_model_output(sample, message) -> None:
+    class InvalidReward(RewardModel):
+        domain = RewardDomain.REAL
+
+        def sample(self, means, rng):
+            return sample
+
+    with pytest.raises(ValueError, match=message):
+        Experiment(
+            environment=BanditEnvironment(
+                means=np.array([0.0, 1.0]), reward_model=InvalidReward()
+            ),
+            policies={"fixed": FixedPolicy(2)},
+            config=ExperimentConfig(horizon=1, n_replicates=1, seed=1),
+        ).run()
+
+
+def test_experiment_validates_environment_mean_shape() -> None:
+    class InvalidEnvironment:
+        n_arms = 2
+        reward_model = GaussianReward()
+        reward_domain = RewardDomain.REAL
+        contextual = False
+
+        def clone(self):
+            return self
+
+        def advance(self, *, step, rng) -> None:
+            return None
+
+        def expected_rewards(self):
+            return np.array([0.0])
+
+    with pytest.raises(ValueError, match="one expected reward per arm"):
+        Experiment(
+            environment=InvalidEnvironment(),
+            policies={"fixed": FixedPolicy(2)},
+            config=ExperimentConfig(horizon=1, n_replicates=1, seed=1),
+        ).run()
+
+
+def test_contextual_policy_rejects_missing_runtime_context() -> None:
+    class MissingContextEnvironment:
+        n_arms = 1
+        n_features = 1
+        reward_model = GaussianReward()
+        reward_domain = RewardDomain.REAL
+        contextual = True
+
+        def clone(self):
+            return self
+
+        def context(self, rng):
+            return None
+
+        def expected_rewards(self, context):
+            return np.array([0.0])
+
+    class FixedContextualPolicy(ContextualPolicy):
+        def select_action(self, *, context, rng):
+            return 0
+
+        def update(self, *, action, reward, context) -> None:
+            return None
+
+        def reset(self) -> None:
+            return None
+
+        def recommend_action(self, *, context):
+            return 0
+
+    with pytest.raises(CompatibilityError, match="requires context"):
+        Experiment(
+            environment=MissingContextEnvironment(),
+            policies={"contextual": FixedContextualPolicy(n_arms=1, n_features=1)},
+            config=ExperimentConfig(horizon=1, n_replicates=1, seed=1),
+        ).run()
+
+
 def test_result_arrays_are_read_only_and_metadata_is_immutable() -> None:
     result = _experiment({"fixed": FixedPolicy(3)})
     with pytest.raises(ValueError):
@@ -230,6 +331,34 @@ def test_result_npz_and_json_roundtrip() -> None:
         assert loaded.provenance.equals(result.provenance)
 
 
+def test_npz_save_does_not_build_full_json_payload(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    result = _experiment({"fixed": FixedPolicy(3)})
+
+    def reject_full_payload(self) -> dict[str, object]:
+        pytest.fail("NPZ persistence must not call SimulationResult.to_dict()")
+
+    monkeypatch.setattr(SimulationResult, "to_dict", reject_full_payload)
+    destination = result.save_npz(tmp_path / "result")
+    assert SimulationResult.load_npz(destination).equals(result)
+
+
+def test_npz_roundtrip_with_context_tensor(tmp_path: Path) -> None:
+    payload = _experiment({"fixed": FixedPolicy(3)}).to_dict()
+    payload["contexts"] = np.zeros((4, 25, 3, 1)).tolist()
+    result = SimulationResult.from_dict(payload)
+    destination = result.save_npz(tmp_path / "contextual-result")
+    restored = SimulationResult.load_npz(destination)
+    assert restored.contexts is not None
+    np.testing.assert_array_equal(restored.contexts, result.contexts)
+
+
+def test_simulation_result_has_one_canonical_domain_module() -> None:
+    assert SimulationResult.__module__ == "pymab.results"
+    assert not hasattr(simulation_module, "SimulationResult")
+
+
 def test_result_paths_are_suffix_consistent(tmp_path: Path) -> None:
     result = _experiment({"fixed": FixedPolicy(3)})
     npz_path = result.save_npz(tmp_path / "archive")
@@ -240,6 +369,8 @@ def test_result_paths_are_suffix_consistent(tmp_path: Path) -> None:
     assert SimulationResult.load_json(tmp_path / "payload").equals(result)
     with pytest.raises(SerializationError, match="suffix"):
         result.save_npz(tmp_path / "wrong.json")
+    with pytest.raises(SerializationError, match="suffix"):
+        SimulationResult.load_npz(tmp_path / "wrong.json")
 
 
 def test_atomic_write_preserves_destination_on_replace_failure(
@@ -270,6 +401,36 @@ def test_corrupt_persistence_is_wrapped(tmp_path: Path, suffix: str) -> None:
         loader(path)
 
 
+@pytest.mark.parametrize(
+    ("metadata", "message"),
+    [
+        (np.array(3), "metadata must be JSON text"),
+        (np.array("[]"), "metadata must be an object"),
+    ],
+)
+def test_npz_rejects_invalid_metadata(
+    tmp_path: Path, metadata: np.ndarray, message: str
+) -> None:
+    path = tmp_path / "invalid-metadata.npz"
+    np.savez(path, metadata=metadata)
+    with pytest.raises(SerializationError, match=message):
+        SimulationResult.load_npz(path)
+
+
+def test_npz_schema_errors_include_source_path(tmp_path: Path) -> None:
+    path = tmp_path / "missing-arrays.npz"
+    np.savez(path, metadata=np.array(json.dumps({"schema_version": 3})))
+    with pytest.raises(SerializationError, match=str(path)):
+        SimulationResult.load_npz(path)
+
+
+def test_json_rejects_nonfinite_constants(tmp_path: Path) -> None:
+    path = tmp_path / "nonfinite.json"
+    path.write_text('{"schema_version": NaN}', encoding="utf-8")
+    with pytest.raises(SerializationError, match="nonfinite JSON number"):
+        SimulationResult.load_json(path)
+
+
 def test_schema_two_payload_has_explicit_unknown_provenance() -> None:
     payload = _experiment({"fixed": FixedPolicy(3)}).to_dict()
     payload["schema_version"] = 2
@@ -286,6 +447,27 @@ def test_result_rejects_unknown_schema() -> None:
     payload["schema_version"] = 999
     with pytest.raises(SerializationError, match="unsupported"):
         SimulationResult.from_dict(payload)
+
+
+@pytest.mark.parametrize("schema", [None, True, "3", 1])
+def test_result_rejects_missing_or_invalid_schema(schema) -> None:
+    payload = _experiment({"fixed": FixedPolicy(3)}).to_dict()
+    if schema is None:
+        payload.pop("schema_version")
+    else:
+        payload["schema_version"] = schema
+    with pytest.raises(SerializationError, match="schema"):
+        SimulationResult.from_dict(payload)
+
+
+def test_schema_two_uses_unknown_version_for_invalid_legacy_version() -> None:
+    payload = _experiment({"fixed": FixedPolicy(3)}).to_dict()
+    payload["schema_version"] = 2
+    payload["library_version"] = 12
+    payload.pop("provenance")
+    migrated = SimulationResult.from_dict(payload)
+    assert migrated.library_version == "unknown"
+    assert migrated.provenance.pymab_version == "unknown"
 
 
 @pytest.mark.parametrize(
@@ -313,6 +495,99 @@ def test_result_validation_rejects_inconsistent_data(mutation) -> None:
     payload = _experiment({"fixed": FixedPolicy(3)}).to_dict()
     mutation(payload)
     with pytest.raises(ValueError):
+        SimulationResult.from_dict(payload)
+
+
+@pytest.mark.parametrize(
+    ("field", "value", "message"),
+    [
+        ("library_version", 2, "library_version"),
+        ("policy_ids", ("fixed",), "policy_ids"),
+        ("replicate_seeds", (1,), "replicate_seeds"),
+        ("config", [], "config"),
+        ("metadata", [], "metadata"),
+        ("provenance", [], "provenance"),
+    ],
+)
+def test_result_schema_rejects_invalid_field_types(field, value, message) -> None:
+    payload = _experiment({"fixed": FixedPolicy(3)}).to_dict()
+    payload[field] = value
+    with pytest.raises(SerializationError, match=message):
+        SimulationResult.from_dict(payload)
+
+
+def test_result_schema_rejects_invalid_provenance_string() -> None:
+    payload = _experiment({"fixed": FixedPolicy(3)}).to_dict()
+    provenance = dict(payload["provenance"])
+    provenance["rng_scheme"] = ""
+    payload["provenance"] = provenance
+    with pytest.raises(SerializationError, match="provenance.rng_scheme"):
+        SimulationResult.from_dict(payload)
+
+
+@pytest.mark.parametrize(
+    ("field", "value", "message"),
+    [
+        ("rewards", [[[0.0]]], "equal shapes"),
+        ("recommendations", [[[0]]], "recommendations must match"),
+        ("arm_means", [[[0.1, 0.5, 0.9]]], "replicate and step"),
+        ("optimal_mask", [[[True]]], "optimal_mask must match"),
+        (
+            "contexts",
+            np.zeros((1, 1, 3, 1)).tolist(),
+            "contexts must have shape",
+        ),
+        ("policy_ids", ["fixed", "other"], "policy dimension"),
+    ],
+)
+def test_result_rejects_mismatched_dimensions(field, value, message) -> None:
+    payload = _experiment({"fixed": FixedPolicy(3)}).to_dict()
+    payload[field] = value
+    with pytest.raises(ValueError, match=message):
+        SimulationResult.from_dict(payload)
+
+
+@pytest.mark.parametrize(
+    ("field", "value", "message"),
+    [
+        ("policy_ids", [""], "non-empty"),
+        ("replicate_seeds", [True, 2, 3, 4], "only integers"),
+        ("replicate_seeds", [-1, 2, 3, 4], "non-negative"),
+    ],
+)
+def test_result_rejects_invalid_identifiers(field, value, message) -> None:
+    payload = _experiment({"fixed": FixedPolicy(3)}).to_dict()
+    payload[field] = value
+    with pytest.raises(ValueError, match=message):
+        SimulationResult.from_dict(payload)
+
+
+def test_result_rejects_duplicate_policy_ids_at_matching_dimension() -> None:
+    payload = _experiment({"first": FixedPolicy(3), "second": FixedPolicy(3)}).to_dict()
+    payload["policy_ids"] = ["duplicate", "duplicate"]
+    with pytest.raises(ValueError, match="unique"):
+        SimulationResult.from_dict(payload)
+
+
+def test_result_rejects_steps_without_an_optimal_arm() -> None:
+    payload = _experiment({"fixed": FixedPolicy(3)}).to_dict()
+    payload["optimal_mask"] = np.zeros((4, 25, 3), dtype=bool).tolist()
+    with pytest.raises(ValueError, match="at least one optimal arm"):
+        SimulationResult.from_dict(payload)
+
+
+@pytest.mark.parametrize(
+    ("field", "value", "message"),
+    [
+        ("actions", 99, "actions contain"),
+        ("recommendations", 99, "recommendations contain"),
+        ("expected_rewards", 99.0, "selected arm means"),
+    ],
+)
+def test_result_rejects_invalid_observation_values(field, value, message) -> None:
+    payload = _experiment({"fixed": FixedPolicy(3)}).to_dict()
+    payload[field][0][0][0] = value
+    with pytest.raises(ValueError, match=message):
         SimulationResult.from_dict(payload)
 
 

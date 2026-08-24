@@ -8,7 +8,7 @@ from typing import Any
 import numpy as np
 
 from pymab._resampling import bootstrap_curve
-from pymab.simulation import SimulationResult
+from pymab.results import SimulationResult
 from pymab.statistics import BootstrapConfig
 
 

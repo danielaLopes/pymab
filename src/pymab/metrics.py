@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import numpy as np
 
-from pymab.simulation import SimulationResult
+from pymab.results import SimulationResult
 
 
 def average_reward_by_step(result: SimulationResult) -> np.ndarray:

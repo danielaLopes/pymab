@@ -14,7 +14,15 @@
 - Benchmarking, offline estimation, and plotting now share
   `BootstrapConfig`; separate bootstrap keyword arguments and
   `BootstrapBandConfig` were removed.
+- Simulation execution, result validation, and persistence schemas now use
+  focused internal modules behind their public facades. NPZ writes build
+  metadata without converting result tensors to Python lists.
 - The repository branch-coverage gate increased from 90% to 92%.
+
+### Removed
+
+- `SimulationResult` is no longer re-exported from `pymab.simulation`. Import it
+  from `pymab.results` or the package root.
 
 ## [2.0.0] - 2026-08-09
 

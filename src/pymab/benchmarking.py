@@ -13,7 +13,8 @@ import numpy as np
 from pymab.environments import Environment
 from pymab.errors import ValidationError
 from pymab.policies.policy import ContextualPolicy, Policy
-from pymab.simulation import Experiment, ExperimentConfig, SimulationResult
+from pymab.results import SimulationResult
+from pymab.simulation import Experiment, ExperimentConfig
 from pymab.statistics import BootstrapConfig, IntervalEstimate, bootstrap_mean_interval
 
 SummaryValue: TypeAlias = str | int | float | None
