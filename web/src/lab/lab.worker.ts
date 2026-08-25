@@ -41,14 +41,14 @@ async function fetchVerified(relative: string): Promise<Uint8Array> {
 }
 
 async function boot() {
-  scope.postMessage({ type: "progress", message: "Opening a clean Python runtime…" });
+  scope.postMessage({ type: "progress", message: "Opening a clean Python runtime..." });
   const response = await fetch(new URL("runtime-manifest.json", baseUrl));
   if (!response.ok) throw new Error("Could not load the runtime manifest");
   manifest = (await response.json()) as RuntimeManifest;
   const moduleUrl = new URL("pyodide/pyodide.mjs", baseUrl).href;
   const module = (await import(/* @vite-ignore */ moduleUrl)) as PyodideModule;
   runtime = await module.loadPyodide({ indexURL: new URL("pyodide/", baseUrl).href });
-  scope.postMessage({ type: "progress", message: "Loading NumPy and PyMAB…" });
+  scope.postMessage({ type: "progress", message: "Loading NumPy and PyMAB..." });
   await fetchVerified(manifest.numpyFilename);
   await runtime.loadPackage("numpy");
   const wheel = manifest.pymabFilename;

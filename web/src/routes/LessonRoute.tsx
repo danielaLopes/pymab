@@ -192,19 +192,13 @@ export function LessonRoute() {
   }, [advance]);
 
   const changeMode = (mode: LessonMode) => {
-    if (
-      state.snapshot?.step &&
-      !window.confirm("Start a fresh expedition? Current progress will reset.")
-    )
+    if (state.snapshot?.step && !window.confirm("Start a new run? Current progress will reset."))
       return;
     void startMode(mode);
   };
 
   const changeParameter = (value: number) => {
-    if (
-      state.snapshot?.step &&
-      !window.confirm("Changing this parameter starts a fresh expedition.")
-    )
+    if (state.snapshot?.step && !window.confirm("Changing this parameter starts a new run."))
       return;
     setParameter(value);
     parameterRef.current = value;

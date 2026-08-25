@@ -5,13 +5,13 @@ export function HomeRoute() {
     <main className="home-page">
       <section className="hero">
         <div>
-          <p className="eyebrow">Interactive bandit lessons · Powered by real Python</p>
+          <p className="eyebrow">Interactive bandit lessons · Powered by PyMAB</p>
           <h1>
-            Learn the art of choosing <em>before</em> you know.
+            See how bandit algorithms choose with <em>incomplete information</em>.
           </h1>
           <p className="hero-copy">
-            Enter a sequence of independent crossroads. Watch PyMAB explore, learn, and balance
-            uncertainty—one transparent decision at a time.
+            Run a sequence of independent decisions. Watch PyMAB balance estimated reward against
+            uncertainty, one choice at a time.
           </p>
         </div>
         <div className="hero-orbit" aria-hidden="true">
@@ -23,10 +23,13 @@ export function HomeRoute() {
       <section aria-labelledby="choose-mission">
         <div className="section-heading">
           <div>
-            <p className="eyebrow">Your expedition</p>
+            <p className="eyebrow">Lessons</p>
             <h2 id="choose-mission">Choose a mission</h2>
           </div>
-          <p>Each journey begins guided, becomes a challenge, then opens into a full simulation.</p>
+          <p>
+            Start with a guided lesson, test yourself in challenge mode, then adjust the simulation
+            in free play.
+          </p>
         </div>
         <CampaignMap />
       </section>
@@ -38,18 +41,18 @@ export function HomeRoute() {
         <ol>
           <li>
             <span>01</span>
-            <strong>Read the chamber</strong>
-            <p>See what the policy knows before it acts.</p>
+            <strong>Review the inputs</strong>
+            <p>See what information the policy has before it acts.</p>
           </li>
           <li>
             <span>02</span>
             <strong>Watch the choice</strong>
-            <p>The checked-out PyMAB wheel selects a gate.</p>
+            <p>The PyMAB policy selects a gate.</p>
           </li>
           <li>
             <span>03</span>
-            <strong>Reveal and learn</strong>
-            <p>Observe reward, regret, and the exact update.</p>
+            <strong>Check the result</strong>
+            <p>Review the reward, regret, and exact policy update.</p>
           </li>
         </ol>
       </section>

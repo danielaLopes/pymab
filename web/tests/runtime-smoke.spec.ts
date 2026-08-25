@@ -3,7 +3,9 @@ import AxeBuilder from "@axe-core/playwright";
 
 test("home is accessible and mission links are present", async ({ page }) => {
   await page.goto("./#/");
-  await expect(page.getByRole("heading", { name: /Learn the art of choosing/ })).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: /See how bandit algorithms choose/ }),
+  ).toBeVisible();
   await expect(page.getByRole("link", { name: /Three Ancient Gates/ })).toBeVisible();
   const results = await new AxeBuilder({ page }).analyze();
   expect(results.violations).toEqual([]);
@@ -13,10 +15,10 @@ test("home is accessible and mission links are present", async ({ page }) => {
 
 test("real PyMAB wheel completes a seeded epsilon decision", async ({ page }) => {
   await page.goto("./#/lesson/epsilon-greedy");
-  const advance = page.getByRole("button", { name: "Advance one chamber" });
+  const advance = page.getByRole("button", { name: "Advance one round" });
   await expect(advance).toBeEnabled({ timeout: 30_000 });
   await advance.click();
-  await expect(page.getByText("Chamber 1: Relic found")).toBeVisible();
+  await expect(page.getByText("Round 1: Relic found")).toBeVisible();
   await expect(page.getByRole("button", { name: /Star Gate.*selected by PyMAB/ })).toBeVisible();
   await page.getByRole("button", { name: /Inspect PyMAB/ }).click();
   await expect(page.getByText("2.0.0", { exact: true })).toBeVisible();
@@ -26,10 +28,10 @@ test("real PyMAB wheel completes a seeded epsilon decision", async ({ page }) =>
 
 test("real LinUCB decision displays context and score decomposition", async ({ page }) => {
   await page.goto("./#/lesson/linucb");
-  const advance = page.getByRole("button", { name: "Advance one chamber" });
+  const advance = page.getByRole("button", { name: "Advance one round" });
   await expect(advance).toBeEnabled({ timeout: 30_000 });
   await advance.click();
-  await expect(page.getByRole("list", { name: "Current chamber signals" })).toBeVisible();
+  await expect(page.getByRole("list", { name: "Current round signals" })).toBeVisible();
   await page.getByRole("button", { name: /Inspect PyMAB/ }).click();
   await expect(page.getByRole("table", { name: "LinUCB score decomposition" })).toBeVisible();
   const results = await new AxeBuilder({ page }).analyze();
@@ -46,7 +48,7 @@ test("Python Lab runs PyMAB and reports output", async ({ page }) => {
   expect(results.violations).toEqual([]);
 });
 
-test("completed expedition reveals truth and the full regret path", async ({
+test("completed run reveals environment values and the full regret path", async ({
   page,
   browserName,
 }) => {
@@ -55,10 +57,10 @@ test("completed expedition reveals truth and the full regret path", async ({
   const autoRun = page.getByRole("button", { name: "Auto-run" });
   await expect(autoRun).toBeEnabled({ timeout: 30_000 });
   await autoRun.click();
-  await expect(page.getByRole("heading", { name: "The map has learned from you" })).toBeVisible({
+  await expect(page.getByRole("heading", { name: "Run complete" })).toBeVisible({
     timeout: 30_000,
   });
-  await page.getByText("Reveal the environment and regret path").click();
+  await page.getByText("Show environment values and regret by round").click();
   await expect(page.locator(".truth-grid div").filter({ hasText: "Star Gate" })).toContainText(
     "75% success",
   );
@@ -78,7 +80,7 @@ test("mode changes preserve progress when reset confirmation is cancelled", asyn
 }) => {
   test.skip(browserName !== "chromium", "Interaction scenario runs once in Chromium");
   await page.goto("./#/lesson/epsilon-greedy");
-  const advance = page.getByRole("button", { name: "Advance one chamber" });
+  const advance = page.getByRole("button", { name: "Advance one round" });
   await expect(advance).toBeEnabled({ timeout: 30_000 });
   await advance.click();
   await expect(page.getByText("1 / 12")).toBeVisible();
@@ -145,12 +147,12 @@ test("warm lesson switching stays responsive", async ({ page, browserName }) => 
     }).observe({ type: "longtask", buffered: true });
   });
   await page.goto("./#/lesson/epsilon-greedy");
-  await expect(page.getByRole("button", { name: "Advance one chamber" })).toBeEnabled({
+  await expect(page.getByRole("button", { name: "Advance one round" })).toBeEnabled({
     timeout: 30_000,
   });
   const started = Date.now();
   await page.goto("./#/lesson/linucb");
-  await expect(page.getByRole("button", { name: "Advance one chamber" })).toBeEnabled({
+  await expect(page.getByRole("button", { name: "Advance one round" })).toBeEnabled({
     timeout: 2_000,
   });
   expect(Date.now() - started).toBeLessThan(2_000);
@@ -164,7 +166,7 @@ test("warm lesson switching stays responsive", async ({ page, browserName }) => 
 test("narrow layout has no horizontal overflow", async ({ page }) => {
   await page.setViewportSize({ width: 320, height: 760 });
   await page.goto("./#/lesson/epsilon-greedy");
-  await expect(page.getByRole("button", { name: "Advance one chamber" })).toBeEnabled({
+  await expect(page.getByRole("button", { name: "Advance one round" })).toBeEnabled({
     timeout: 30_000,
   });
   const overflow = await page.evaluate(

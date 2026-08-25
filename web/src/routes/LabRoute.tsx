@@ -100,7 +100,7 @@ export function LabRoute() {
     const code = editor.current?.state.doc.toString() ?? "";
     setRunning(true);
     setResult(null);
-    setStatus("Starting a clean Python process…");
+    setStatus("Starting a clean Python process...");
     try {
       const next = await lab.current.run(code);
       setResult(next);

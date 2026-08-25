@@ -4,7 +4,7 @@ import { HashRouter } from "react-router-dom";
 import { App } from "./App";
 
 describe.each([
-  ["#/", "Learn the art of choosing before you know."],
+  ["#/", "See how bandit algorithms choose with incomplete information."],
   ["#/lesson/epsilon-greedy", "The Three Ancient Gates"],
   ["#/lesson/linucb", "The Labyrinth of Signals"],
   ["#/lab", "PyMAB Python Lab"],

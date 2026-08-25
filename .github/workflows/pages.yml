@@ -31,6 +31,7 @@ jobs:
         working-directory: web
       - run: npm run format:check && npm run lint && npm run typecheck && npm run test:coverage
         working-directory: web
+      - run: make text-check
       - run: npm run build
         working-directory: web
       - run: make docs-html

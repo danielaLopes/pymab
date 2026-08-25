@@ -71,7 +71,7 @@ export class LabClient {
           resolve();
         }
         if (event.data.type === "progress")
-          this.progressListener?.(event.data.message ?? "Loading Python…");
+          this.progressListener?.(event.data.message ?? "Loading Python...");
         if (event.data.type === "result" && event.data.result) this.finish(event.data.result);
         if (event.data.type === "error") {
           const error = new Error(event.data.message ?? "Python Lab failed to start");

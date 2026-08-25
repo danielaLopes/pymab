@@ -67,18 +67,20 @@ export function CampaignMap() {
         <span className="mission-number">01</span>
         <span className="tag">FOUNDATIONS</span>
         <h2>The Three Ancient Gates</h2>
-        <p>Discover why learning requires both curiosity and conviction.</p>
+        <p>
+          See how ε-greedy chooses between using its current estimates and testing a random gate.
+        </p>
         <span className="mission-cta">
-          Enter the chamber <span aria-hidden="true">→</span>
+          Start the lesson <span aria-hidden="true">→</span>
         </span>
       </Link>
       <Link className="mission-card mission-two" to="/lesson/linucb">
         <span className="mission-number">02</span>
         <span className="tag">CONTEXTUAL BANDITS</span>
         <h2>The Labyrinth of Signals</h2>
-        <p>Read a changing world and act with calibrated confidence.</p>
+        <p>See how changing context and uncertainty affect each choice.</p>
         <span className="mission-cta">
-          Follow the signals <span aria-hidden="true">→</span>
+          Start the lesson <span aria-hidden="true">→</span>
         </span>
       </Link>
     </div>
@@ -112,9 +114,13 @@ export function MissionHeader({
 
 export function CueStrip({ snapshot }: { snapshot: LessonSnapshot | null }) {
   if (!snapshot?.visibleCues.length)
-    return <p className="cue-empty">No signals in this mission—the gates stay the same.</p>;
+    return (
+      <p className="cue-empty">
+        This lesson has no context signals, so the available information is the same in every round.
+      </p>
+    );
   return (
-    <ul className="cue-strip" aria-label="Current chamber signals">
+    <ul className="cue-strip" aria-label="Current round signals">
       {snapshot.visibleCues.map((cue) => (
         <li key={cue.name}>
           <span aria-hidden="true">
@@ -171,7 +177,7 @@ export function Chamber({
   animationState?: string;
 }) {
   return (
-    <section className={`chamber ${animationState}`} aria-label="Infinite Crossroads chamber">
+    <section className={`chamber ${animationState}`} aria-label="Independent decision round">
       <div className="chamber-haze" aria-hidden="true" />
       <CueStrip snapshot={snapshot} />
       <div className="gates">
@@ -204,7 +210,7 @@ export function OutcomeReveal({
       <div>
         <strong>
           {snapshot?.step
-            ? `Chamber ${snapshot.step}: ${snapshot.reward ? "Relic found" : "No relic this time"}`
+            ? `Round ${snapshot.step}: ${snapshot.reward ? "Relic found" : "No relic this time"}`
             : "Awaiting the first decision"}
         </strong>
         <p>{explanation}</p>
@@ -219,7 +225,7 @@ export function ProgressTrail({ snapshot }: { snapshot: LessonSnapshot | null })
   return (
     <div className="progress-trail">
       <div>
-        <span>Expedition</span>
+        <span>Run</span>
         <strong>
           {step} / {horizon}
         </strong>
@@ -227,7 +233,7 @@ export function ProgressTrail({ snapshot }: { snapshot: LessonSnapshot | null })
       <div
         className="progress-track"
         role="progressbar"
-        aria-label="Expedition progress"
+        aria-label="Run progress"
         aria-valuemin={0}
         aria-valuemax={horizon}
         aria-valuenow={step}
@@ -273,11 +279,11 @@ export function RunControls({
         disabled={pending || completed || autoRunning}
         onClick={onStep}
       >
-        Advance one chamber
+        Advance one round
       </button>
       {autoRunning ? (
         <button type="button" onClick={onPause}>
-          Pause expedition
+          Pause run
         </button>
       ) : (
         <button type="button" disabled={pending || completed} onClick={onAutoRun}>
@@ -350,24 +356,24 @@ export function Debrief({
   const optimalArms = snapshot.hiddenTruth?.optimalArms;
   return (
     <section className={`debrief ${snapshot.passed ? "passed" : "complete"}`}>
-      <p className="eyebrow">Expedition complete</p>
+      <p className="eyebrow">Run complete</p>
       <h2>
         {snapshot.mode === "challenge"
           ? snapshot.passed
             ? "Challenge cleared"
-            : "A useful failure"
-          : "The map has learned from you"}
+            : "Challenge not cleared"
+          : "Run complete"}
       </h2>
       <p>
         You collected <strong>{snapshot.totalReward} relics</strong> with{" "}
         <strong>{snapshot.cumulativeExpectedRegret.toFixed(2)} expected regret</strong>.
       </p>
       <p className="caveat">
-        One seeded expedition illustrates behaviour; it does not prove that a parameter is
-        universally best.
+        A single seeded run shows one outcome. It does not establish that a parameter is best in
+        general.
       </p>
       <details className="debrief-details">
-        <summary>Reveal the environment and regret path</summary>
+        <summary>Show environment values and regret by round</summary>
         {snapshot.lessonId === "epsilon-greedy" &&
           Array.isArray(probabilities) &&
           probabilities.every((value) => typeof value === "number") && (
@@ -383,8 +389,8 @@ export function Debrief({
         {snapshot.lessonId === "linucb" && (
           <>
             <p>
-              The best gate can change with the signals. The optimal gate for each chamber is shown
-              beside the policy's actual choice below.
+              The best gate can change with the signals. The table below compares the optimal gate
+              with the policy's choice in each round.
             </p>
             <MatrixTable
               label="Hidden environment coefficients by gate"
@@ -397,7 +403,7 @@ export function Debrief({
             <caption>Decision and expected-regret path</caption>
             <thead>
               <tr>
-                <th>Chamber</th>
+                <th>Round</th>
                 <th>Chosen</th>
                 {snapshot.lessonId === "linucb" && <th>Optimal</th>}
                 <th>Reward</th>
@@ -414,7 +420,7 @@ export function Debrief({
                     <td>
                       {Array.isArray(optimalArms) && typeof optimalArms[event.step - 1] === "number"
                         ? gateDetails[Number(optimalArms[event.step - 1])]?.name
-                        : "—"}
+                        : "Not available"}
                     </td>
                   )}
                   <td>{event.reward ? "Relic" : "Empty"}</td>
@@ -441,8 +447,8 @@ export function LoadingStages({ progress }: { progress: RuntimeProgress | null }
     <div className="loading-panel" role="status">
       <span className="loader" aria-hidden="true" />
       <div>
-        <strong>Waking the Python engine</strong>
-        <p>{progress?.message ?? "Preparing the chamber…"}</p>
+        <strong>Starting the Python runtime</strong>
+        <p>{progress?.message ?? "Preparing the lesson..."}</p>
       </div>
     </div>
   );
@@ -451,9 +457,9 @@ export function LoadingStages({ progress }: { progress: RuntimeProgress | null }
 export function ErrorRecovery({ message, onRetry }: { message: string; onRetry: () => void }) {
   return (
     <div className="error-panel" role="alert">
-      <h2>The chamber lost its signal</h2>
+      <h2>The Python runtime could not start</h2>
       <p>{message}</p>
-      <button onClick={onRetry}>Retry from step zero</button>
+      <button onClick={onRetry}>Retry</button>
     </div>
   );
 }
@@ -579,7 +585,7 @@ export function InspectPanel({
       {open && (
         <div className="inspector-body">
           {!snapshot ? (
-            <p>Run a chamber to inspect the policy state.</p>
+            <p>Run one round to inspect the policy state.</p>
           ) : (
             <>
               <dl className="metadata">
@@ -636,7 +642,7 @@ export function InspectPanel({
               </details>
               {snapshot.hiddenTruth && (
                 <details>
-                  <summary>Revealed environment truth</summary>
+                  <summary>Environment values used by this run</summary>
                   <pre>{JSON.stringify(snapshot.hiddenTruth, null, 2)}</pre>
                 </details>
               )}
@@ -685,5 +691,7 @@ export function ModeTabs({
 }
 
 export function LessonBadge({ lessonId }: { lessonId: LessonId }) {
-  return <span className="lesson-badge">{lessonId === "epsilon-greedy" ? "ε" : "xᵀθ + α√…"}</span>;
+  return (
+    <span className="lesson-badge">{lessonId === "epsilon-greedy" ? "ε" : "xᵀθ + bonus"}</span>
+  );
 }

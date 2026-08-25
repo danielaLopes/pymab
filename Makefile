@@ -1,6 +1,6 @@
 .PHONY: audit ci docs docs-coverage docs-doctest docs-html docs-linkcheck \
 	docs-snippets format format-fix lint llm-security security sync test test-ci demo-test \
-	web-sync web-format web-lint web-test web-build web-e2e web-ci pages-build pages-serve
+	text-check web-sync web-format web-lint web-test web-build web-e2e web-ci pages-build pages-serve
 
 UV ?= uv
 PYTHON ?= python3.12
@@ -21,7 +21,7 @@ PYMAB_PREFER_VENV ?= 1
 endif
 export PYMAB_PREFER_VENV
 
-ci: format lint security test-ci
+ci: format lint text-check security test-ci
 
 sync:
 	@$(UV) sync --python $(PYTHON_VERSION) --dev --all-extras || { \
@@ -69,6 +69,9 @@ audit:
 llm-security:
 	$(RUN_TOOL) python scripts/llm_security_review.py
 
+text-check:
+	$(RUN_TOOL) python scripts/check_published_text.py
+
 docs: docs-html docs-doctest docs-coverage docs-snippets
 
 docs-html:
@@ -112,7 +115,7 @@ web-e2e:
 
 web-ci: web-format web-lint web-test web-build
 
-pages-build: web-build docs-html
+pages-build: text-check web-build docs-html
 	$(RUN_TOOL) python scripts/build_pages_site.py
 
 pages-serve: pages-build
