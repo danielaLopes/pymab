@@ -4,6 +4,7 @@ pub mod distribution;
 pub mod environment;
 pub mod error;
 pub mod experiment;
+pub mod memory;
 pub mod policy;
 pub mod result;
 pub mod rng;

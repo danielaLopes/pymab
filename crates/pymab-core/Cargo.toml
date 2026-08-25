@@ -24,6 +24,16 @@ rand_distr.workspace = true
 statrs.workspace = true
 
 [dev-dependencies]
+clap.workspace = true
+criterion.workspace = true
 proptest.workspace = true
 serde.workspace = true
 serde_json.workspace = true
+
+[[bench]]
+name = "policies"
+harness = false
+
+[[bench]]
+name = "experiments"
+harness = false
