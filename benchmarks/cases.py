@@ -51,10 +51,10 @@ class CaseDefaults:
 
 
 _CASE_DEFAULTS = {
-    "stationary": CaseDefaults(horizon=2_000, n_replicates=64, seed=101),
-    "bernoulli": CaseDefaults(horizon=2_000, n_replicates=64, seed=202),
-    "nonstationary": CaseDefaults(horizon=2_000, n_replicates=64, seed=303),
-    "contextual": CaseDefaults(horizon=1_000, n_replicates=32, seed=404),
+    "stationary": CaseDefaults(horizon=1_000, n_replicates=16, seed=101),
+    "bernoulli": CaseDefaults(horizon=500, n_replicates=8, seed=202),
+    "nonstationary": CaseDefaults(horizon=1_000, n_replicates=16, seed=303),
+    "contextual": CaseDefaults(horizon=250, n_replicates=8, seed=404),
 }
 
 

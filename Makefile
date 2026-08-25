@@ -1,4 +1,4 @@
-.PHONY: audit ci docs docs-coverage docs-doctest docs-html docs-linkcheck \
+.PHONY: audit benchmark benchmark-check benchmark-smoke ci docs docs-coverage docs-doctest docs-html docs-linkcheck \
 	docs-snippets format format-fix lint llm-security native rust-format \
 	rust-format-fix rust-lint rust-test security sync test test-ci
 
@@ -42,6 +42,17 @@ format-fix:
 
 native:
 	$(MATURIN) develop --manifest-path crates/pymab-python/Cargo.toml
+
+benchmark:
+	$(RUN_TOOL) python -m benchmarks.run_backends --all --output benchmarks/results/local.json
+	$(RUN_TOOL) python -m benchmarks.report benchmarks/results/local.json --check-thresholds
+
+benchmark-check:
+	$(RUN_TOOL) python -m benchmarks.report benchmarks/results/local.json --check-thresholds
+
+benchmark-smoke:
+	$(RUN_TOOL) python -m benchmarks.run_backends --all --horizon 12 --n-replicates 2 \
+		--repetitions 1 --output benchmarks/results/smoke.json
 
 rust-format:
 	$(CARGO) fmt --all --check

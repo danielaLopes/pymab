@@ -8,12 +8,21 @@ use pymab::types::ActionIndex;
 
 #[test]
 fn action_value_estimate_includes_owned_buffers_and_stays_stable() {
-    let mut state = ActionValueState::new(8, 0.0).unwrap();
+    const N_ARMS: usize = 8;
+    let mut state = ActionValueState::new(N_ARMS, 0.0).unwrap();
     let initial = state.estimated_state_bytes();
-    assert!(initial >= size_of::<ActionValueState>() + 8 * size_of::<u64>() + 8 * size_of::<f64>());
+    assert!(
+        initial
+            >= size_of::<ActionValueState>()
+                + N_ARMS * size_of::<u64>()
+                + N_ARMS * size_of::<f64>()
+    );
     for step in 0..128 {
         state
-            .update(ActionIndex::new(step % 8, 8).unwrap(), step as f64)
+            .update(
+                ActionIndex::new(step % N_ARMS, N_ARMS).unwrap(),
+                step as f64,
+            )
             .unwrap();
     }
     assert_eq!(state.estimated_state_bytes(), initial);

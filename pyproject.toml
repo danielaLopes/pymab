@@ -39,6 +39,7 @@ dev = [
     "maturin>=1.15,<2",
     "hypothesis>=6.100",
     "pip-audit>=2.9",
+    "psutil>=6.0",
     "pytest>=8.0",
     "pytest-cov>=5.0",
     "ruff>=0.5",

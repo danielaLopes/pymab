@@ -62,6 +62,9 @@ coverage.xml
 cover/
 reports/
 results/
+!benchmarks/results/
+benchmarks/results/*
+!benchmarks/results/local.json
 
 # Translations
 *.mo

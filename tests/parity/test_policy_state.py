@@ -678,9 +678,7 @@ def _context(value: object, *, n_arms: int, n_features: int) -> np.ndarray:
 
 
 def _contextual_state(policy: ContextualPolicy) -> dict[str, object]:
-    if isinstance(
-        policy, (LinearEpsilonGreedyPolicy, LogisticContextualBanditPolicy)
-    ):
+    if isinstance(policy, (LinearEpsilonGreedyPolicy, LogisticContextualBanditPolicy)):
         return {"theta": policy.theta.reshape(-1).tolist()}
     if isinstance(policy, (LinUCBPolicy, LinearThompsonSamplingPolicy)):
         return {
@@ -713,18 +711,14 @@ def test_contextual_policy_matches_shared_state_fixture(fixture_name: str) -> No
         policy.update(
             action=_integer(update, "action"),
             reward=_number(update, "reward"),
-            context=_context(
-                update["context"], n_arms=n_arms, n_features=n_features
-            ),
+            context=_context(update["context"], n_arms=n_arms, n_features=n_features),
         )
 
     final = cast(list[Mapping[str, object]], fixture["checkpoints"])[-1]
     assert final["after_update"] == len(updates)
     assert _contextual_state(policy) == final["state"]
     scores = cast(Mapping[str, object], final["scores"])
-    score_context = _context(
-        scores["context"], n_arms=n_arms, n_features=n_features
-    )
+    score_context = _context(scores["context"], n_arms=n_arms, n_features=n_features)
     if isinstance(policy, LinearEpsilonGreedyPolicy):
         actual_scores = policy.scores(score_context)
     elif isinstance(policy, LinUCBPolicy):

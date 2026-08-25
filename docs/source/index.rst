@@ -46,6 +46,7 @@ Quick start
    offline
    distributions
    migration_v2
+   performance
 
 Indices and tables
 ==================

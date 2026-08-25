@@ -1,0 +1,8 @@
+[time]
+minimum_case_speedup = 1.0
+minimum_classic_speedup = 2.0
+minimum_contextual_speedup = 2.0
+
+[memory]
+maximum_policy_state_ratio = 1.0
+maximum_aggregate_incremental_rss_ratio = 1.0
