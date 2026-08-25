@@ -47,6 +47,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         <nav aria-label="Primary navigation">
           <Link to="/">Missions</Link>
           <Link to="/lab">Python Lab</Link>
+          <a href="../docs/">Docs</a>
           <button className="motion-toggle" type="button" onClick={cycleMotion}>
             Motion: {motionOverride === null ? "system" : motionOverride ? "reduced" : "full"}
           </button>
@@ -462,7 +463,9 @@ export function UnsupportedBrowser({ reason }: { reason: string }) {
     <div className="error-panel">
       <h2>This browser cannot open the Arcade</h2>
       <p>{reason}</p>
-      <p>You can still read about each policy in the PyMAB documentation.</p>
+      <p>
+        You can still read about each policy in the <a href="../docs/">PyMAB documentation</a>.
+      </p>
     </div>
   );
 }

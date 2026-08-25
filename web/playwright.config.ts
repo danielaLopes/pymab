@@ -10,7 +10,7 @@ export default defineConfig({
   retries: process.env.CI ? 2 : 0,
   reporter: process.env.CI ? "github" : "list",
   use: {
-    baseURL: remoteBaseUrl ?? "http://127.0.0.1:4173/pymab/",
+    baseURL: remoteBaseUrl ?? "http://127.0.0.1:4173/pymab/demo/",
     trace: "on-first-retry",
   },
   projects: [
@@ -43,7 +43,7 @@ export default defineConfig({
     ? undefined
     : {
         command: "npm run preview -- --host 127.0.0.1",
-        url: "http://127.0.0.1:4173/pymab/",
+        url: "http://127.0.0.1:4173/pymab/demo/",
         reuseExistingServer: !process.env.CI,
       },
 });

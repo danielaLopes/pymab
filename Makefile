@@ -1,6 +1,6 @@
 .PHONY: audit ci docs docs-coverage docs-doctest docs-html docs-linkcheck \
 	docs-snippets format format-fix lint llm-security security sync test test-ci demo-test \
-	web-sync web-format web-lint web-test web-build web-e2e web-ci
+	web-sync web-format web-lint web-test web-build web-e2e web-ci pages-build pages-serve
 
 UV ?= uv
 PYTHON ?= python3.12
@@ -111,3 +111,9 @@ web-e2e:
 	cd web && npm run e2e
 
 web-ci: web-format web-lint web-test web-build
+
+pages-build: web-build docs-html
+	$(RUN_TOOL) python scripts/build_pages_site.py
+
+pages-serve: pages-build
+	$(RUN_TOOL) python scripts/serve_pages_site.py

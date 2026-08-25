@@ -6,6 +6,8 @@ PyMAB Arcade is an interactive companion to this documentation. It teaches
 expeditions, then exposes the exact policy inputs, diagnostics, and equivalent
 Python behind each decision.
 
+`Launch PyMAB Arcade <../demo/>`_
+
 The Arcade is a static website. It has no account, server-side application,
 analytics, or telemetry. Lesson completion and a small set of display
 preferences remain in versioned browser local storage. Python executes locally
@@ -49,6 +51,19 @@ The production build creates and verifies all Python assets before Vite runs:
 
    make web-build
    make web-e2e
+
+To assemble and preview the complete GitHub Pages site with its production URL
+structure, run:
+
+.. code-block:: console
+
+   make pages-build
+   make pages-serve
+
+The preview exposes the landing hub at ``/pymab/``, Arcade at
+``/pymab/demo/``, and this documentation at ``/pymab/docs/``. The Pages build
+also creates redirects from the former root documentation URLs into
+``/pymab/docs/``.
 
 Generated wheels, Pyodide files, caches, reports, and browser artifacts stay
 under ignored directories in ``web/`` and are never included in the Python

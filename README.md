@@ -4,6 +4,10 @@
 
 # PyMAB
 
+[Website](https://danielalopes.github.io/pymab/) ·
+[Interactive Arcade](https://danielalopes.github.io/pymab/demo/) ·
+[Documentation](https://danielalopes.github.io/pymab/docs/)
+
 PyMAB is a typed Python library for reliable, reproducible multi-armed bandit
 experiments. Version 2 separates environment, policy, decision, and observation
 randomness; treats replicates as the independent unit of analysis; and records
@@ -102,7 +106,7 @@ assert estimate.estimate == 0.75
 ```
 
 Adaptive replay requires the logging design explicitly. Use
-``logging_scheme="uniform"`` only for uniformly randomized logs; non-uniform
+`logging_scheme="uniform"` only for uniformly randomized logs; non-uniform
 logs also require propensities and use rejection sampling.
 
 ## Probability environments
@@ -130,9 +134,11 @@ make security
 make test
 make docs
 make docs-linkcheck  # external network check; run separately
+make pages-build
+make pages-serve     # http://127.0.0.1:8080/pymab/
 ```
 
-``make docs`` performs a clean warnings-as-errors HTML build, executes Sphinx
+`make docs` performs a clean warnings-as-errors HTML build, executes Sphinx
 doctests, enforces 100% API docstring coverage, and runs every Python snippet
 in this README.
 

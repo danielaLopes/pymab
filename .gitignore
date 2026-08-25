@@ -171,6 +171,7 @@ web/playwright-report/
 web/test-results/
 web/coverage/
 web/.playwright-cli/
+website/build/
 
 # PyCharm
 #  JetBrains specific template is maintained in a separate JetBrains.gitignore that can

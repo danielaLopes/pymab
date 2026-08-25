@@ -1,4 +1,4 @@
-name: Deploy PyMAB Arcade
+name: Deploy PyMAB website
 
 on:
   push:
@@ -26,16 +26,19 @@ jobs:
           node-version: "24"
           cache: npm
           cache-dependency-path: web/package-lock.json
+      - run: uv sync --frozen --python 3.12 --dev --extra docs
       - run: npm ci
         working-directory: web
       - run: npm run format:check && npm run lint && npm run typecheck && npm run test:coverage
         working-directory: web
       - run: npm run build
         working-directory: web
+      - run: make docs-html
+      - run: uv run python scripts/build_pages_site.py
       - uses: actions/configure-pages@v6
       - uses: actions/upload-pages-artifact@v4
         with:
-          path: web/dist
+          path: website/build
 
   deploy:
     needs: build
@@ -67,7 +70,15 @@ jobs:
         working-directory: web
       - run: npx playwright install --with-deps chromium
         working-directory: web
+      - name: Verify deployed routes
+        env:
+          SITE_URL: ${{ needs.deploy.outputs.page_url }}
+        run: |
+          curl --fail --location --retry 8 --retry-all-errors "${SITE_URL}"
+          curl --fail --location --retry 8 --retry-all-errors "${SITE_URL}demo/"
+          curl --fail --location --retry 8 --retry-all-errors "${SITE_URL}docs/"
+          curl --fail --location --retry 8 --retry-all-errors "${SITE_URL}policies.html"
       - run: npm run e2e -- tests/runtime-smoke.spec.ts --project=chromium
         working-directory: web
         env:
-          PLAYWRIGHT_BASE_URL: ${{ needs.deploy.outputs.page_url }}
+          PLAYWRIGHT_BASE_URL: ${{ needs.deploy.outputs.page_url }}demo/
