@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="assets/pymab-lucky-lever.png" alt="PyMAB Lucky Lever slot machine" width="280">
+</p>
+
 # PyMAB
 
 PyMAB is a typed Python library for reliable, reproducible multi-armed bandit

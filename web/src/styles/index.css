@@ -135,15 +135,10 @@ pre,
   color: var(--mint);
 }
 .brand-mark {
-  display: grid;
-  place-items: center;
-  width: 2rem;
-  height: 2rem;
-  border: 1px solid var(--mint);
-  color: var(--mint);
-  font-family: "Newsreader";
-  border-radius: 50% 50% 48% 52%;
-  transform: rotate(-8deg);
+  display: block;
+  width: 2.25rem;
+  height: 2.25rem;
+  object-fit: contain;
 }
 footer {
   width: min(88rem, calc(100% - 2rem));

@@ -19,3 +19,13 @@ describe.each([
     expect(screen.getByRole("heading", { level: 1, name: heading })).toBeInTheDocument();
   });
 });
+
+it("uses the Machine Face companion mark in the Arcade header", () => {
+  const { container } = render(
+    <HashRouter>
+      <App />
+    </HashRouter>,
+  );
+
+  expect(container.querySelector("img.brand-mark")).toHaveAttribute("src", "/pymab-mark.svg");
+});

@@ -16,6 +16,7 @@ const execute = promisify(execFile);
 const scriptDirectory = path.dirname(fileURLToPath(import.meta.url));
 const webRoot = path.resolve(scriptDirectory, "..");
 const repositoryRoot = path.resolve(webRoot, "..");
+const brandMarkSource = path.join(repositoryRoot, "assets", "pymab-mark.svg");
 const generatedRoot = path.join(webRoot, ".generated");
 const publicRoot = safeJoin(generatedRoot, "public");
 const cacheRoot = safeJoin(generatedRoot, "cache");
@@ -27,6 +28,7 @@ const clean = process.argv.includes("--clean");
 if (clean) await rm(generatedRoot, { recursive: true, force: true });
 await mkdir(cacheRoot, { recursive: true });
 await mkdir(publicRoot, { recursive: true });
+await cp(brandMarkSource, safeJoin(publicRoot, "pymab-mark.svg"));
 await rm(wheelBuildRoot, { recursive: true, force: true });
 await mkdir(wheelBuildRoot, { recursive: true });
 

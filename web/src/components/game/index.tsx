@@ -34,9 +34,12 @@ export function AppShell({ children }: { children: ReactNode }) {
     <div className="app-shell">
       <header className="site-header">
         <Link className="brand" to="/" aria-label="PyMAB Arcade home">
-          <span className="brand-mark" aria-hidden="true">
-            P
-          </span>
+          <img
+            className="brand-mark"
+            src={`${import.meta.env.BASE_URL}pymab-mark.svg`}
+            alt=""
+            aria-hidden="true"
+          />
           <span>
             PyMAB <b>Arcade</b>
           </span>
