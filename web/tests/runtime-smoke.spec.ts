@@ -62,7 +62,10 @@ test("completed run reveals environment values and the full regret path", async 
   });
   await page.getByText("Show environment values and regret by round").click();
   await expect(page.locator(".truth-grid div").filter({ hasText: "Star Gate" })).toContainText(
-    "75% success",
+    "75% reward chance",
+  );
+  await expect(page.locator(".truth-grid div").filter({ hasText: "Moon Gate" })).toContainText(
+    "Not selected in this run",
   );
   await expect(
     page.getByRole("table", { name: "Decision and expected-regret path" }),

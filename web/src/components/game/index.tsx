@@ -354,6 +354,13 @@ export function Debrief({
   }));
   const probabilities = snapshot.hiddenTruth?.probabilities;
   const optimalArms = snapshot.hiddenTruth?.optimalArms;
+  const gateResults = gateDetails.map((_, gateIndex) => {
+    const selections = snapshot.history.filter((event) => event.selectedArm === gateIndex);
+    return {
+      selections: selections.length,
+      rewards: selections.reduce((total, event) => total + event.reward, 0),
+    };
+  });
   return (
     <section className={`debrief ${snapshot.passed ? "passed" : "complete"}`}>
       <p className="eyebrow">Run complete</p>
@@ -368,22 +375,26 @@ export function Debrief({
         You collected <strong>{snapshot.totalReward} relics</strong> with{" "}
         <strong>{snapshot.cumulativeExpectedRegret.toFixed(2)} expected regret</strong>.
       </p>
-      <p className="caveat">
-        A single seeded run shows one outcome. It does not establish that a parameter is best in
-        general.
-      </p>
       <details className="debrief-details">
         <summary>Show environment values and regret by round</summary>
         {snapshot.lessonId === "epsilon-greedy" &&
           Array.isArray(probabilities) &&
           probabilities.every((value) => typeof value === "number") && (
-            <dl className="truth-grid" aria-label="Hidden gate success probabilities">
-              {probabilities.map((value, index) => (
-                <div key={gateDetails[index]?.name}>
-                  <dt>{gateDetails[index]?.name}</dt>
-                  <dd>{Math.round(value * 100)}% success</dd>
-                </div>
-              ))}
+            <dl className="truth-grid" aria-label="Configured gate reward probabilities">
+              {probabilities.map((value, index) => {
+                const result = gateResults[index]!;
+                return (
+                  <div key={gateDetails[index]?.name}>
+                    <dt>{gateDetails[index]?.name}</dt>
+                    <dd>{Math.round(value * 100)}% reward chance</dd>
+                    <dd>
+                      {result.selections
+                        ? `${result.rewards} rewards from ${result.selections} selections`
+                        : "Not selected in this run"}
+                    </dd>
+                  </div>
+                );
+              })}
             </dl>
           )}
         {snapshot.lessonId === "linucb" && (
