@@ -50,6 +50,8 @@ dev = [
 Homepage = "https://github.com/danielaLopes/pymab"
 Repository = "https://github.com/danielaLopes/pymab"
 Issues = "https://github.com/danielaLopes/pymab/issues"
+Changelog = "https://github.com/danielaLopes/pymab/blob/main/CHANGELOG.md"
+Rust = "https://crates.io/crates/pymab"
 
 [tool.maturin]
 bindings = "pyo3"

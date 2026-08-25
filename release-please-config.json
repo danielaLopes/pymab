@@ -1,12 +1,22 @@
 {
   "$schema": "https://raw.githubusercontent.com/googleapis/release-please/main/schemas/config.json",
   "bootstrap-sha": "3e21de4662c14f5cfb37beb136c22b77a98d1c14",
-  "release-type": "python",
+  "release-type": "rust",
   "include-component-in-tag": false,
   "packages": {
     ".": {
       "package-name": "pymab",
       "extra-files": [
+        {
+          "type": "toml",
+          "path": "Cargo.lock",
+          "jsonpath": "$['package'][?(@.name.value=='pymab')].version"
+        },
+        {
+          "type": "toml",
+          "path": "Cargo.lock",
+          "jsonpath": "$['package'][?(@.name.value=='pymab-python')].version"
+        },
         {
           "type": "toml",
           "path": "uv.lock",

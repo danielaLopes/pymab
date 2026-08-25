@@ -46,6 +46,7 @@ Quick start
    offline
    distributions
    migration_v2
+   migration_rust
    performance
 
 Indices and tables

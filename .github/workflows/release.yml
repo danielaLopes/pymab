@@ -1,4 +1,4 @@
-name: Publish to PyPI
+name: Publish matching Rust and Python releases
 
 on:
   release:
@@ -12,129 +12,331 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  build:
-    name: Build release distributions
+  metadata:
+    name: Validate release metadata
     runs-on: ubuntu-latest
     outputs:
-      package-version: ${{ steps.version.outputs.package-version }}
+      version: ${{ steps.version.outputs.version }}
     steps:
-      - name: Check out the released revision
-        uses: actions/checkout@v6
+      - uses: actions/checkout@v6
         with:
           persist-credentials: false
           ref: ${{ github.event.release.tag_name }}
-
-      - name: Set up Python
-        uses: actions/setup-python@v6
+      - uses: actions/setup-python@v6
         with:
           python-version: "3.12"
-
-      - name: Install build tools
-        run: python -m pip install --disable-pip-version-check build twine
-
-      - name: Verify tag matches package version
+      - name: Require tag and workspace version agreement
         id: version
         shell: bash
         run: |
-          package_version="$(
-            python -c \
-              "import tomllib; print(tomllib.load(open('Cargo.toml', 'rb'))['workspace']['package']['version'])"
-          )"
-          tag_version="${GITHUB_REF_NAME#v}"
-          if [[ "${tag_version}" != "${package_version}" ]]; then
-            echo "Release tag ${GITHUB_REF_NAME} does not match package version ${package_version}." >&2
+          version="$(python -c "import tomllib; print(tomllib.load(open('Cargo.toml', 'rb'))['workspace']['package']['version'])")"
+          if [[ "${GITHUB_REF_NAME#v}" != "${version}" ]]; then
+            echo "Tag ${GITHUB_REF_NAME} does not match workspace version ${version}" >&2
             exit 1
           fi
-          echo "package-version=${package_version}" >> "${GITHUB_OUTPUT}"
+          echo "version=${version}" >> "${GITHUB_OUTPUT}"
 
-      - name: Build wheel and source distribution
-        run: python -m build
-
-      - name: Validate distribution metadata
-        run: python -m twine check --strict dist/*
-
-      - name: Verify the expected distributions were built
-        run: |
-          python - <<'PY'
-          from pathlib import Path
-
-          distributions = sorted(Path("dist").iterdir())
-          wheels = [path for path in distributions if path.suffix == ".whl"]
-          sdists = [path for path in distributions if path.name.endswith(".tar.gz")]
-          if len(wheels) != 1 or len(sdists) != 1 or len(distributions) != 2:
-              names = ", ".join(path.name for path in distributions)
-              raise SystemExit(f"Expected one wheel and one sdist; found: {names}")
-          PY
-
-      - name: Store release distributions
-        uses: actions/upload-artifact@v5
+  crate:
+    name: Build public Rust crate
+    needs: metadata
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
         with:
-          name: python-package-distributions
-          path: dist/
+          persist-credentials: false
+          ref: ${{ github.event.release.tag_name }}
+      - name: Install Rust MSRV
+        run: |
+          rustup toolchain install 1.83.0 --profile minimal
+          rustup default 1.83.0
+      - name: Package and verify crate
+        run: cargo package -p pymab --locked
+      - uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
+        with:
+          name: rust-crate
+          path: target/package/*.crate
           if-no-files-found: error
           retention-days: 7
 
-  test-package:
-    name: Test wheel (Python ${{ matrix.python-version }})
-    needs: build
+  sdist:
+    name: Build Python source distribution
+    needs: metadata
     runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+          ref: ${{ github.event.release.tag_name }}
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+      - name: Install uv
+        uses: astral-sh/setup-uv@11f9893b081a58869d3b5fccaea48c9e9e46f990 # v8.3.2
+      - name: Install Rust MSRV
+        run: |
+          rustup toolchain install 1.83.0 --profile minimal
+          rustup default 1.83.0
+      - name: Build exactly one sdist
+        run: |
+          uv sync --frozen --python 3.12 --dev
+          uv run maturin build --release --sdist --locked --out dist
+      - uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
+        with:
+          name: python-sdist
+          path: dist/*.tar.gz
+          if-no-files-found: error
+          retention-days: 7
+
+  wheels:
+    name: Wheel ${{ matrix.platform.label }} / Python ${{ matrix.python-version }}
+    needs: metadata
+    runs-on: ${{ matrix.platform.runner }}
     strategy:
       fail-fast: false
       matrix:
         python-version: ["3.11", "3.12", "3.13", "3.14"]
+        platform:
+          - label: linux-x86_64
+            runner: ubuntu-24.04
+            target: x86_64-unknown-linux-gnu
+          - label: linux-aarch64
+            runner: ubuntu-24.04-arm
+            target: aarch64-unknown-linux-gnu
+          - label: macos-x86_64
+            runner: macos-15-intel
+            target: x86_64-apple-darwin
+          - label: macos-arm64
+            runner: macos-15
+            target: aarch64-apple-darwin
+          - label: windows-x86_64
+            runner: windows-2025
+            target: x86_64-pc-windows-msvc
     steps:
-      - name: Set up Python
-        uses: actions/setup-python@v6
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+          ref: ${{ github.event.release.tag_name }}
+      - uses: actions/setup-python@v6
         with:
           python-version: ${{ matrix.python-version }}
-
-      - name: Download release distributions
-        uses: actions/download-artifact@v6
+      - name: Build one release wheel
+        uses: PyO3/maturin-action@423a6347767a8b16e65c2a7a7042e4a921528da8 # v1
         with:
-          name: python-package-distributions
-          path: dist/
+          command: build
+          maturin-version: v1.15.0
+          rust-toolchain: 1.83.0
+          target: ${{ matrix.platform.target }}
+          manylinux: ${{ startsWith(matrix.platform.label, 'linux-') && '2_28' || 'off' }}
+          args: >-
+            --release --locked --compatibility pypi --out dist
+            -i python${{ matrix.python-version }}
+      - name: Test native wheel on its target runner
+        run: python scripts/test_native_wheel.py dist
+      - uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
+        with:
+          name: wheel-${{ matrix.platform.label }}-py${{ matrix.python-version }}
+          path: dist/*.whl
+          if-no-files-found: error
+          retention-days: 7
 
-      - name: Install the wheel
-        run: >-
-          python -m pip install --disable-pip-version-check
-          --only-binary=:all: dist/*.whl
-
-      - name: Import package and verify installed version
-        env:
-          EXPECTED_VERSION: ${{ needs.build.outputs.package-version }}
+  verify:
+    name: Verify complete release set
+    needs: [metadata, crate, sdist, wheels]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+          ref: ${{ github.event.release.tag_name }}
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+      - name: Install Rust MSRV
         run: |
-          cd "${RUNNER_TEMP}"
-          python - <<'PY'
-          import os
-          from importlib.metadata import version
+          rustup toolchain install 1.83.0 --profile minimal
+          rustup default 1.83.0
+      - uses: actions/download-artifact@018cc2cf5baa6db3ef3c5f8a56943fffe632ef53 # v6
+        with:
+          pattern: wheel-*
+          path: dist
+          merge-multiple: true
+      - uses: actions/download-artifact@018cc2cf5baa6db3ef3c5f8a56943fffe632ef53 # v6
+        with:
+          name: python-sdist
+          path: dist
+      - uses: actions/download-artifact@018cc2cf5baa6db3ef3c5f8a56943fffe632ef53 # v6
+        with:
+          name: rust-crate
+          path: target/package
+      - name: Inspect every archive and matrix coordinate
+        run: python scripts/verify_release_artifacts.py --dist dist --cargo-package target/package
+      - name: Build the extracted packaged crate
+        env:
+          VERSION: ${{ needs.metadata.outputs.version }}
+        run: |
+          mkdir -p target/package/extracted
+          tar -xzf "target/package/pymab-${VERSION}.crate" -C target/package/extracted
+          cargo test --manifest-path "target/package/extracted/pymab-${VERSION}/Cargo.toml"
+      - name: Validate Python distribution metadata
+        run: |
+          python -m pip install --disable-pip-version-check twine
+          python -m twine check --strict dist/*
+      - uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
+        with:
+          name: verified-python-distributions
+          path: dist/*
+          if-no-files-found: error
+          retention-days: 7
+      - uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
+        with:
+          name: verified-rust-crate
+          path: target/package/*.crate
+          if-no-files-found: error
+          retention-days: 7
 
-          import pymab
+  registry-state:
+    name: Check exact registry versions
+    needs: [metadata, verify]
+    runs-on: ubuntu-latest
+    outputs:
+      crate-exists: ${{ steps.crate.outputs.exists }}
+      pypi-exists: ${{ steps.pypi.outputs.exists }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+          ref: ${{ github.event.release.tag_name }}
+      - name: Query crates.io
+        id: crate
+        run: >-
+          python scripts/check_registry_version.py --registry crates
+          --package pymab --version "${{ needs.metadata.outputs.version }}"
+      - name: Query PyPI
+        id: pypi
+        run: >-
+          python scripts/check_registry_version.py --registry pypi
+          --package pymab --version "${{ needs.metadata.outputs.version }}"
 
-          expected = os.environ["EXPECTED_VERSION"]
-          installed = version("pymab")
-          if installed != expected or pymab.__version__ != expected:
-              raise SystemExit(
-                  f"Expected pymab {expected}; metadata={installed}, "
-                  f"module={pymab.__version__}"
-              )
-          print(f"Installed and imported pymab {installed}")
-          PY
+  publish-crate:
+    name: Publish crate before Python artifacts
+    needs: [metadata, verify, registry-state]
+    runs-on: ubuntu-latest
+    environment:
+      name: crates-io
+      url: https://crates.io/crates/pymab
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+          ref: ${{ github.event.release.tag_name }}
+      - name: Install Rust MSRV
+        if: needs.registry-state.outputs.crate-exists != 'true'
+        run: |
+          rustup toolchain install 1.83.0 --profile minimal
+          rustup default 1.83.0
+      - uses: actions/download-artifact@018cc2cf5baa6db3ef3c5f8a56943fffe632ef53 # v6
+        if: needs.registry-state.outputs.crate-exists != 'true'
+        with:
+          name: verified-rust-crate
+          path: verified
+      - name: Reproduce the verified crate bytes
+        if: needs.registry-state.outputs.crate-exists != 'true'
+        env:
+          VERSION: ${{ needs.metadata.outputs.version }}
+        run: |
+          cargo package -p pymab --locked
+          cmp "verified/pymab-${VERSION}.crate" "target/package/pymab-${VERSION}.crate"
+      - name: Obtain crates.io trusted-publishing token
+        id: crates-auth
+        if: >-
+          needs.registry-state.outputs.crate-exists != 'true' &&
+          vars.CRATES_IO_TRUSTED_PUBLISHING == 'true'
+        uses: rust-lang/crates-io-auth-action@c6f97d42243bad5fab37ca0427f495c86d5b1a18 # v1.0.5
+      - name: Publish crate
+        if: needs.registry-state.outputs.crate-exists != 'true'
+        env:
+          BOOTSTRAP_TOKEN: ${{ secrets.CRATES_IO_TOKEN }}
+          TRUSTED_TOKEN: ${{ steps.crates-auth.outputs.token }}
+        run: |
+          token="${TRUSTED_TOKEN:-${BOOTSTRAP_TOKEN:-}}"
+          if [[ -z "${token}" ]]; then
+            echo "Configure trusted publishing or the one-time scoped bootstrap token" >&2
+            exit 1
+          fi
+          cargo publish -p pymab --locked --token "${token}"
+      - name: Confirm crates.io visibility
+        if: needs.registry-state.outputs.crate-exists != 'true'
+        run: >-
+          python scripts/check_registry_version.py --registry crates
+          --package pymab --version "${{ needs.metadata.outputs.version }}"
+          --wait-seconds 120
+      - name: Report idempotent skip
+        if: needs.registry-state.outputs.crate-exists == 'true'
+        run: echo "Exact crates.io version already exists; publication is safely skipped."
 
-  publish:
-    name: Publish distributions to PyPI
-    needs: test-package
+  publish-pypi:
+    name: Publish verified Python artifacts
+    needs: [metadata, verify, registry-state, publish-crate]
     runs-on: ubuntu-latest
     environment:
       name: pypi
       url: https://pypi.org/p/pymab
     permissions:
       id-token: write
+      contents: read
     steps:
-      - name: Download release distributions
-        uses: actions/download-artifact@v6
+      - uses: actions/download-artifact@018cc2cf5baa6db3ef3c5f8a56943fffe632ef53 # v6
+        if: needs.registry-state.outputs.pypi-exists != 'true'
         with:
-          name: python-package-distributions
-          path: dist/
+          name: verified-python-distributions
+          path: dist
+      - name: Publish to PyPI with trusted publishing
+        if: needs.registry-state.outputs.pypi-exists != 'true'
+        uses: pypa/gh-action-pypi-publish@dc37677b2e1c63e2034f94d8a5b11f265b73ba33 # release/v1
+      - name: Report idempotent skip
+        if: needs.registry-state.outputs.pypi-exists == 'true'
+        run: echo "Exact PyPI version already exists; publication is safely skipped."
 
-      - name: Publish distributions to PyPI
-        uses: pypa/gh-action-pypi-publish@release/v1
+  attach:
+    name: Attach verified artifacts and evidence
+    needs: [metadata, publish-crate, publish-pypi]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+          ref: ${{ github.event.release.tag_name }}
+      - uses: actions/download-artifact@018cc2cf5baa6db3ef3c5f8a56943fffe632ef53 # v6
+        with:
+          name: verified-python-distributions
+          path: release-assets
+      - uses: actions/download-artifact@018cc2cf5baa6db3ef3c5f8a56943fffe632ef53 # v6
+        with:
+          name: verified-rust-crate
+          path: release-assets
+      - name: Add benchmark evidence
+        env:
+          VERSION: ${{ needs.metadata.outputs.version }}
+        run: |
+          cp docs/source/performance.rst "release-assets/pymab-${VERSION}-performance.rst"
+          cp benchmarks/results/local.json "release-assets/pymab-${VERSION}-performance.json"
+      - name: Upload only missing release assets
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.event.release.tag_name }}
+        shell: bash
+        run: |
+          existing="$(gh release view "${TAG}" --json assets --jq '.assets[].name')"
+          for asset in release-assets/*; do
+            name="$(basename "${asset}")"
+            if grep -Fxq "${name}" <<<"${existing}"; then
+              echo "Skipping existing release asset ${name}"
+            else
+              gh release upload "${TAG}" "${asset}"
+            fi
+          done
