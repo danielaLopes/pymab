@@ -20,3 +20,11 @@ The maintainers will acknowledge a complete report, assess severity, coordinate
 a fix and release where needed, and credit the reporter unless anonymity is
 requested. Ordinary correctness bugs without a security impact belong in the
 public issue tracker.
+
+The Rust core validates JSON configuration, action indices, context shapes,
+rewards, and allocation sizes before use. Pull requests run Clippy with warnings
+denied, property tests requiring malformed public inputs to return typed errors
+without panicking, Python dependency auditing, and a pinned RustSec audit.
+
+Unsafe Rust is not currently needed. Any future ``unsafe`` block must document
+its invariant, include a focused test, and receive explicit security review.

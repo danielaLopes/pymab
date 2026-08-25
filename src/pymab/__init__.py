@@ -14,6 +14,8 @@ from pymab.environments import (
     AbruptShift,
     BanditEnvironment,
     ContextProvider,
+    FixedContextProvider,
+    GaussianContextProvider,
     GradualDrift,
     LinearContextualEnvironment,
     LogisticContextualEnvironment,
@@ -41,7 +43,7 @@ from pymab.offline import (
 )
 from pymab.provenance import RunProvenance
 from pymab.results import SimulationResult
-from pymab.simulation import Experiment, ExperimentConfig
+from pymab.simulation import BackendCompatibilityReport, Experiment, ExperimentConfig
 
 __all__ = [
     "__version__",
@@ -51,13 +53,16 @@ __all__ = [
     "BenchmarkResult",
     "BernoulliReward",
     "BetaArmPrior",
+    "BackendCompatibilityReport",
     "CompatibilityError",
     "ContextProvider",
     "CrossFittedRewardModel",
     "Experiment",
     "ExperimentConfig",
+    "FixedContextProvider",
     "GaussianArmPrior",
     "GaussianReward",
+    "GaussianContextProvider",
     "GradualDrift",
     "LinearContextualEnvironment",
     "LoggedBanditDataset",

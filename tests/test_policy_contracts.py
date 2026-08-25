@@ -110,8 +110,12 @@ def test_clone_resets_state_without_sharing_arrays() -> None:
     policy.update(action=0, reward=1)
     clone = policy.clone()
     assert clone.step == 0
-    clone.estimates[0] = 99
+    assert not clone.estimates.flags.writeable
+    with pytest.raises(ValueError, match="read-only"):
+        clone.estimates[0] = 99
+    clone.update(action=1, reward=0.5)
     assert policy.estimates[0] == 1
+    assert policy.counts[1] == 0
 
 
 def test_windowed_policies_expire_observations_by_global_time() -> None:
@@ -233,9 +237,10 @@ def test_pure_exploration_single_arm_and_phase_paths() -> None:
     assert median.best_arm == 0
     assert median.recommend_action() == 0
     multi = MedianEliminationPolicy(n_arms=2, epsilon=1, delta=0.5)
-    multi.phase_epsilon = 10
-    multi.update(action=0, reward=1)
-    multi.update(action=1, reward=0)
+    quota = multi._phase_quota()
+    for _ in range(quota):
+        multi.update(action=0, reward=1)
+        multi.update(action=1, reward=0)
     assert np.sum(multi.active) == 1
 
 

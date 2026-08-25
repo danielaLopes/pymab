@@ -49,7 +49,7 @@ jobs:
           permission-issues: write
           permission-pull-requests: write
 
-      - name: Run Release Please
+      - name: Update Cargo workspace release and changelog
         uses: googleapis/release-please-action@45996ed1f6d02564a971a2fa1b5860e934307cf7 # v5.0.0
         with:
           token: ${{ steps.app_token.outputs.token }}

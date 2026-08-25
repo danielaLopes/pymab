@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "policy_kind": "cusum_ucb",
+  "config": {"n_arms": 2, "initial_value": 0.0, "c": 2.0, "reward_scale": 1.0, "threshold": 10.0, "drift": 0.05, "min_observations": 2},
+  "updates": [{"action": 0, "reward": 0.0}, {"action": 0, "reward": 0.0}, {"action": 0, "reward": 2.0}, {"action": 1, "reward": -0.5}],
+  "checkpoints": [{
+    "after_update": 4,
+    "state": {"step": 4, "total_reward": 1.5, "counts": [3, 1], "estimates": [0.6666666666666666, -0.5], "detector_counts": [3, 1], "detector_means": [0.6666666666666666, -0.5], "positive_cusum": [1.95, 0.0], "negative_cusum": [0.0, 0.0], "ph_cumulative": [0.0, 0.0], "ph_minimum": [0.0, 0.0], "change_counts": [0, 0]},
+    "scores": {}
+  }],
+  "recommendation": 0,
+  "reset_state": {"step": 0, "total_reward": 0.0, "counts": [0, 0], "estimates": [0.0, 0.0], "detector_counts": [0, 0], "detector_means": [0.0, 0.0], "positive_cusum": [0.0, 0.0], "negative_cusum": [0.0, 0.0], "ph_cumulative": [0.0, 0.0], "ph_minimum": [0.0, 0.0], "change_counts": [0, 0]},
+  "expected_error": null
+}

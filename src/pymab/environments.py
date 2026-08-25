@@ -65,6 +65,62 @@ class CallableContextProvider(ContextProvider):
         return self
 
 
+@dataclass(eq=False)
+class FixedContextProvider(ContextProvider):
+    """Deterministic native-compatible source of contextual features."""
+
+    value: FloatArray
+
+    def __post_init__(self) -> None:
+        value = np.asarray(self.value, dtype=float)
+        if value.ndim not in {1, 2} or value.size == 0:
+            raise ValueError("value must be a non-empty feature vector or matrix")
+        if not np.all(np.isfinite(value)):
+            raise ValueError("value must contain only finite values")
+        self.value = value.copy()
+
+    def sample(self, rng: np.random.Generator) -> FloatArray:
+        del rng
+        return self.value.copy()
+
+    def clone(self) -> FixedContextProvider:
+        return type(self)(self.value.copy())
+
+
+@dataclass(frozen=True)
+class GaussianContextProvider(ContextProvider):
+    """Native-compatible source of independent Gaussian context matrices."""
+
+    n_arms: int
+    n_features: int
+    mean: float = 0.0
+    std: float = 1.0
+
+    def __post_init__(self) -> None:
+        for name, value in (("n_arms", self.n_arms), ("n_features", self.n_features)):
+            if not isinstance(value, int) or isinstance(value, bool):
+                raise TypeError(f"{name} must be an integer")
+            if value <= 0:
+                raise ValueError(f"{name} must be positive")
+        if not np.isfinite(self.mean):
+            raise ValueError("mean must be finite")
+        if not np.isfinite(self.std) or self.std < 0:
+            raise ValueError("std must be finite and non-negative")
+
+    def sample(self, rng: np.random.Generator) -> FloatArray:
+        return np.asarray(
+            rng.normal(
+                self.mean,
+                self.std,
+                size=(self.n_arms, self.n_features),
+            ),
+            dtype=float,
+        )
+
+    def clone(self) -> GaussianContextProvider:
+        return self
+
+
 @runtime_checkable
 class ClassicEnvironment(Protocol):
     """Structural contract for a classic non-contextual environment."""
@@ -387,6 +443,8 @@ __all__ = [
     "ContextualEnvironment",
     "Environment",
     "EnvironmentDynamics",
+    "FixedContextProvider",
+    "GaussianContextProvider",
     "GradualDrift",
     "LinearContextualEnvironment",
     "LogisticContextualEnvironment",

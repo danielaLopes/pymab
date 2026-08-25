@@ -68,9 +68,10 @@ def _result_from_payload(payload: Mapping[str, object]) -> SimulationResult:
         pymab_version=_required_string(provenance_payload, "pymab_version"),
         python_version=_required_string(provenance_payload, "python_version"),
         numpy_version=_required_string(provenance_payload, "numpy_version"),
-        rng_scheme=_required_string(provenance_payload, "rng_scheme"),
+        rng_scheme=_legacy_compatible_string(provenance_payload, "rng_scheme"),
         environment=cast(Mapping[str, JSONValue], provenance_payload["environment"]),
         policies=cast(Mapping[str, JSONValue], provenance_payload["policies"]),
+        backend=_backend_string(provenance_payload),
     )
 
     from pymab.results import SimulationResult
@@ -152,6 +153,23 @@ def _required_string(payload: Mapping[str, object], field: str) -> str:
     if not isinstance(value, str) or not value:
         raise SerializationError(f"provenance.{field} must be a non-empty string")
     return value
+
+
+def _legacy_compatible_string(payload: Mapping[str, object], field: str) -> str:
+    """Read a provenance field added after result schema three was introduced."""
+
+    if field not in payload:
+        return "unknown"
+    return _required_string(payload, field)
+
+
+def _backend_string(payload: Mapping[str, object]) -> str:
+    backend = _legacy_compatible_string(payload, "backend")
+    if backend not in {"python", "rust", "unknown"}:
+        raise SerializationError(
+            "provenance.backend must be 'python', 'rust', or 'unknown'"
+        )
+    return backend
 
 
 __all__: list[str] = []

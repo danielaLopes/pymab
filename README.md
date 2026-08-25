@@ -14,6 +14,17 @@ pip install pymab
 Optional features are available through `pymab[plot]`, `pymab[analysis]`, and
 `pymab[bayes]`.
 
+Binary wheels execute all 27 built-in policies and built-in experiment loops in
+Rust while preserving the Python API. The same core is available to Rust users:
+
+```bash
+cargo add pymab
+```
+
+Use `ExperimentConfig(backend="rust", ...)` to require native execution,
+`backend="python"` for the private behavioral reference, or the default
+`backend="auto"` to use Rust whenever every component is native-compatible.
+
 ## Basic experiment
 
 ```python
@@ -126,10 +137,12 @@ make security
 make test
 make docs
 make docs-linkcheck  # external network check; run separately
+make benchmark       # release-mode same-machine backend comparison
 ```
 
 ``make docs`` performs a clean warnings-as-errors HTML build, executes Sphinx
 doctests, enforces 100% API docstring coverage, and runs every Python snippet
 in this README.
 
-The complete v1-to-v2 migration is documented in `docs/source/migration_v2.rst`.
+The complete v1-to-v2 migration is documented in `docs/source/migration_v2.rst`;
+the Rust backend migration is documented in `docs/source/migration_rust.rst`.

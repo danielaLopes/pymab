@@ -67,3 +67,13 @@ The concentration guarantees used by successive and median elimination assume
 bounded or appropriately sub-Gaussian rewards. Runtime reward-domain checks
 cannot verify stationarity, linear realizability, independence, or a correctly
 chosen noise scale; these remain study-design responsibilities.
+
+Native numerical implementation
+-------------------------------
+
+All 27 built-in policy classes use Rust-owned learned state when the compiled
+extension is available. Contextual policies store contiguous matrices and use
+factorization/solve operations instead of explicit matrix inversion. Public
+state arrays are read-only snapshots so Python and Rust state cannot diverge.
+The private pure-Python implementations remain the reference backend for parity
+testing and custom-component experiments.

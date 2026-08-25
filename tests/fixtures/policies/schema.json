@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/danielaLopes/pymab/tests/fixtures/policies/schema.json",
+  "title": "PyMAB cross-language policy parity fixture",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "policy_kind",
+    "config",
+    "updates",
+    "checkpoints",
+    "recommendation",
+    "reset_state",
+    "expected_error"
+  ],
+  "properties": {
+    "schema_version": {"const": 1},
+    "policy_kind": {"type": "string", "minLength": 1},
+    "config": {"type": "object"},
+    "updates": {"type": "array", "items": {"type": "object"}},
+    "checkpoints": {"type": "array", "items": {"type": "object"}},
+    "recommendation": {},
+    "reset_state": {"type": "object"},
+    "expected_error": {"type": ["string", "null"]}
+  }
+}
