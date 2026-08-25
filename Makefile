@@ -1,4 +1,4 @@
-.PHONY: audit benchmark benchmark-check benchmark-smoke ci docs docs-coverage docs-doctest docs-html docs-linkcheck \
+.PHONY: audit benchmark benchmark-check benchmark-smoke check-policy-coverage check-versions ci docs docs-coverage docs-doctest docs-html docs-linkcheck \
 	docs-snippets format format-fix lint llm-security native rust-format \
 	rust-format-fix rust-lint rust-test security sync test test-ci
 
@@ -23,7 +23,7 @@ PYMAB_PREFER_VENV ?= 1
 endif
 export PYMAB_PREFER_VENV
 
-ci: format lint security test-ci
+ci: rust-format rust-lint rust-test format lint security test-ci check-policy-coverage check-versions
 
 sync:
 	@$(UV) sync --python $(PYTHON_VERSION) --dev --all-extras || { \
@@ -53,6 +53,12 @@ benchmark-check:
 benchmark-smoke:
 	$(RUN_TOOL) python -m benchmarks.run_backends --all --horizon 12 --n-replicates 2 \
 		--repetitions 1 --output benchmarks/results/smoke.json
+
+check-policy-coverage:
+	$(RUN_TOOL) python scripts/check_policy_coverage.py
+
+check-versions:
+	$(RUN_TOOL) python scripts/check_versions.py --require-native
 
 rust-format:
 	$(CARGO) fmt --all --check
