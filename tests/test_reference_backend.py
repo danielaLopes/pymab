@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 from collections.abc import Mapping
 from pathlib import Path
+from typing import cast
 
 import numpy as np
 import pytest
@@ -55,7 +56,7 @@ def test_reference_registry_constructs_every_public_builtin() -> None:
         policy = create_reference_policy(kind, configs[kind])
         assert type(policy).__name__ == class_name
         assert type(policy).__module__.startswith("pymab._reference.policies.")
-        assert getattr(public_policies, class_name) is type(policy)
+        assert issubclass(getattr(public_policies, class_name), type(policy))
         assert reference_policy_kind(policy) == kind
         assert dict(reference_policy_config(policy)) == dict(configs[kind])
 
@@ -68,9 +69,10 @@ def test_reference_clone_uses_immutable_config_and_fresh_state() -> None:
         reward_scale=2.0,
     )
     policy.update(action=0, reward=1.0)
-    clone = clone_reference_policy(policy)
+    clone = cast(ActionValuePolicy, clone_reference_policy(policy))
 
-    assert isinstance(clone, public_policies.UCBPolicy)
+    assert type(clone).__module__.startswith("pymab._reference.policies.")
+    assert type(clone).__name__ == "UCBPolicy"
     assert clone is not policy
     assert clone.step == 0
     np.testing.assert_array_equal(clone.counts, [0.0, 0.0])
@@ -85,9 +87,7 @@ def test_reference_registry_rejects_unknown_or_incomplete_configuration() -> Non
     with pytest.raises(ValueError, match="configuration fields differ"):
         create_reference_policy("greedy", {"n_arms": 2})
     with pytest.raises(ValueError, match="configuration fields differ"):
-        create_reference_policy(
-            "random", {"n_arms": 2, "surprise": True}
-        )
+        create_reference_policy("random", {"n_arms": 2, "surprise": True})
 
 
 def test_custom_action_value_subclasses_remain_public_and_unregistered() -> None:

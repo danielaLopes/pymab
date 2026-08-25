@@ -52,7 +52,7 @@ pub fn reward(name: &str, value: f64, domain: RewardDomain) -> Result<f64> {
             match domain {
                 RewardDomain::Real => "must be a finite real number",
                 RewardDomain::UnitInterval => "must be between zero and one inclusive",
-                RewardDomain::Binary => "must be exactly zero or one",
+                RewardDomain::Binary => "must be binary (exactly zero or one)",
             },
         ))
     }

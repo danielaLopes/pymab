@@ -2,6 +2,9 @@
 
 use pyo3::prelude::*;
 
+mod error;
+mod policy;
+
 /// Return whether the compiled native extension loaded successfully.
 #[pyfunction]
 #[must_use]
@@ -28,4 +31,7 @@ fn rng_scheme_version() -> &'static str {
 mod _pymab {
     #[pymodule_export]
     use super::{core_version, native_available, rng_scheme_version};
+
+    #[pymodule_export]
+    use crate::policy::NativePolicy;
 }

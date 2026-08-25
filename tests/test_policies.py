@@ -151,11 +151,11 @@ class PolicyTests(unittest.TestCase):
 
     def test_median_elimination_completes_phase(self) -> None:
         policy = MedianEliminationPolicy(n_arms=3, epsilon=1.0, delta=0.5)
-        policy.phase_epsilon = 10.0
-        policy.phase_delta = 0.5
-        policy.update(action=0, reward=1.0)
-        policy.update(action=1, reward=0.5)
-        policy.update(action=2, reward=0.0)
+        quota = policy._phase_quota()
+        for _ in range(quota):
+            policy.update(action=0, reward=1.0)
+            policy.update(action=1, reward=0.5)
+            policy.update(action=2, reward=0.0)
         self.assertLess(np.sum(policy.active), 3)
 
     def test_gaussian_bayesian_ucb(self) -> None:

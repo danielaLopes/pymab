@@ -2,15 +2,16 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable, Mapping
+from collections.abc import Mapping
 from dataclasses import dataclass
 from types import MappingProxyType
+from typing import Any, cast
 
 from pymab._reference import policies
 from pymab.policies.policy import ContextualPolicy, Policy
 
 ReferencePolicy = Policy | ContextualPolicy
-ReferenceFactory = Callable[..., ReferencePolicy]
+ReferenceFactory = type[Policy] | type[ContextualPolicy]
 
 
 @dataclass(frozen=True, slots=True)
@@ -174,9 +175,8 @@ REFERENCE_POLICY_SPECS: Mapping[str, ReferencePolicySpec] = MappingProxyType(
     }
 )
 
-def create_reference_policy(
-    kind: str, config: Mapping[str, object]
-) -> ReferencePolicy:
+
+def create_reference_policy(kind: str, config: Mapping[str, object]) -> ReferencePolicy:
     """Construct a fresh reference policy from a registered kind and config."""
 
     try:
@@ -190,7 +190,7 @@ def create_reference_policy(
             f"configuration fields differ for {kind}: "
             f"missing={sorted(expected - actual)}, unknown={sorted(actual - expected)}"
         )
-    return spec.factory(**dict(config))
+    return cast(ReferencePolicy, cast(Any, spec.factory)(**dict(config)))
 
 
 def reference_policy_kind(policy: ReferencePolicy) -> str:
@@ -199,6 +199,11 @@ def reference_policy_kind(policy: ReferencePolicy) -> str:
     for kind, spec in REFERENCE_POLICY_SPECS.items():
         if type(policy) is spec.factory:
             return kind
+    native_kind = getattr(policy, "_native_kind", None)
+    if isinstance(native_kind, str):
+        native_spec = REFERENCE_POLICY_SPECS.get(native_kind)
+        if native_spec is not None and isinstance(policy, native_spec.factory):
+            return native_kind
     raise TypeError("custom policies are not registered reference built-ins")
 
 

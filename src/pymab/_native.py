@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from importlib import import_module
 from types import ModuleType
+from typing import Any
 
 
 def _load_extension() -> ModuleType | None:
@@ -38,6 +39,18 @@ def rng_scheme_version() -> str | None:
     if _EXTENSION is None:
         return None
     return str(_EXTENSION.rng_scheme_version())
+
+
+def create_policy(kind: str, configuration_json: str) -> Any:
+    """Construct a private native policy handle.
+
+    This internal function is intentionally absent from the public package API;
+    public policy wrappers provide the stable typed constructors.
+    """
+
+    if _EXTENSION is None:
+        raise RuntimeError("the optional PyMAB native extension is unavailable")
+    return _EXTENSION._NativePolicy.create(kind, configuration_json)
 
 
 __all__ = ["core_version", "native_available", "rng_scheme_version"]
