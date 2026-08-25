@@ -3,6 +3,8 @@
 //! This crate is the Python-independent core of PyMAB. Policy and experiment
 //! modules are added incrementally during the native-core migration.
 
+pub mod distribution;
+pub mod environment;
 pub mod error;
 pub mod policy;
 pub mod rng;

@@ -2,6 +2,7 @@
 
 use pyo3::prelude::*;
 
+mod environment;
 mod error;
 mod policy;
 
@@ -31,6 +32,9 @@ fn rng_scheme_version() -> &'static str {
 mod _pymab {
     #[pymodule_export]
     use super::{core_version, native_available, rng_scheme_version};
+
+    #[pymodule_export]
+    use crate::environment::NativeEnvironment;
 
     #[pymodule_export]
     use crate::policy::NativePolicy;

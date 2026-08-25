@@ -291,6 +291,7 @@ dependencies = [
  "numpy",
  "pymab",
  "pyo3",
+ "serde",
  "serde_json",
 ]
 
