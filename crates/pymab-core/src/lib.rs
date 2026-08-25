@@ -1,7 +1,4 @@
-//! Reliable, reproducible multi-armed bandit policies and experiments.
-//!
-//! This crate is the Python-independent core of PyMAB. Policy and experiment
-//! modules are added incrementally during the native-core migration.
+#![doc = include_str!("../README.md")]
 
 pub mod distribution;
 pub mod environment;

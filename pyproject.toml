@@ -91,6 +91,7 @@ markers = [
 [tool.coverage.run]
 source = ["src/pymab"]
 branch = true
+omit = ["src/pymab/_reference/**"]
 
 [tool.coverage.report]
 exclude_also = [

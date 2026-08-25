@@ -154,10 +154,23 @@ impl RewardModel for UniformReward {
         if self.half_width == 0.0 {
             return Ok(means.to_vec());
         }
-        Ok(means
+        means
             .iter()
-            .map(|mean| rng.random_range(mean - self.half_width..mean + self.half_width))
-            .collect())
+            .map(|&mean| {
+                let low = mean - self.half_width;
+                let high = mean + self.half_width;
+                if !low.is_finite() || !high.is_finite() {
+                    return Err(PyMabError::numerical(
+                        "uniform reward bounds",
+                        "mean plus or minus half_width must remain finite",
+                    ));
+                }
+                if low >= high {
+                    return Ok(mean);
+                }
+                Ok(rng.random_range(low..high))
+            })
+            .collect()
     }
 }
 
