@@ -2,7 +2,7 @@
 
 use rand::seq::SliceRandom;
 use rand::Rng;
-use rand_distr::{Distribution, Normal};
+use rand_distr::{Distribution, StandardNormal};
 
 use crate::error::{PyMabError, Result};
 use crate::rng::NativeRng;
@@ -54,12 +54,12 @@ impl GradualDrift {
         if self.std == 0.0 {
             return Ok(means.to_vec());
         }
-        let distribution = Normal::new(0.0, self.std).map_err(|error| {
-            PyMabError::configuration("std", format!("invalid Gaussian scale: {error}"))
-        })?;
         Ok(means
             .iter()
-            .map(|mean| mean + distribution.sample(rng))
+            .map(|mean| {
+                let noise: f64 = StandardNormal.sample(rng);
+                mean + self.std * noise
+            })
             .collect())
     }
 }
@@ -141,13 +141,6 @@ impl EnvironmentDynamics for ProbabilityDrift {
     }
 
     fn apply(&self, means: &[f64], _step: u64, rng: &mut NativeRng) -> Result<Vec<f64>> {
-        let noise = if self.logit_std == 0.0 {
-            None
-        } else {
-            Some(Normal::new(0.0, self.logit_std).map_err(|error| {
-                PyMabError::configuration("logit_std", format!("invalid Gaussian scale: {error}"))
-            })?)
-        };
         means
             .iter()
             .map(|&mean| {
@@ -155,8 +148,9 @@ impl EnvironmentDynamics for ProbabilityDrift {
                     .map_err(|error| PyMabError::validation("means", error.to_string()))?;
                 let clipped = mean.clamp(self.epsilon, 1.0 - self.epsilon);
                 let mut logit = (clipped / (1.0 - clipped)).ln();
-                if let Some(distribution) = noise {
-                    logit += distribution.sample(rng);
+                if self.logit_std != 0.0 {
+                    let noise: f64 = StandardNormal.sample(rng);
+                    logit += self.logit_std * noise;
                 }
                 Ok(1.0 / (1.0 + (-logit).exp()))
             })

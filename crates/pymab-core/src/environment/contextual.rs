@@ -1,6 +1,6 @@
 //! Built-in context providers and contextual environments.
 
-use rand_distr::{Distribution, Normal};
+use rand_distr::{Distribution, StandardNormal};
 
 use crate::distribution::{BuiltInRewardModel, RewardModel};
 use crate::error::{PyMabError, Result};
@@ -88,12 +88,11 @@ impl ContextProvider for GaussianContextProvider {
         if self.std == 0.0 {
             return Ok(vec![self.mean; self.shape.element_count()]);
         }
-        let distribution = Normal::new(self.mean, self.std).map_err(|error| {
-            PyMabError::configuration("std", format!("invalid Gaussian scale: {error}"))
-        })?;
-        Ok(distribution
-            .sample_iter(rng)
-            .take(self.shape.element_count())
+        Ok((0..self.shape.element_count())
+            .map(|_| {
+                let noise: f64 = StandardNormal.sample(rng);
+                self.mean + self.std * noise
+            })
             .collect())
     }
 }
@@ -230,6 +229,12 @@ impl<P: ContextProvider> LinearContextualEnvironment<P> {
     pub fn theta(&self) -> &[f64] {
         &self.theta
     }
+
+    /// Return the built-in reward model.
+    #[must_use]
+    pub const fn reward_model(&self) -> BuiltInRewardModel {
+        self.reward_model
+    }
 }
 
 /// Contextual Bernoulli environment with a clipped logistic link.
@@ -303,5 +308,11 @@ impl<P: ContextProvider> LogisticContextualEnvironment<P> {
     #[must_use]
     pub fn theta(&self) -> &[f64] {
         &self.theta
+    }
+
+    /// Return the built-in reward model.
+    #[must_use]
+    pub const fn reward_model(&self) -> BuiltInRewardModel {
+        self.reward_model
     }
 }

@@ -17,6 +17,7 @@ def test_reference_experiment_config_contract() -> None:
         "seed",
         "reward_coupling",
         "record_contexts",
+        "backend",
     )
 
 
@@ -50,6 +51,7 @@ def test_reference_result_array_and_provenance_contract() -> None:
         "seed",
         "reward_coupling",
         "record_contexts",
+        "backend",
     )
     assert set(result.provenance.to_dict()) == {
         "pymab_version",

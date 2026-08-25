@@ -4,6 +4,7 @@ use pyo3::prelude::*;
 
 mod environment;
 mod error;
+mod experiment;
 mod policy;
 
 /// Return whether the compiled native extension loaded successfully.
@@ -35,6 +36,9 @@ mod _pymab {
 
     #[pymodule_export]
     use crate::environment::NativeEnvironment;
+
+    #[pymodule_export]
+    use crate::experiment::{NativeExperiment, NativeExperimentResult};
 
     #[pymodule_export]
     use crate::policy::NativePolicy;

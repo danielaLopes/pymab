@@ -14,6 +14,7 @@ use pymab::environment::dynamics::{
     AbruptShift, BuiltInDynamics, GradualDrift, ProbabilityDrift, RandomArmSwap, StationaryDynamics,
 };
 use pymab::environment::BanditEnvironment;
+use pymab::environment::BuiltInEnvironment;
 use pymab::rng::{rng_for, StreamKey, StreamRole};
 
 use crate::error::to_python;
@@ -251,6 +252,16 @@ impl EnvironmentHandle {
 pub(crate) struct NativeEnvironment {
     configuration: Value,
     handle: EnvironmentHandle,
+}
+
+impl NativeEnvironment {
+    pub(crate) fn runtime_clone(&self) -> BuiltInEnvironment {
+        match &self.handle {
+            EnvironmentHandle::Classic(value) => BuiltInEnvironment::Classic(value.clone()),
+            EnvironmentHandle::Linear(value) => BuiltInEnvironment::Linear(value.clone()),
+            EnvironmentHandle::Logistic(value) => BuiltInEnvironment::Logistic(value.clone()),
+        }
+    }
 }
 
 #[pymethods]

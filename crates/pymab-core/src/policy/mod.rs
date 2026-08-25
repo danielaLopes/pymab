@@ -17,6 +17,7 @@ pub mod gradient;
 pub mod nonstationary;
 pub mod pure_exploration;
 pub mod registry;
+pub mod runtime;
 pub mod softmax;
 pub mod thompson;
 pub mod ucb;

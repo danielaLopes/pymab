@@ -1,7 +1,7 @@
 //! Built-in reward distributions and priors for arm means.
 
 use rand::Rng;
-use rand_distr::{Bernoulli, Beta, Distribution, Normal};
+use rand_distr::{Beta, Distribution, Normal, StandardNormal};
 
 use crate::error::{PyMabError, Result};
 use crate::rng::NativeRng;
@@ -66,12 +66,12 @@ impl RewardModel for GaussianReward {
 
     fn sample(&self, means: &[f64], rng: &mut NativeRng) -> Result<Vec<f64>> {
         self.validate_means(means)?;
-        let standard = Normal::new(0.0, self.std).map_err(|error| {
-            PyMabError::configuration("std", format!("invalid Gaussian scale: {error}"))
-        })?;
         Ok(means
             .iter()
-            .map(|mean| mean + standard.sample(rng))
+            .map(|mean| {
+                let noise: f64 = StandardNormal.sample(rng);
+                mean + self.std * noise
+            })
             .collect())
     }
 }
@@ -112,16 +112,10 @@ impl RewardModel for BernoulliReward {
 
     fn sample(&self, means: &[f64], rng: &mut NativeRng) -> Result<Vec<f64>> {
         self.validate_means(means)?;
-        means
+        Ok(means
             .iter()
-            .map(|&mean| {
-                Bernoulli::new(mean)
-                    .map_err(|error| {
-                        PyMabError::validation("Bernoulli arm probabilities", error.to_string())
-                    })
-                    .map(|distribution| f64::from(distribution.sample(rng)))
-            })
-            .collect()
+            .map(|&mean| f64::from(rng.random::<f64>() < mean))
+            .collect())
     }
 }
 

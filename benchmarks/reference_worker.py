@@ -80,6 +80,7 @@ def measure_case(
             name,
             horizon=horizon,
             n_replicates=n_replicates,
+            backend="python",
         )
         n_policies = len(experiment.policies)
         started = time.perf_counter()

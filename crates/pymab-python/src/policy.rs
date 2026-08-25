@@ -212,6 +212,7 @@ impl StateSnapshot for LinearPosteriorState {
 
 trait ErasedPolicy: Send + Sync {
     fn clone_reset_box(&self) -> Box<dyn ErasedPolicy>;
+    fn clone_runtime_box(&self) -> Box<dyn pymab::policy::runtime::RuntimePolicy>;
     fn n_arms(&self) -> usize;
     fn select_action(
         &mut self,
@@ -230,6 +231,10 @@ where
     T::State: StateSnapshot,
 {
     fn clone_reset_box(&self) -> Box<dyn ErasedPolicy> {
+        Box::new(self.clone_reset())
+    }
+
+    fn clone_runtime_box(&self) -> Box<dyn pymab::policy::runtime::RuntimePolicy> {
         Box::new(self.clone_reset())
     }
 
@@ -267,6 +272,7 @@ where
 
 trait ErasedContextualPolicy: Send + Sync {
     fn clone_reset_box(&self) -> Box<dyn ErasedContextualPolicy>;
+    fn clone_runtime_box(&self) -> Box<dyn pymab::policy::runtime::RuntimeContextualPolicy>;
     fn n_arms(&self) -> usize;
     fn select_action(
         &mut self,
@@ -291,6 +297,10 @@ where
     T::State: StateSnapshot,
 {
     fn clone_reset_box(&self) -> Box<dyn ErasedContextualPolicy> {
+        Box::new(self.clone_reset())
+    }
+
+    fn clone_runtime_box(&self) -> Box<dyn pymab::policy::runtime::RuntimeContextualPolicy> {
         Box::new(self.clone_reset())
     }
 
@@ -352,6 +362,24 @@ pub(crate) struct NativePolicy {
     kind: String,
     configuration: Value,
     handle: PolicyHandle,
+}
+
+pub(crate) enum RuntimePolicyHandle {
+    Classic(Box<dyn pymab::policy::runtime::RuntimePolicy>),
+    Contextual(Box<dyn pymab::policy::runtime::RuntimeContextualPolicy>),
+}
+
+impl NativePolicy {
+    pub(crate) fn clone_runtime(&self) -> RuntimePolicyHandle {
+        match &self.handle {
+            PolicyHandle::Classic(policy) => {
+                RuntimePolicyHandle::Classic(policy.clone_runtime_box())
+            }
+            PolicyHandle::Contextual(policy) => {
+                RuntimePolicyHandle::Contextual(policy.clone_runtime_box())
+            }
+        }
+    }
 }
 
 #[pymethods]

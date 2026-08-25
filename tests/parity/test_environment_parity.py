@@ -55,7 +55,9 @@ def test_native_classic_environment_matches_deterministic_reference_trace() -> N
         native.advance(step, step)
         native_means = json.loads(native.state_json())["means"]
         np.testing.assert_allclose(native_means, reference.means, rtol=0, atol=1e-15)
-        np.testing.assert_allclose(native.expected_rewards(), reference.expected_rewards())
+        np.testing.assert_allclose(
+            native.expected_rewards(), reference.expected_rewards()
+        )
 
 
 def test_native_uniform_reward_matches_zero_width_reference_exactly() -> None:

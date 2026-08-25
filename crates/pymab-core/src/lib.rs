@@ -6,7 +6,9 @@
 pub mod distribution;
 pub mod environment;
 pub mod error;
+pub mod experiment;
 pub mod policy;
+pub mod result;
 pub mod rng;
 pub mod types;
 pub mod validation;

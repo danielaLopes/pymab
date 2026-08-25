@@ -53,4 +53,36 @@ def create_policy(kind: str, configuration_json: str) -> Any:
     return _EXTENSION._NativePolicy.create(kind, configuration_json)
 
 
+def create_environment(configuration_json: str) -> Any:
+    """Construct a private native environment handle."""
+
+    if _EXTENSION is None:
+        raise RuntimeError("the optional PyMAB native extension is unavailable")
+    return _EXTENSION._NativeEnvironment.create(configuration_json)
+
+
+def run_experiment(
+    environment: Any,
+    policies: list[tuple[str, Any]],
+    horizon: int,
+    n_replicates: int,
+    seed: int,
+    reward_coupling: str,
+    record_contexts: bool,
+) -> Any:
+    """Run a private native experiment and return NumPy-owned buffers."""
+
+    if _EXTENSION is None:
+        raise RuntimeError("the optional PyMAB native extension is unavailable")
+    return _EXTENSION._NativeExperiment.run(
+        environment,
+        policies,
+        horizon,
+        n_replicates,
+        seed,
+        reward_coupling,
+        record_contexts,
+    )
+
+
 __all__ = ["core_version", "native_available", "rng_scheme_version"]

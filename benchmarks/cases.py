@@ -10,6 +10,7 @@ import numpy as np
 from pymab.distributions import BernoulliReward, GaussianReward
 from pymab.environments import (
     BanditEnvironment,
+    GaussianContextProvider,
     LogisticContextualEnvironment,
     ProbabilityDrift,
 )
@@ -35,7 +36,7 @@ from pymab.policies import (
     SoftmaxPolicy,
     UCBPolicy,
 )
-from pymab.simulation import Experiment, ExperimentConfig
+from pymab.simulation import BackendMode, Experiment, ExperimentConfig
 
 CASE_NAMES = ("stationary", "bernoulli", "nonstationary", "contextual")
 
@@ -78,6 +79,7 @@ def build_experiment(
     *,
     horizon: int,
     n_replicates: int,
+    backend: BackendMode = "auto",
 ) -> Experiment:
     """Construct a fresh canonical experiment at the requested scale.
 
@@ -104,6 +106,7 @@ def build_experiment(
         horizon=horizon,
         n_replicates=n_replicates,
         seed=defaults.seed,
+        backend=backend,
     )
     return builders[name](config)
 
@@ -173,12 +176,6 @@ def _nonstationary_experiment(config: ExperimentConfig) -> Experiment:
     )
 
 
-def _context_matrix(rng: np.random.Generator) -> np.ndarray:
-    """Generate a finite per-arm context matrix for the reference workload."""
-
-    return np.asarray(rng.normal(size=(4, 8)), dtype=float)
-
-
 def _contextual_experiment(config: ExperimentConfig) -> Experiment:
     n_arms = 4
     n_features = 8
@@ -194,7 +191,10 @@ def _contextual_experiment(config: ExperimentConfig) -> Experiment:
     return Experiment(
         environment=LogisticContextualEnvironment(
             theta=theta,
-            context_provider=_context_matrix,
+            context_provider=GaussianContextProvider(
+                n_arms=n_arms,
+                n_features=n_features,
+            ),
             reward_model=BernoulliReward(),
         ),
         policies={
