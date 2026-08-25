@@ -256,7 +256,7 @@ jobs:
           python-version: "3.11"
       - name: Install minimum runtime and test dependencies
         run: |
-          python -m pip install --disable-pip-version-check "numpy==1.24.*" hypothesis pytest pytest-cov
+          python -m pip install --disable-pip-version-check "numpy==1.24.*" hypothesis "psutil>=6.0" pytest pytest-cov
           python -m pip install --disable-pip-version-check --no-deps -e .
       - name: Run core tests
         run: pytest -m "not optional" --no-cov
