@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useReducer, useRef, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 
 import {
   Chamber,
@@ -8,13 +8,12 @@ import {
   InspectPanel,
   LoadingStages,
   MissionHeader,
-  ModeTabs,
   OutcomeReveal,
-  ParameterChallenge,
   ProgressTrail,
   RunControls,
   UnsupportedBrowser,
 } from "../components/game";
+import { RunSetupPanel } from "../components/game/RunSetupPanel";
 import { explanationCopy, lessonContent } from "../content/lessons";
 import type { LessonId, LessonMode, LessonResponse, LessonSnapshot } from "../engine/protocol";
 import { useRuntime } from "../engine/RuntimeProvider";
@@ -22,6 +21,18 @@ import { detectBrowserSupport } from "../engine/support";
 import { WorkerClient } from "../engine/WorkerClient";
 import { initialLessonState, lessonReducer } from "../state/lessonReducer";
 import { loadPersistence, savePersistence } from "../state/persistence";
+import {
+  configurationFromSnapshot,
+  draftFromConfiguration,
+  parameterDefinitions,
+  validateRunDraft,
+  type RunConfiguration,
+  type RunDraftConfiguration,
+} from "../state/runConfiguration";
+
+interface LessonNavigationState {
+  runConfiguration?: RunConfiguration;
+}
 
 function snapshotFrom(response: LessonResponse): LessonSnapshot {
   if ("snapshot" in response) return response.snapshot;
@@ -29,86 +40,118 @@ function snapshotFrom(response: LessonResponse): LessonSnapshot {
   throw new Error(`Unexpected worker response: ${response.type}`);
 }
 
+function fixedSeed(lessonId: LessonId, mode: LessonMode): number {
+  const content = lessonContent[lessonId];
+  return mode === "challenge" ? content.challengeSeed : content.guidedSeed;
+}
+
+function defaultConfiguration(lessonId: LessonId): RunConfiguration {
+  return {
+    lessonId,
+    mode: "guided",
+    parameter: parameterDefinitions[lessonId].defaultValue,
+    seed: lessonContent[lessonId].guidedSeed,
+  };
+}
+
+function configurationFromNavigationState(
+  state: unknown,
+  lessonId: LessonId,
+): RunConfiguration | null {
+  const candidate = (state as LessonNavigationState | null)?.runConfiguration;
+  if (!candidate || candidate.lessonId !== lessonId) return null;
+  return validateRunDraft(draftFromConfiguration(candidate)).configuration;
+}
+
 export function LessonRoute() {
   const { lessonSlug } = useParams();
   const lessonId: LessonId = lessonSlug === "linucb" ? "linucb" : "epsilon-greedy";
   const content = lessonContent[lessonId];
   const { client, progress } = useRuntime();
+  const location = useLocation();
+  const routeState = location.state as unknown;
   const navigate = useNavigate();
   const [state, dispatch] = useReducer(lessonReducer, initialLessonState);
   const [persisted, setPersisted] = useState(() => loadPersistence());
-  const [parameter, setParameter] = useState(lessonId === "epsilon-greedy" ? 0.2 : 1.0);
-  const [seed, setSeed] = useState(content.guidedSeed);
+  const [activeConfiguration, setActiveConfiguration] = useState<RunConfiguration | null>(null);
+  const [draftConfiguration, setDraftConfiguration] = useState<RunDraftConfiguration>(() =>
+    draftFromConfiguration(defaultConfiguration(lessonId)),
+  );
   const [inspectorOpen, setInspectorOpen] = useState(persisted.preferences.inspectorOpen);
   const [autoRunning, setAutoRunning] = useState(false);
   const autoRef = useRef(false);
   const sessionRef = useRef("");
-  const lessonRef = useRef(lessonId);
-  const parameterRef = useRef(parameter);
-  const seedRef = useRef(seed);
   const persistedRef = useRef(persisted);
   const recordedSessionRef = useRef("");
+  const locationStateRef = useRef<unknown>(routeState);
 
-  const startMode = useCallback(
-    async (mode: LessonMode, nextParameter?: number, nextSeed?: number) => {
+  useEffect(() => {
+    locationStateRef.current = routeState;
+  }, [routeState]);
+
+  const startConfiguration = useCallback(
+    async (configuration: RunConfiguration): Promise<boolean> => {
       autoRef.current = false;
       setAutoRunning(false);
       dispatch({ type: "pending", value: true });
       try {
-        if (mode === "challenge" && persistedRef.current.attempts[lessonId] >= 3) {
-          throw new Error(
-            "All three challenge attempts are complete. Free play is still available.",
-          );
-        }
-        if (sessionRef.current) {
-          await client.send({
-            type: "dispose",
-            requestId: WorkerClient.requestId(),
-            sessionId: sessionRef.current,
-          });
-        }
+        const previousSessionId = sessionRef.current;
         const sessionId = WorkerClient.requestId();
-        sessionRef.current = sessionId;
-        const resolvedParameter = nextParameter ?? parameterRef.current;
-        const resolvedSeed =
-          nextSeed ??
-          (mode === "guided"
-            ? content.guidedSeed
-            : mode === "challenge"
-              ? content.challengeSeed
-              : seedRef.current);
-        setSeed(resolvedSeed);
-        seedRef.current = resolvedSeed;
         const response = await client.send({
           type: "startLesson",
           requestId: WorkerClient.requestId(),
           sessionId,
-          lessonId,
-          mode,
-          seed: resolvedSeed,
+          lessonId: configuration.lessonId,
+          mode: configuration.mode,
+          seed: configuration.seed,
           parameters:
-            lessonId === "epsilon-greedy"
-              ? { epsilon: resolvedParameter }
-              : { alpha: resolvedParameter, l2: 1 },
+            configuration.lessonId === "epsilon-greedy"
+              ? { epsilon: configuration.parameter }
+              : { alpha: configuration.parameter, l2: 1 },
         });
-        dispatch({ type: "started", mode, snapshot: snapshotFrom(response) });
+        const snapshot = snapshotFrom(response);
+        const active = configurationFromSnapshot(snapshot);
+        sessionRef.current = sessionId;
+        if (previousSessionId) {
+          void client
+            .send({
+              type: "dispose",
+              requestId: WorkerClient.requestId(),
+              sessionId: previousSessionId,
+            })
+            .catch(() => undefined);
+        }
+        setActiveConfiguration(active);
+        setDraftConfiguration(draftFromConfiguration(active));
+
+        const previousRecent = persistedRef.current.recent[active.lessonId];
+        const next = {
+          ...persistedRef.current,
+          recent: {
+            ...persistedRef.current.recent,
+            [active.lessonId]: {
+              parameter: active.parameter,
+              seed: active.mode === "freePlay" ? active.seed : previousRecent.seed,
+            },
+          },
+        };
+        persistedRef.current = next;
+        setPersisted(next);
+        savePersistence(next);
+        dispatch({ type: "started", mode: active.mode, snapshot });
+        return true;
       } catch (error) {
         dispatch({
           type: "error",
           message: error instanceof Error ? error.message : String(error),
         });
+        return false;
       }
     },
-    [client, content.challengeSeed, content.guidedSeed, lessonId],
+    [client],
   );
 
   useEffect(() => {
-    if (lessonRef.current !== lessonId) {
-      lessonRef.current = lessonId;
-      const defaultParameter = lessonId === "epsilon-greedy" ? 0.2 : 1.0;
-      setParameter(defaultParameter);
-      parameterRef.current = defaultParameter;
-    }
     const support = detectBrowserSupport();
     if (!support.supported) {
       dispatch({
@@ -117,12 +160,21 @@ export function LessonRoute() {
       });
       return;
     }
+
+    const requestedConfiguration = configurationFromNavigationState(
+      locationStateRef.current,
+      lessonId,
+    );
+    const initialConfiguration = requestedConfiguration ?? defaultConfiguration(lessonId);
+
     let active = true;
     void client
       .initialize()
-      .then(() => {
-        if (active) {
-          return startMode("guided", lessonId === "epsilon-greedy" ? 0.2 : 1.0, content.guidedSeed);
+      .then(async () => {
+        if (!active) return;
+        const started = await startConfiguration(initialConfiguration);
+        if (active && started && requestedConfiguration) {
+          void navigate(`/lesson/${lessonId}`, { replace: true, state: null });
         }
       })
       .catch((error: unknown) => {
@@ -137,7 +189,7 @@ export function LessonRoute() {
       active = false;
       autoRef.current = false;
     };
-  }, [client, content.guidedSeed, lessonId, startMode]);
+  }, [client, lessonId, navigate, startConfiguration]);
 
   useEffect(
     () => () => {
@@ -191,28 +243,41 @@ export function LessonRoute() {
     })();
   }, [advance]);
 
-  const changeMode = (mode: LessonMode) => {
-    if (state.snapshot?.step && !window.confirm("Start a new run? Current progress will reset."))
-      return;
-    void startMode(mode);
+  const changeAlgorithm = (nextLessonId: LessonId) => {
+    setDraftConfiguration((current) => ({
+      ...current,
+      lessonId: nextLessonId,
+      parameter: String(parameterDefinitions[nextLessonId].defaultValue),
+      seed:
+        current.mode === "freePlay" ? current.seed : String(fixedSeed(nextLessonId, current.mode)),
+    }));
   };
 
-  const changeParameter = (value: number) => {
-    if (state.snapshot?.step && !window.confirm("Changing this parameter starts a new run."))
+  const changeMode = (mode: LessonMode) => {
+    setDraftConfiguration((current) => ({
+      ...current,
+      mode,
+      seed:
+        mode === "freePlay"
+          ? String(persistedRef.current.recent[current.lessonId].seed)
+          : String(fixedSeed(current.lessonId, mode)),
+    }));
+  };
+
+  const applyDraft = () => {
+    const { configuration } = validateRunDraft(draftConfiguration);
+    if (!configuration) return;
+    if (configuration.lessonId !== lessonId) {
+      autoRef.current = false;
+      setAutoRunning(false);
+      setActiveConfiguration(null);
+      dispatch({ type: "loading" });
+      void navigate(`/lesson/${configuration.lessonId}`, {
+        state: { runConfiguration: configuration } satisfies LessonNavigationState,
+      });
       return;
-    setParameter(value);
-    parameterRef.current = value;
-    const next = {
-      ...persistedRef.current,
-      recent: {
-        ...persistedRef.current.recent,
-        [lessonId]: { seed: seedRef.current, parameter: value },
-      },
-    };
-    persistedRef.current = next;
-    setPersisted(next);
-    savePersistence(next);
-    void startMode(state.mode, value);
+    }
+    void startConfiguration(configuration);
   };
 
   useEffect(() => {
@@ -229,7 +294,7 @@ export function LessonRoute() {
         ...persistedRef.current.attempts,
         [lessonId]:
           snapshot.mode === "challenge"
-            ? Math.min(3, persistedRef.current.attempts[lessonId] + 1)
+            ? persistedRef.current.attempts[lessonId] + 1
             : persistedRef.current.attempts[lessonId],
       },
     };
@@ -250,6 +315,22 @@ export function LessonRoute() {
     savePersistence(next);
   };
 
+  const setupPanel = (
+    <RunSetupPanel
+      activeConfiguration={activeConfiguration}
+      draftConfiguration={draftConfiguration}
+      challengeTarget={lessonContent[draftConfiguration.lessonId].target}
+      pending={state.pending || autoRunning}
+      onAlgorithmChange={changeAlgorithm}
+      onModeChange={changeMode}
+      onParameterChange={(parameter) =>
+        setDraftConfiguration((current) => ({ ...current, parameter }))
+      }
+      onSeedChange={(seed) => setDraftConfiguration((current) => ({ ...current, seed }))}
+      onApply={applyDraft}
+    />
+  );
+
   if (state.phase === "loading")
     return (
       <main className="lesson-page">
@@ -268,12 +349,15 @@ export function LessonRoute() {
     return (
       <main className="lesson-page">
         <MissionHeader {...content} />
+        {setupPanel}
         <ErrorRecovery
           message={state.error ?? "Unknown runtime failure"}
           onRetry={() => {
+            const retryConfiguration =
+              validateRunDraft(draftConfiguration).configuration ?? defaultConfiguration(lessonId);
             client.restart();
             dispatch({ type: "loading" });
-            void client.initialize().then(() => startMode("guided"));
+            void client.initialize().then(() => startConfiguration(retryConfiguration));
           }}
         />
       </main>
@@ -285,33 +369,7 @@ export function LessonRoute() {
   return (
     <main className="lesson-page">
       <MissionHeader {...content} />
-      <ModeTabs mode={state.mode} onChange={changeMode} />
-      {(state.mode === "challenge" || state.mode === "freePlay") && (
-        <ParameterChallenge
-          label={content.parameterLabel}
-          choices={content.choices}
-          value={parameter}
-          disabled={state.pending || autoRunning}
-          target={content.target}
-          onChange={changeParameter}
-        />
-      )}
-      {state.mode === "freePlay" && (
-        <label className="seed-input">
-          Seed{" "}
-          <input
-            type="number"
-            value={seed}
-            disabled={state.pending || autoRunning}
-            onChange={(event) => {
-              const value = Number(event.target.value);
-              setSeed(value);
-              seedRef.current = value;
-            }}
-            onBlur={() => void startMode("freePlay", parameter, seed)}
-          />
-        </label>
-      )}
+      {setupPanel}
       <div className="lesson-layout">
         <div className="game-column">
           <ProgressTrail snapshot={state.snapshot} />
@@ -333,14 +391,28 @@ export function LessonRoute() {
                 autoRef.current = false;
                 setAutoRunning(false);
               }}
-              onReset={() => void startMode(state.mode)}
+              onReset={() => {
+                if (activeConfiguration) void startConfiguration(activeConfiguration);
+              }}
             />
           )}
-          {state.snapshot?.completed && (
+          {state.snapshot?.completed && activeConfiguration && (
             <Debrief
               snapshot={state.snapshot}
-              onChallenge={() => void startMode("challenge")}
-              onFreePlay={() => void startMode("freePlay")}
+              onChallenge={() =>
+                void startConfiguration({
+                  ...activeConfiguration,
+                  mode: "challenge",
+                  seed: content.challengeSeed,
+                })
+              }
+              onFreePlay={() =>
+                void startConfiguration({
+                  ...activeConfiguration,
+                  mode: "freePlay",
+                  seed: persistedRef.current.recent[lessonId].seed,
+                })
+              }
             />
           )}
         </div>

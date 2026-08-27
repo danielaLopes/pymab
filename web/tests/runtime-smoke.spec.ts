@@ -26,6 +26,21 @@ test("real PyMAB wheel completes a seeded epsilon decision", async ({ page }) =>
   expect(results.violations).toEqual([]);
 });
 
+test("the debrief free play shortcut keeps the active parameter", async ({ page, browserName }) => {
+  test.skip(browserName !== "chromium", "Long debrief scenario runs once in Chromium");
+  await page.goto("./#/lesson/linucb");
+  await expect(page.getByRole("button", { name: "Auto-run" })).toBeEnabled({ timeout: 30_000 });
+  await page.getByRole("button", { name: "Auto-run" }).click();
+  await expect(page.getByRole("heading", { name: "Run complete" })).toBeVisible({
+    timeout: 30_000,
+  });
+  await page.getByRole("button", { name: "Start free play" }).click();
+  await expect(page.locator(".current-run strong")).toHaveText(
+    "LinUCB · Free play · α 1 · seed 31415",
+  );
+  await expect(page.getByLabel("Random seed")).toBeEditable();
+});
+
 test("real LinUCB decision displays context and score decomposition", async ({ page }) => {
   await page.goto("./#/lesson/linucb");
   const advance = page.getByRole("button", { name: "Advance one round" });
@@ -75,9 +90,15 @@ test("completed run reveals environment values and the full regret path", async 
   ).toHaveCount(13);
   const results = await new AxeBuilder({ page }).analyze();
   expect(results.violations).toEqual([]);
+  await page.getByRole("button", { name: "Start challenge" }).click();
+  await expect(page.locator(".current-run strong")).toContainText("Challenge");
+  await expect(page.getByRole("progressbar", { name: "Run progress" })).toHaveAttribute(
+    "aria-valuenow",
+    "0",
+  );
 });
 
-test("mode changes preserve progress when reset confirmation is cancelled", async ({
+test("draft changes preserve progress until the user starts a new run", async ({
   page,
   browserName,
 }) => {
@@ -87,27 +108,92 @@ test("mode changes preserve progress when reset confirmation is cancelled", asyn
   await expect(advance).toBeEnabled({ timeout: 30_000 });
   await advance.click();
   await expect(page.getByText("1 / 12")).toBeVisible();
-  page.once("dialog", (dialog) => dialog.dismiss());
-  await page.getByRole("button", { name: "Challenge" }).click();
-  await expect(page.getByRole("button", { name: "Guided" })).toHaveAttribute(
-    "aria-pressed",
-    "true",
-  );
+  await page.getByRole("radio", { name: "Challenge" }).click();
+  await expect(page.getByText("Changes have not been applied.")).toBeVisible();
+  await expect(page.locator(".current-run strong")).toContainText("Guided");
   await expect(page.getByText("1 / 12")).toBeVisible();
+
+  await page.getByRole("button", { name: "Restart with these settings" }).click();
+  await expect(page.locator(".current-run strong")).toContainText("Challenge");
+  await expect(page.getByRole("progressbar", { name: "Run progress" })).toHaveAttribute(
+    "aria-valuenow",
+    "0",
+  );
 });
 
 test("epsilon challenge can be completed by auto-run", async ({ page, browserName }) => {
   test.skip(browserName !== "chromium", "Long resilience scenarios run once in Chromium");
   await page.goto("./#/lesson/epsilon-greedy");
-  const challenge = page.getByRole("button", { name: "Challenge" });
+  const challenge = page.getByRole("radio", { name: "Challenge" });
   await expect(challenge).toBeEnabled({ timeout: 30_000 });
   await challenge.click();
+  await page.getByRole("button", { name: "Restart with these settings" }).click();
   const autoRun = page.getByRole("button", { name: "Auto-run" });
   await expect(autoRun).toBeEnabled();
   await autoRun.click();
   await expect(page.getByRole("heading", { name: "Challenge cleared" })).toBeVisible({
     timeout: 30_000,
   });
+});
+
+test("free play accepts exact parameters and an editable seed", async ({ page, browserName }) => {
+  test.skip(browserName !== "chromium", "Interaction scenario runs once in Chromium");
+  await page.goto("./#/lesson/epsilon-greedy");
+  await expect(page.getByRole("radio", { name: "Free play" })).toBeEnabled({ timeout: 30_000 });
+  await page.getByRole("radio", { name: "Free play" }).click();
+  await page.getByRole("spinbutton", { name: "Exploration chance" }).fill("0.35");
+  await page.getByLabel("Random seed").fill("1234");
+  await page.getByRole("button", { name: "Restart with these settings" }).click();
+  await expect(page.locator(".current-run strong")).toHaveText(
+    "ε-greedy · Free play · ε 0.35 · seed 1234",
+  );
+});
+
+test("algorithm changes apply once and carry the selected mode", async ({ page, browserName }) => {
+  test.skip(browserName !== "chromium", "Interaction scenario runs once in Chromium");
+  await page.goto("./#/lesson/epsilon-greedy");
+  await expect(page.getByRole("radio", { name: "LinUCB" })).toBeEnabled({ timeout: 30_000 });
+  await page.getByRole("radio", { name: "Free play" }).click();
+  await page.getByLabel("Random seed").fill("9876");
+  await page.getByRole("radio", { name: "LinUCB" }).click();
+  await expect(page.getByRole("spinbutton", { name: "Confidence width" })).toHaveValue("1");
+  await expect(page.getByLabel("Random seed")).toHaveValue("9876");
+  await page.getByRole("button", { name: "Restart with these settings" }).click();
+  await expect(page.getByRole("heading", { name: "The Labyrinth of Signals" })).toBeVisible();
+  await expect(page.locator(".current-run strong")).toContainText("LinUCB · Free play");
+
+  await page.getByRole("radio", { name: "ε-greedy" }).click();
+  await page.getByRole("button", { name: "Restart with these settings" }).click();
+  await expect(page.getByRole("heading", { name: "The Three Ancient Gates" })).toBeVisible();
+  await expect(page.locator(".current-run strong")).toContainText("ε-greedy · Free play");
+});
+
+test("challenge starts even when four attempts are already recorded", async ({
+  page,
+  browserName,
+}) => {
+  test.skip(browserName !== "chromium", "Persistence scenario runs once in Chromium");
+  await page.addInitScript(() => {
+    window.localStorage.setItem(
+      "pymab-arcade:v1",
+      JSON.stringify({
+        version: 1,
+        completed: ["epsilon-greedy"],
+        attempts: { "epsilon-greedy": 4, linucb: 0 },
+        preferences: { inspectorOpen: false, reducedMotion: null },
+        recent: {
+          "epsilon-greedy": { seed: 42, parameter: 0.2 },
+          linucb: { seed: 31415, parameter: 1 },
+        },
+      }),
+    );
+  });
+  await page.goto("./#/lesson/epsilon-greedy");
+  await expect(page.getByRole("radio", { name: "Challenge" })).toBeEnabled({ timeout: 30_000 });
+  await page.getByRole("radio", { name: "Challenge" }).click();
+  await page.getByRole("button", { name: "Restart with these settings" }).click();
+  await expect(page.locator(".current-run strong")).toContainText("Challenge");
+  await expect(page.getByRole("button", { name: "Advance one round" })).toBeEnabled();
 });
 
 test("Python Lab reports syntax errors, times out, and recovers cleanly", async ({

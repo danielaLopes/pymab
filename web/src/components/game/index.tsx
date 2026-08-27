@@ -291,46 +291,9 @@ export function RunControls({
         </button>
       )}
       <button type="button" disabled={pending} onClick={onReset}>
-        Reset seed
+        Restart run
       </button>
     </div>
-  );
-}
-
-export function ParameterChallenge({
-  label,
-  choices,
-  value,
-  disabled,
-  target,
-  onChange,
-}: {
-  label: string;
-  choices: number[];
-  value: number;
-  disabled: boolean;
-  target: string;
-  onChange: (value: number) => void;
-}) {
-  return (
-    <fieldset className="parameter-challenge" disabled={disabled}>
-      <legend>{label}</legend>
-      <div className="choice-row">
-        {choices.map((choice) => (
-          <label key={choice} className={choice === value ? "active" : ""}>
-            <input
-              type="radio"
-              name="parameter"
-              value={choice}
-              checked={choice === value}
-              onChange={() => onChange(choice)}
-            />
-            {choice}
-          </label>
-        ))}
-      </div>
-      <p>{target}</p>
-    </fieldset>
   );
 }
 
@@ -445,9 +408,9 @@ export function Debrief({
       </details>
       <div className="run-controls">
         <button className="primary-button" onClick={onChallenge}>
-          Try the challenge
+          Start challenge
         </button>
-        <button onClick={onFreePlay}>Enter free play</button>
+        <button onClick={onFreePlay}>Start free play</button>
       </div>
     </section>
   );
@@ -675,29 +638,6 @@ export function InspectPanel({
         </div>
       )}
     </aside>
-  );
-}
-
-export function ModeTabs({
-  mode,
-  onChange,
-}: {
-  mode: string;
-  onChange: (mode: "guided" | "challenge" | "freePlay") => void;
-}) {
-  return (
-    <div className="mode-tabs" aria-label="Lesson mode">
-      {(["guided", "challenge", "freePlay"] as const).map((item) => (
-        <button
-          key={item}
-          type="button"
-          aria-pressed={mode === item}
-          onClick={() => onChange(item)}
-        >
-          {item === "freePlay" ? "Free play" : item[0]!.toUpperCase() + item.slice(1)}
-        </button>
-      ))}
-    </div>
   );
 }
 

@@ -19,6 +19,15 @@ test("campaign map", async ({ page }) => {
   await expect(page).toHaveScreenshot("campaign-map.png", screenshotOptions);
 });
 
+test("run setup panels", async ({ page }) => {
+  for (const lesson of ["epsilon-greedy", "linucb"] as const) {
+    await page.goto(`./#/lesson/${lesson}`);
+    const panel = page.getByRole("region", { name: "Configure this run" });
+    await expect(panel).toBeVisible({ timeout: 30_000 });
+    await expect(panel).toHaveScreenshot(`${lesson}-run-setup.png`, screenshotOptions);
+  }
+});
+
 test("epsilon round and inspector", async ({ page }) => {
   await page.goto("./#/lesson/epsilon-greedy");
   const advance = page.getByRole("button", { name: "Advance one round" });
