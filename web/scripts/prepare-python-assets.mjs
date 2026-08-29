@@ -61,7 +61,7 @@ const packageJson = JSON.parse(await readFile(path.join(pyodideSource, "package.
 const lock = JSON.parse(await readFile(path.join(pyodideSource, "pyodide-lock.json"), "utf8"));
 if (packageJson.version !== "314.0.5") throw new Error(`Unexpected Pyodide ${packageJson.version}`);
 const dependencyAssets = [];
-for (const dependency of resolveDependencies(lock, ["numpy"])) {
+for (const dependency of resolveDependencies(lock, ["numpy", "scipy"])) {
   const cacheFile = safeJoin(cacheRoot, dependency.file_name);
   const url = `https://cdn.jsdelivr.net/pyodide/v${packageJson.version}/full/${dependency.file_name}`;
   await ensureVerifiedDownload({

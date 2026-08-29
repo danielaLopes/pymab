@@ -2,42 +2,181 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
-import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
-import type { LessonId, LessonMode } from "@/engine/protocol";
 import {
-  algorithmLabels,
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import { policiesByFamily, policyCatalog, type PolicyId } from "@/catalog/policies";
+import type { LessonMode } from "@/engine/protocol";
+import type { EnvironmentDraft } from "@/state/environments";
+import {
   configurationsMatch,
   formatParameter,
   modeLabels,
-  parameterDefinitions,
   validateRunDraft,
+  type DraftParameterValue,
   type RunConfiguration,
   type RunDraftConfiguration,
 } from "@/state/runConfiguration";
-import { formatProbabilityPercent } from "@/state/portalProbabilities";
+import { EnvironmentEditor } from "./EnvironmentEditor";
 
-const lessonIds: LessonId[] = ["epsilon-greedy", "linucb"];
 const lessonModes: LessonMode[] = ["guided", "challenge", "freePlay"];
-const portalNames = ["Moon", "Sun", "Star"] as const;
 
 export interface RunSetupPanelProps {
   activeConfiguration: RunConfiguration | null;
   draftConfiguration: RunDraftConfiguration;
   challengeTarget: string;
   pending: boolean;
-  onAlgorithmChange: (lessonId: LessonId) => void;
+  onPolicyChange: (policyId: PolicyId) => void;
   onModeChange: (mode: LessonMode) => void;
-  onParameterChange: (value: string) => void;
+  onParameterChange: (key: string, value: DraftParameterValue) => void;
   onSeedChange: (value: string) => void;
-  onPortalProbabilityChange: (index: number, value: string) => void;
-  onUseSeedGeneratedValues: () => void;
+  onEnvironmentChange: (environment: EnvironmentDraft) => void;
+  onRegenerateEnvironment: () => void;
+  onRestorePolicyDefaults: () => void;
   onApply: () => void;
 }
 
 function activeRunSummary(configuration: RunConfiguration | null): string {
   if (!configuration) return "No run has started.";
-  const definition = parameterDefinitions[configuration.lessonId];
-  return `${algorithmLabels[configuration.lessonId]} · ${modeLabels[configuration.mode]} · ${definition.shortLabel} ${configuration.parameter} · seed ${configuration.seed}`;
+  const policy = policyCatalog[configuration.policyId];
+  const parameters = Object.entries(configuration.parameters)
+    .map(([key, value]) => `${key} ${value === null ? "default" : String(value)}`)
+    .join(" · ");
+  return `${policy.label} · ${modeLabels[configuration.mode]}${parameters ? ` · ${parameters}` : ""} · seed ${configuration.seed}`;
+}
+
+function ParameterField({
+  definition,
+  value,
+  error,
+  pending,
+  onChange,
+}: {
+  definition: (typeof policyCatalog)[PolicyId]["parameters"][number];
+  value: DraftParameterValue | undefined;
+  error: string | undefined;
+  pending: boolean;
+  onChange: (value: DraftParameterValue) => void;
+}) {
+  const inputId = `run-parameter-${definition.key}`;
+  const errorId = `${inputId}-error`;
+  const helpId = `${inputId}-help`;
+
+  if (definition.kind === "boolean") {
+    return (
+      <div className="run-setup-field parameter-card">
+        <label className="boolean-parameter" htmlFor={inputId}>
+          <span>
+            <strong>{definition.label}</strong>
+            <small>{definition.help}</small>
+          </span>
+          <input
+            id={inputId}
+            type="checkbox"
+            checked={value === true}
+            disabled={pending}
+            onChange={(event) => onChange(event.target.checked)}
+          />
+        </label>
+      </div>
+    );
+  }
+
+  if (definition.kind === "select") {
+    return (
+      <div className="run-setup-field parameter-card">
+        <Label htmlFor={inputId}>{definition.label}</Label>
+        <Select
+          value={typeof value === "string" ? value : ""}
+          disabled={pending}
+          onValueChange={onChange}
+        >
+          <SelectTrigger id={inputId} aria-describedby={error ? errorId : helpId}>
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {definition.options?.map((option) => (
+              <SelectItem key={option.value} value={option.value}>
+                {option.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <p id={helpId} className="field-help">
+          {definition.help}
+        </p>
+        {error && (
+          <p id={errorId} className="field-error" role="alert">
+            {error}
+          </p>
+        )}
+      </div>
+    );
+  }
+
+  const numeric = Number(value);
+  const hasSlider =
+    definition.kind !== "optional-number" &&
+    definition.minimum !== undefined &&
+    definition.maximum !== undefined &&
+    definition.step !== undefined;
+  const sliderValue = Number.isFinite(numeric)
+    ? Math.min(definition.maximum ?? numeric, Math.max(definition.minimum ?? numeric, numeric))
+    : (definition.minimum ?? 0);
+  return (
+    <div className="run-setup-field parameter-card">
+      <div className="run-setup-label-row">
+        <Label htmlFor={inputId}>{definition.label}</Label>
+        {definition.shortLabel && <span>{definition.shortLabel}</span>}
+      </div>
+      <div className={hasSlider ? "parameter-inputs" : "parameter-inputs number-only"}>
+        {hasSlider && (
+          <Slider
+            aria-label={`${definition.label} slider`}
+            min={definition.minimum!}
+            max={definition.maximum!}
+            step={definition.step!}
+            value={[sliderValue]}
+            disabled={pending}
+            onValueChange={(values) => {
+              const next = values[0];
+              if (next !== undefined) onChange(formatParameter(next));
+            }}
+          />
+        )}
+        <Input
+          id={inputId}
+          className="parameter-number"
+          type="number"
+          inputMode="decimal"
+          min={definition.minimum}
+          max={definition.maximum}
+          step={definition.step}
+          value={typeof value === "string" ? value : ""}
+          placeholder={definition.kind === "optional-number" ? "Use default" : undefined}
+          disabled={pending}
+          aria-invalid={Boolean(error)}
+          aria-describedby={error ? errorId : helpId}
+          onChange={(event) => onChange(event.target.value)}
+        />
+      </div>
+      <p id={helpId} className="field-help">
+        {definition.help}
+      </p>
+      {error && (
+        <p id={errorId} className="field-error" role="alert">
+          {error}
+        </p>
+      )}
+    </div>
+  );
 }
 
 export function RunSetupPanel({
@@ -45,24 +184,21 @@ export function RunSetupPanel({
   draftConfiguration,
   challengeTarget,
   pending,
-  onAlgorithmChange,
+  onPolicyChange,
   onModeChange,
   onParameterChange,
   onSeedChange,
-  onPortalProbabilityChange,
-  onUseSeedGeneratedValues,
+  onEnvironmentChange,
+  onRegenerateEnvironment,
+  onRestorePolicyDefaults,
   onApply,
 }: RunSetupPanelProps) {
-  const definition = parameterDefinitions[draftConfiguration.lessonId];
+  const policy = policyCatalog[draftConfiguration.policyId];
   const { configuration, errors } = validateRunDraft(draftConfiguration);
   const dirty = !configurationsMatch(draftConfiguration, activeConfiguration);
-  const numericParameter = Number(draftConfiguration.parameter);
-  const sliderValue = Number.isFinite(numericParameter)
-    ? Math.min(definition.maximum, Math.max(definition.minimum, numericParameter))
-    : definition.defaultValue;
   const fixedSeed = draftConfiguration.mode !== "freePlay";
-  const showPortalProbabilities =
-    draftConfiguration.lessonId === "epsilon-greedy" && draftConfiguration.mode === "freePlay";
+  const primaryParameters = policy.parameters.filter((item) => !item.advanced);
+  const advancedParameters = policy.parameters.filter((item) => item.advanced);
 
   return (
     <section className="run-setup" aria-labelledby="run-setup-title">
@@ -75,25 +211,30 @@ export function RunSetupPanel({
       </div>
 
       <div className="run-setup-grid">
-        <div className="run-setup-field run-setup-selector">
-          <span className="run-setup-label" id="algorithm-label">
-            Algorithm
-          </span>
-          <ToggleGroup
-            type="single"
-            value={draftConfiguration.lessonId}
+        <div className="run-setup-field run-setup-policy">
+          <Label htmlFor="policy-select">Policy</Label>
+          <Select
+            value={draftConfiguration.policyId}
             disabled={pending}
-            aria-labelledby="algorithm-label"
-            onValueChange={(value) => {
-              if (value) onAlgorithmChange(value as LessonId);
-            }}
+            onValueChange={(value) => onPolicyChange(value as PolicyId)}
           >
-            {lessonIds.map((lessonId) => (
-              <ToggleGroupItem key={lessonId} value={lessonId}>
-                {algorithmLabels[lessonId]}
-              </ToggleGroupItem>
-            ))}
-          </ToggleGroup>
+            <SelectTrigger id="policy-select" aria-label="Policy">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {Object.entries(policiesByFamily).map(([family, policies]) => (
+                <SelectGroup key={family}>
+                  <SelectLabel>{family.replace("-", " ")}</SelectLabel>
+                  {policies.map((item) => (
+                    <SelectItem key={item.id} value={item.id}>
+                      {item.label}
+                    </SelectItem>
+                  ))}
+                </SelectGroup>
+              ))}
+            </SelectContent>
+          </Select>
+          <p className="field-help">{policy.className}</p>
         </div>
 
         <div className="run-setup-field run-setup-selector">
@@ -120,46 +261,57 @@ export function RunSetupPanel({
           )}
         </div>
 
-        <div className="run-setup-field run-setup-parameter">
-          <div className="run-setup-label-row">
-            <Label htmlFor="run-parameter">{definition.label}</Label>
-            <span>{definition.shortLabel}</span>
+        <div className="parameter-section">
+          <div className="parameter-section-heading">
+            <div>
+              <h3>Policy parameters</h3>
+              <p>These values are passed to the public PyMAB constructor.</p>
+            </div>
+            <Button type="button" variant="outline" size="sm" onClick={onRestorePolicyDefaults}>
+              Restore policy defaults
+            </Button>
           </div>
-          <div className="parameter-inputs">
-            <Slider
-              aria-label={`${definition.label} slider`}
-              min={definition.minimum}
-              max={definition.maximum}
-              step={definition.step}
-              value={[sliderValue]}
-              disabled={pending}
-              onValueChange={(values) => {
-                const value = values[0];
-                if (value !== undefined) onParameterChange(formatParameter(value));
-              }}
-            />
-            <Input
-              id="run-parameter"
-              className="parameter-number"
-              type="number"
-              inputMode="decimal"
-              min={definition.minimum}
-              max={definition.maximum}
-              step={definition.step}
-              value={draftConfiguration.parameter}
-              disabled={pending}
-              aria-invalid={Boolean(errors.parameter)}
-              aria-describedby={errors.parameter ? "parameter-error" : "parameter-range"}
-              onChange={(event) => onParameterChange(event.target.value)}
-            />
-          </div>
-          <p id="parameter-range" className="field-help">
-            {definition.minimum} to {definition.maximum}, step {definition.step}
-          </p>
-          {errors.parameter && (
-            <p id="parameter-error" className="field-error" role="alert">
-              {errors.parameter}
+          {primaryParameters.length ? (
+            <div className="dynamic-parameter-grid">
+              {primaryParameters.map((definition) => (
+                <ParameterField
+                  key={definition.key}
+                  definition={definition}
+                  value={draftConfiguration.parameters[definition.key]}
+                  error={errors.parameters[definition.key]}
+                  pending={pending}
+                  onChange={(value) => onParameterChange(definition.key, value)}
+                />
+              ))}
+            </div>
+          ) : (
+            <p className="no-parameters">This policy has no configurable constructor values.</p>
+          )}
+          {policy.id === "moss" && (
+            <p className="constructor-note">
+              <code>
+                horizon=
+                {draftConfiguration.mode === "guided" ? policy.horizon : policy.challengeHorizon}
+              </code>{" "}
+              is fixed to the run length.
             </p>
+          )}
+          {advancedParameters.length > 0 && (
+            <details className="advanced-parameters">
+              <summary>Advanced numerical settings</summary>
+              <div className="dynamic-parameter-grid">
+                {advancedParameters.map((definition) => (
+                  <ParameterField
+                    key={definition.key}
+                    definition={definition}
+                    value={draftConfiguration.parameters[definition.key]}
+                    error={errors.parameters[definition.key]}
+                    pending={pending}
+                    onChange={(value) => onParameterChange(definition.key, value)}
+                  />
+                ))}
+              </div>
+            </details>
           )}
         </div>
 
@@ -190,87 +342,15 @@ export function RunSetupPanel({
           )}
         </div>
 
-        {showPortalProbabilities && (
-          <fieldset className="portal-probabilities">
-            <legend>Portal relic chances</legend>
-            <div className="portal-probabilities-heading">
-              <p>Set the chance that each portal contains a relic.</p>
-              <div className="probability-source">
-                <span>
-                  {draftConfiguration.probabilitySource === "generated"
-                    ? "Generated from seed"
-                    : "Custom"}
-                </span>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  disabled={pending || Boolean(errors.seed)}
-                  onClick={onUseSeedGeneratedValues}
-                >
-                  Use seed-generated values
-                </Button>
-              </div>
-            </div>
-            <div className="portal-probability-grid">
-              {portalNames.map((name, index) => {
-                const value = draftConfiguration.portalProbabilities[index];
-                const numericValue = Number(value);
-                const sliderProbability = Number.isFinite(numericValue)
-                  ? Math.min(100, Math.max(0, numericValue))
-                  : 50;
-                const error = errors.portalProbabilities?.[index];
-                const inputId = `portal-probability-${index}`;
-                const errorId = `${inputId}-error`;
-                return (
-                  <div className="portal-probability-card" key={name}>
-                    <div className="run-setup-label-row">
-                      <Label htmlFor={inputId}>{name} Gate</Label>
-                      <span>{formatProbabilityPercent(sliderProbability / 100)}%</span>
-                    </div>
-                    <div className="parameter-inputs">
-                      <Slider
-                        aria-label={`${name} Gate relic chance slider`}
-                        min={0}
-                        max={100}
-                        step={0.1}
-                        value={[sliderProbability]}
-                        disabled={pending}
-                        onValueChange={(values) => {
-                          const next = values[0];
-                          if (next !== undefined) {
-                            onPortalProbabilityChange(index, formatProbabilityPercent(next / 100));
-                          }
-                        }}
-                      />
-                      <div className="probability-number-wrap">
-                        <Input
-                          id={inputId}
-                          className="parameter-number"
-                          type="number"
-                          inputMode="decimal"
-                          min={0}
-                          max={100}
-                          step={0.1}
-                          value={value}
-                          disabled={pending}
-                          aria-invalid={Boolean(error)}
-                          aria-describedby={error ? errorId : undefined}
-                          onChange={(event) => onPortalProbabilityChange(index, event.target.value)}
-                        />
-                        <span aria-hidden="true">%</span>
-                      </div>
-                    </div>
-                    {error && (
-                      <p id={errorId} className="field-error" role="alert">
-                        {error}
-                      </p>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          </fieldset>
+        {draftConfiguration.mode === "freePlay" && (
+          <EnvironmentEditor
+            draft={draftConfiguration.environment}
+            errors={errors.environment}
+            source={draftConfiguration.probabilitySource}
+            pending={pending}
+            onChange={onEnvironmentChange}
+            onRegenerate={onRegenerateEnvironment}
+          />
         )}
       </div>
 

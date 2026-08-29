@@ -5,6 +5,7 @@ interface RuntimeManifest {
   pymabVersion: string;
   bridgeFilename: string;
   numpyFilename: string;
+  scipyFilename: string;
   assets: Record<string, string>;
 }
 
@@ -26,6 +27,7 @@ const baseUrl = new URL(import.meta.env.BASE_URL, scope.location.origin);
 const outputLimit = 64 * 1024;
 let runtime: PyodideRuntime;
 let manifest: RuntimeManifest;
+let scipyLoaded = false;
 
 async function fetchVerified(relative: string): Promise<Uint8Array> {
   const expected = manifest.assets[relative];
@@ -66,6 +68,14 @@ with zipfile.ZipFile(${JSON.stringify(temporary)}) as archive:
   scope.postMessage({ type: "ready" });
 }
 
+async function loadScipyIfNeeded(code: string) {
+  if (scipyLoaded || !/BernoulliBayesianUCBPolicy|import scipy|from scipy/.test(code)) return;
+  scope.postMessage({ type: "progress", message: "Loading SciPy for this example..." });
+  await fetchVerified(manifest.scipyFilename);
+  await runtime.loadPackage("scipy");
+  scipyLoaded = true;
+}
+
 scope.addEventListener("message", (event: MessageEvent<{ type: "run"; code: string }>) => {
   if (event.data.type !== "run") return;
   void (async () => {
@@ -84,6 +94,7 @@ scope.addEventListener("message", (event: MessageEvent<{ type: "run"; code: stri
     runtime.setStdout({ batched: (value) => append("stdout", value) });
     runtime.setStderr({ batched: (value) => append("stderr", value) });
     try {
+      await loadScipyIfNeeded(event.data.code);
       await runtime.runPythonAsync(event.data.code);
       scope.postMessage({
         type: "result",

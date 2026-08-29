@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useReducer, useRef, useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 
+import { isPolicyId, policyCatalog, type PolicyId } from "@/catalog/policies";
+
 import {
   Chamber,
   Debrief,
@@ -15,13 +17,7 @@ import {
 } from "../components/game";
 import { RunSetupPanel } from "../components/game/RunSetupPanel";
 import { explanationCopy, lessonContent } from "../content/lessons";
-import type {
-  LessonId,
-  LessonMode,
-  LessonRequest,
-  LessonResponse,
-  LessonSnapshot,
-} from "../engine/protocol";
+import type { LessonMode, LessonRequest, LessonResponse, LessonSnapshot } from "../engine/protocol";
 import { useRuntime } from "../engine/RuntimeProvider";
 import { detectBrowserSupport } from "../engine/support";
 import { WorkerClient } from "../engine/WorkerClient";
@@ -29,13 +25,13 @@ import { initialLessonState, lessonReducer } from "../state/lessonReducer";
 import { loadPersistence, savePersistence } from "../state/persistence";
 import {
   configurationFromSnapshot,
+  defaultConfiguration,
   draftFromConfiguration,
-  parameterDefinitions,
+  regenerateDraftEnvironment,
   validateRunDraft,
   type RunConfiguration,
   type RunDraftConfiguration,
 } from "../state/runConfiguration";
-import { generatePortalProbabilities, probabilityDraft } from "../state/portalProbabilities";
 
 interface LessonNavigationState {
   runConfiguration?: RunConfiguration;
@@ -47,35 +43,19 @@ function snapshotFrom(response: LessonResponse): LessonSnapshot {
   throw new Error(`Unexpected worker response: ${response.type}`);
 }
 
-function fixedSeed(lessonId: LessonId, mode: LessonMode): number {
-  const content = lessonContent[lessonId];
-  return mode === "challenge" ? content.challengeSeed : content.guidedSeed;
-}
-
-function defaultConfiguration(lessonId: LessonId): RunConfiguration {
-  return {
-    lessonId,
-    mode: "guided",
-    parameter: parameterDefinitions[lessonId].defaultValue,
-    seed: lessonContent[lessonId].guidedSeed,
-    portalProbabilities: null,
-    probabilitySource: "generated",
-  };
-}
-
 function configurationFromNavigationState(
   state: unknown,
-  lessonId: LessonId,
+  policyId: PolicyId,
 ): RunConfiguration | null {
   const candidate = (state as LessonNavigationState | null)?.runConfiguration;
-  if (!candidate || candidate.lessonId !== lessonId) return null;
+  if (!candidate || candidate.policyId !== policyId) return null;
   return validateRunDraft(draftFromConfiguration(candidate)).configuration;
 }
 
 export function LessonRoute() {
   const { lessonSlug } = useParams();
-  const lessonId: LessonId = lessonSlug === "linucb" ? "linucb" : "epsilon-greedy";
-  const content = lessonContent[lessonId];
+  const policyId: PolicyId = lessonSlug && isPolicyId(lessonSlug) ? lessonSlug : "epsilon-greedy";
+  const content = lessonContent[policyId];
   const { client, progress } = useRuntime();
   const location = useLocation();
   const routeState = location.state as unknown;
@@ -84,7 +64,7 @@ export function LessonRoute() {
   const [persisted, setPersisted] = useState(() => loadPersistence());
   const [activeConfiguration, setActiveConfiguration] = useState<RunConfiguration | null>(null);
   const [draftConfiguration, setDraftConfiguration] = useState<RunDraftConfiguration>(() =>
-    draftFromConfiguration(defaultConfiguration(lessonId)),
+    draftFromConfiguration(defaultConfiguration(policyId)),
   );
   const [inspectorOpen, setInspectorOpen] = useState(persisted.preferences.inspectorOpen);
   const [autoRunning, setAutoRunning] = useState(false);
@@ -110,18 +90,11 @@ export function LessonRoute() {
           type: "startLesson",
           requestId: WorkerClient.requestId(),
           sessionId,
-          lessonId: configuration.lessonId,
+          policyId: configuration.policyId,
           mode: configuration.mode,
           seed: configuration.seed,
-          parameters:
-            configuration.lessonId === "epsilon-greedy"
-              ? { epsilon: configuration.parameter }
-              : { alpha: configuration.parameter, l2: 1 },
-          ...(configuration.lessonId === "epsilon-greedy" &&
-          configuration.mode === "freePlay" &&
-          configuration.portalProbabilities
-            ? { environment: { probabilities: configuration.portalProbabilities } }
-            : {}),
+          parameters: configuration.parameters,
+          ...(configuration.environment ? { environment: configuration.environment } : {}),
         };
         const response = await client.send(request);
         const snapshot = snapshotFrom(response);
@@ -139,13 +112,13 @@ export function LessonRoute() {
         setActiveConfiguration(active);
         setDraftConfiguration(draftFromConfiguration(active));
 
-        const previousRecent = persistedRef.current.recent[active.lessonId];
+        const previousRecent = persistedRef.current.recent[active.policyId];
         const next = {
           ...persistedRef.current,
           recent: {
             ...persistedRef.current.recent,
-            [active.lessonId]: {
-              parameter: active.parameter,
+            [active.policyId]: {
+              parameters: active.parameters,
               seed: active.mode === "freePlay" ? active.seed : previousRecent.seed,
             },
           },
@@ -178,9 +151,9 @@ export function LessonRoute() {
 
     const requestedConfiguration = configurationFromNavigationState(
       locationStateRef.current,
-      lessonId,
+      policyId,
     );
-    const initialConfiguration = requestedConfiguration ?? defaultConfiguration(lessonId);
+    const initialConfiguration = requestedConfiguration ?? defaultConfiguration(policyId);
 
     let active = true;
     void client
@@ -189,7 +162,7 @@ export function LessonRoute() {
         if (!active) return;
         const started = await startConfiguration(initialConfiguration);
         if (active && started && requestedConfiguration) {
-          void navigate(`/lesson/${lessonId}`, { replace: true, state: null });
+          void navigate(`/lesson/${policyId}`, { replace: true, state: null });
         }
       })
       .catch((error: unknown) => {
@@ -204,7 +177,7 @@ export function LessonRoute() {
       active = false;
       autoRef.current = false;
     };
-  }, [client, lessonId, navigate, startConfiguration]);
+  }, [client, policyId, navigate, startConfiguration]);
 
   useEffect(
     () => () => {
@@ -258,28 +231,39 @@ export function LessonRoute() {
     })();
   }, [advance]);
 
-  const changeAlgorithm = (nextLessonId: LessonId) => {
-    setDraftConfiguration((current) => ({
-      ...current,
-      lessonId: nextLessonId,
-      parameter: String(parameterDefinitions[nextLessonId].defaultValue),
-      seed:
-        current.mode === "freePlay" ? current.seed : String(fixedSeed(nextLessonId, current.mode)),
-    }));
+  const changePolicy = (nextPolicyId: PolicyId) => {
+    const next = defaultConfiguration(nextPolicyId, draftConfiguration.mode);
+    if (draftConfiguration.mode === "freePlay") {
+      next.seed = persistedRef.current.recent[nextPolicyId].seed;
+      next.parameters = { ...persistedRef.current.recent[nextPolicyId].parameters };
+    }
+    setDraftConfiguration(draftFromConfiguration(next));
   };
 
   const changeMode = (mode: LessonMode) => {
     setDraftConfiguration((current) => {
       const seed =
         mode === "freePlay"
-          ? persistedRef.current.recent[current.lessonId].seed
-          : fixedSeed(current.lessonId, mode);
+          ? persistedRef.current.recent[current.policyId].seed
+          : mode === "challenge"
+            ? policyCatalog[current.policyId].challengeSeed
+            : policyCatalog[current.policyId].guidedSeed;
+      const parameters =
+        mode === "freePlay"
+          ? persistedRef.current.recent[current.policyId].parameters
+          : policyCatalog[current.policyId].guidedParameters;
       return {
         ...current,
         mode,
         seed: String(seed),
+        parameters: Object.fromEntries(
+          Object.entries(parameters).map(([key, value]) => [
+            key,
+            typeof value === "boolean" ? value : value === null ? "" : String(value),
+          ]),
+        ),
         ...(current.probabilitySource === "generated"
-          ? { portalProbabilities: probabilityDraft(generatePortalProbabilities(seed)) }
+          ? { environment: regenerateDraftEnvironment(current.policyId, seed) }
           : {}),
       };
     });
@@ -288,12 +272,12 @@ export function LessonRoute() {
   const applyDraft = () => {
     const { configuration } = validateRunDraft(draftConfiguration);
     if (!configuration) return;
-    if (configuration.lessonId !== lessonId) {
+    if (configuration.policyId !== policyId) {
       autoRef.current = false;
       setAutoRunning(false);
       setActiveConfiguration(null);
       dispatch({ type: "loading" });
-      void navigate(`/lesson/${configuration.lessonId}`, {
+      void navigate(`/lesson/${configuration.policyId}`, {
         state: { runConfiguration: configuration } satisfies LessonNavigationState,
       });
       return;
@@ -305,24 +289,24 @@ export function LessonRoute() {
     const snapshot = state.snapshot;
     if (!snapshot?.completed || recordedSessionRef.current === snapshot.sessionId) return;
     recordedSessionRef.current = snapshot.sessionId;
-    const completed = persistedRef.current.completed.includes(lessonId)
+    const completed = persistedRef.current.completed.includes(policyId)
       ? persistedRef.current.completed
-      : [...persistedRef.current.completed, lessonId];
+      : [...persistedRef.current.completed, policyId];
     const next = {
       ...persistedRef.current,
       completed,
       attempts: {
         ...persistedRef.current.attempts,
-        [lessonId]:
+        [policyId]:
           snapshot.mode === "challenge"
-            ? persistedRef.current.attempts[lessonId] + 1
-            : persistedRef.current.attempts[lessonId],
+            ? persistedRef.current.attempts[policyId] + 1
+            : persistedRef.current.attempts[policyId],
       },
     };
     persistedRef.current = next;
     setPersisted(next);
     savePersistence(next);
-  }, [lessonId, state.snapshot]);
+  }, [policyId, state.snapshot]);
 
   const toggleInspector = () => {
     const open = !inspectorOpen;
@@ -340,12 +324,15 @@ export function LessonRoute() {
     <RunSetupPanel
       activeConfiguration={activeConfiguration}
       draftConfiguration={draftConfiguration}
-      challengeTarget={lessonContent[draftConfiguration.lessonId].target}
+      challengeTarget={lessonContent[draftConfiguration.policyId].target}
       pending={state.pending || autoRunning}
-      onAlgorithmChange={changeAlgorithm}
+      onPolicyChange={changePolicy}
       onModeChange={changeMode}
-      onParameterChange={(parameter) =>
-        setDraftConfiguration((current) => ({ ...current, parameter }))
+      onParameterChange={(key, value) =>
+        setDraftConfiguration((current) => ({
+          ...current,
+          parameters: { ...current.parameters, [key]: value },
+        }))
       }
       onSeedChange={(seed) =>
         setDraftConfiguration((current) => {
@@ -354,30 +341,39 @@ export function LessonRoute() {
             ...current,
             seed,
             ...(current.probabilitySource === "generated" && Number.isSafeInteger(numericSeed)
-              ? {
-                  portalProbabilities: probabilityDraft(generatePortalProbabilities(numericSeed)),
-                }
+              ? { environment: regenerateDraftEnvironment(current.policyId, numericSeed) }
               : {}),
           };
         })
       }
-      onPortalProbabilityChange={(index, value) =>
-        setDraftConfiguration((current) => {
-          const portalProbabilities = [...current.portalProbabilities] as [string, string, string];
-          portalProbabilities[index] = value;
-          return { ...current, portalProbabilities, probabilitySource: "custom" };
-        })
+      onEnvironmentChange={(environment) =>
+        setDraftConfiguration((current) => ({
+          ...current,
+          environment,
+          probabilitySource: "custom",
+        }))
       }
-      onUseSeedGeneratedValues={() =>
+      onRegenerateEnvironment={() =>
         setDraftConfiguration((current) => {
           const seed = Number(current.seed);
           if (!Number.isSafeInteger(seed)) return current;
           return {
             ...current,
-            portalProbabilities: probabilityDraft(generatePortalProbabilities(seed)),
+            environment: regenerateDraftEnvironment(current.policyId, seed),
             probabilitySource: "generated",
           };
         })
+      }
+      onRestorePolicyDefaults={() =>
+        setDraftConfiguration((current) => ({
+          ...current,
+          parameters: Object.fromEntries(
+            Object.entries(policyCatalog[current.policyId].defaults).map(([key, value]) => [
+              key,
+              typeof value === "boolean" ? value : value === null ? "" : String(value),
+            ]),
+          ),
+        }))
       }
       onApply={applyDraft}
     />
@@ -406,7 +402,7 @@ export function LessonRoute() {
           message={state.error ?? "Unknown runtime failure"}
           onRetry={() => {
             const retryConfiguration =
-              validateRunDraft(draftConfiguration).configuration ?? defaultConfiguration(lessonId);
+              validateRunDraft(draftConfiguration).configuration ?? defaultConfiguration(policyId);
             client.restart();
             dispatch({ type: "loading" });
             void client.initialize().then(() => startConfiguration(retryConfiguration));
@@ -456,18 +452,27 @@ export function LessonRoute() {
                   ...activeConfiguration,
                   mode: "challenge",
                   seed: content.challengeSeed,
-                  portalProbabilities: null,
+                  environment: null,
                   probabilitySource: "generated",
                 })
               }
               onFreePlay={() => {
-                const seed = persistedRef.current.recent[lessonId].seed;
+                const seed = persistedRef.current.recent[policyId].seed;
                 void startConfiguration({
                   ...activeConfiguration,
                   mode: "freePlay",
                   seed,
-                  portalProbabilities:
-                    lessonId === "epsilon-greedy" ? generatePortalProbabilities(seed) : null,
+                  environment:
+                    validateRunDraft({
+                      ...draftFromConfiguration({
+                        ...activeConfiguration,
+                        mode: "freePlay",
+                        seed,
+                        environment: null,
+                        probabilitySource: "generated",
+                      }),
+                      mode: "freePlay",
+                    }).configuration?.environment ?? null,
                   probabilitySource: "generated",
                 });
               }}
@@ -479,7 +484,9 @@ export function LessonRoute() {
           open={inspectorOpen}
           onToggle={toggleInspector}
           onOpenLab={() => {
-            void navigate("/lab", { state: { code: state.snapshot?.generatedCode, lessonId } });
+            void navigate("/lab", {
+              state: { code: state.snapshot?.generatedCode, lessonId: policyId },
+            });
           }}
         />
       </div>

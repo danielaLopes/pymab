@@ -3,6 +3,13 @@ import type { CSSProperties, ReactNode } from "react";
 import { Link } from "react-router-dom";
 
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import {
+  familyDefinitions,
+  familyOrder,
+  policiesByFamily,
+  policyCatalog,
+  type PolicyId,
+} from "@/catalog/policies";
 
 import type { LessonId, LessonSnapshot, RuntimeProgress } from "../../engine/protocol";
 import { loadPersistence, savePersistence } from "../../state/persistence";
@@ -14,9 +21,9 @@ const gateDetails = [
 ];
 
 const cueHelp: Record<string, string> = {
-  light: "Light can be red or blue. LinUCB sees it before choosing a portal.",
-  echo: "Echo can be low or high. LinUCB sees it before choosing a portal.",
-  tide: "Tide can be low or high. LinUCB sees it before choosing a portal.",
+  light: "Light can be red or blue. The policy sees it before choosing a portal.",
+  echo: "Echo can be low or high. The policy sees it before choosing a portal.",
+  tide: "Tide can be low or high. The policy sees it before choosing a portal.",
 };
 
 export function AppShell({ children }: { children: ReactNode }) {
@@ -69,28 +76,66 @@ export function AppShell({ children }: { children: ReactNode }) {
 }
 
 export function CampaignMap() {
+  const [query, setQuery] = useState("");
+  const normalized = query.trim().toLowerCase();
+  const matches = Object.values(policyCatalog).filter((policy) =>
+    `${policy.label} ${policy.className} ${policy.family}`.toLowerCase().includes(normalized),
+  );
   return (
-    <div className="campaign-grid">
-      <Link className="mission-card mission-one" to="/lesson/epsilon-greedy">
-        <span className="mission-number">01</span>
-        <span className="tag">FOUNDATIONS</span>
-        <h2>The Three Ancient Gates</h2>
-        <p>
-          See how ε-greedy chooses between using its current estimates and testing a random gate.
-        </p>
-        <span className="mission-cta">
-          Start the lesson <span aria-hidden="true">→</span>
-        </span>
-      </Link>
-      <Link className="mission-card mission-two" to="/lesson/linucb">
-        <span className="mission-number">02</span>
-        <span className="tag">CONTEXTUAL BANDITS</span>
-        <h2>The Labyrinth of Signals</h2>
-        <p>See how changing context and uncertainty affect each choice.</p>
-        <span className="mission-cta">
-          Start the lesson <span aria-hidden="true">→</span>
-        </span>
-      </Link>
+    <div className="mission-atlas">
+      <div className="policy-search">
+        <label htmlFor="policy-search">Find a policy or Python class</label>
+        <input
+          id="policy-search"
+          type="search"
+          placeholder="Try Thompson, UCB, or EXP3"
+          value={query}
+          onChange={(event) => setQuery(event.target.value)}
+        />
+        <span role="status">{matches.length} policies</span>
+      </div>
+      {normalized ? (
+        <div className="policy-search-results">
+          {matches.map((policy) => (
+            <Link key={policy.id} className="policy-row" to={`/lesson/${policy.id}`}>
+              <LessonBadge policyId={policy.id} />
+              <span>
+                <strong>{policy.label}</strong>
+                <small>{policy.className}</small>
+              </span>
+              <span aria-hidden="true">→</span>
+            </Link>
+          ))}
+        </div>
+      ) : (
+        <div className="family-atlas">
+          {familyOrder.map((family) => {
+            const definition = familyDefinitions[family];
+            return (
+              <section className={`family-card family-${family}`} key={family}>
+                <div className="family-card-heading">
+                  <span className="mission-number">{definition.number}</span>
+                  <span className="tag">{definition.label.toUpperCase()}</span>
+                  <h2>{definition.title}</h2>
+                  <p>{definition.description}</p>
+                </div>
+                <div className="family-policy-list">
+                  {policiesByFamily[family].map((policy) => (
+                    <Link key={policy.id} className="policy-row" to={`/lesson/${policy.id}`}>
+                      <LessonBadge policyId={policy.id} />
+                      <span>
+                        <strong>{policy.label}</strong>
+                        <small>{policy.className}</small>
+                      </span>
+                      <span aria-hidden="true">→</span>
+                    </Link>
+                  ))}
+                </div>
+              </section>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }
@@ -184,8 +229,8 @@ export function Gate({
       <small>{gate.rune}</small>
       {insight && <span className="gate-insight">{insight}</span>}
       {selected && reward !== null && (
-        <span className={`reward-token ${reward ? "won" : "empty"}`}>
-          {reward ? "+1 RELIC" : "EMPTY"}
+        <span className={`reward-token ${reward > 0 ? "won" : "empty"}`}>
+          {reward === 1 ? "+1 RELIC" : reward === 0 ? "EMPTY" : reward.toFixed(2)}
         </span>
       )}
     </button>
@@ -199,34 +244,86 @@ export function Chamber({
   snapshot: LessonSnapshot | null;
   animationState?: string;
 }) {
-  const predictedMeans = snapshot?.diagnostic?.predictedMeans;
+  const diagnosticAfter = snapshot?.diagnostic?.after;
+  const after =
+    diagnosticAfter && typeof diagnosticAfter === "object"
+      ? (diagnosticAfter as Record<string, unknown>)
+      : null;
+  const predictedMeans =
+    snapshot?.diagnostic?.predictedMeans ?? after?.predictedMeans ?? after?.estimates;
   const learnedEstimates =
     Array.isArray(predictedMeans) && predictedMeans.length === 3
       ? predictedMeans.map((value) => (typeof value === "number" ? value : null))
       : null;
+  const publicEnvironment = snapshot?.environment;
   const configuredProbabilities =
-    snapshot?.lessonId === "epsilon-greedy" && snapshot.mode === "freePlay"
-      ? snapshot.environment?.probabilities
+    snapshot?.mode === "freePlay" && Array.isArray(publicEnvironment?.probabilities)
+      ? (publicEnvironment.probabilities as unknown[])
       : null;
+  const configuredMeans =
+    snapshot?.mode === "freePlay" && Array.isArray(publicEnvironment?.means)
+      ? (publicEnvironment.means as unknown[])
+      : null;
+  const configuredTheta =
+    snapshot?.mode === "freePlay" && Array.isArray(publicEnvironment?.theta)
+      ? (publicEnvironment.theta as unknown[])
+      : null;
+  const cueFeature =
+    snapshot?.visibleCues.length === 3
+      ? [1, ...snapshot.visibleCues.map((cue) => cue.value)]
+      : null;
+  const activeState = Array.isArray(after?.active) ? after.active : null;
 
   const insightFor = (index: number): string | null => {
     const probability = configuredProbabilities?.[index];
     if (typeof probability === "number") {
-      return `Relic chance ${(probability * 100).toFixed(1)}%`;
+      return `Reward chance ${(probability * 100).toFixed(1)}%`;
     }
-    if (snapshot?.lessonId === "linucb") {
+    const mean = configuredMeans?.[index];
+    if (typeof mean === "number") return `Mean reward ${mean.toFixed(2)}`;
+    const thetaRow = configuredTheta?.[index];
+    if (Array.isArray(thetaRow) && cueFeature && thetaRow.length === 4) {
+      const coefficients = thetaRow as unknown[];
+      const linear = coefficients.reduce<number>(
+        (total, coefficient, featureIndex) =>
+          total + Number(coefficient) * cueFeature[featureIndex]!,
+        0,
+      );
+      if (policyCatalog[snapshot!.policyId].environment === "contextual-logistic") {
+        return `Current reward chance ${(100 / (1 + Math.exp(-linear))).toFixed(1)}%`;
+      }
+      return `Current expected reward ${linear.toFixed(2)}`;
+    }
+    if (snapshot?.family === "contextual") {
       const estimate = learnedEstimates?.[index];
       return typeof estimate === "number"
         ? `Learned estimate ${estimate.toFixed(2)}`
         : "No estimate yet";
     }
+    if (snapshot?.family === "best-arm" && activeState) {
+      return activeState[index] ? "Active candidate" : "Eliminated";
+    }
     return null;
   };
 
   return (
-    <section className={`chamber ${animationState}`} aria-label="Independent decision round">
+    <section
+      className={`chamber world-${snapshot?.family ?? "foundations"} ${animationState}`}
+      aria-label="Independent decision round"
+    >
       <div className="chamber-haze" aria-hidden="true" />
       <CueStrip snapshot={snapshot} />
+      {snapshot?.family === "changing" && (
+        <div className="phase-timeline" aria-label="Changing environment timeline">
+          <span style={{ width: `${(snapshot.step / snapshot.horizon) * 100}%` }} />
+          <strong>Round {snapshot.step || 1}: the environment may change over time</strong>
+        </div>
+      )}
+      {snapshot?.family === "adversarial" && (
+        <p className="world-note">
+          The arena assigns rewards each round. Only the selected reward is revealed.
+        </p>
+      )}
       <div className="gates">
         {gateDetails.map((_, index) => (
           <Gate
@@ -250,16 +347,28 @@ export function OutcomeReveal({
   snapshot: LessonSnapshot | null;
   explanation: string;
 }) {
+  const reward = snapshot?.reward;
+  const binary = snapshot
+    ? ["stationary-bernoulli", "changing-bernoulli", "best-arm", "contextual-logistic"].includes(
+        policyCatalog[snapshot.policyId].environment,
+      )
+    : true;
+  const result =
+    reward === null || reward === undefined
+      ? ""
+      : binary
+        ? reward > 0
+          ? "Relic found"
+          : "No relic this time"
+        : `Reward ${reward.toFixed(3)}`;
   return (
     <div className="outcome" aria-live="polite">
       <span className="outcome-icon" aria-hidden="true">
-        {snapshot?.reward === 1 ? "✦" : "◇"}
+        {(reward ?? 0) > 0 ? "✦" : "◇"}
       </span>
       <div>
         <strong>
-          {snapshot?.step
-            ? `Round ${snapshot.step}: ${snapshot.reward ? "Relic found" : "No relic this time"}`
-            : "Awaiting the first decision"}
+          {snapshot?.step ? `Round ${snapshot.step}: ${result}` : "Awaiting the first decision"}
         </strong>
         <p>{explanation}</p>
       </div>
@@ -290,8 +399,10 @@ export function ProgressTrail({ snapshot }: { snapshot: LessonSnapshot | null })
       </div>
       <dl>
         <div>
-          <dt>Relics</dt>
-          <dd>{snapshot?.totalReward ?? 0}</dd>
+          <dt>{snapshot?.objective === "best-arm" ? "Samples" : "Total reward"}</dt>
+          <dd>
+            {snapshot?.objective === "best-arm" ? step : (snapshot?.totalReward ?? 0).toFixed(2)}
+          </dd>
         </div>
         <div>
           <dt>Expected regret</dt>
@@ -363,8 +474,14 @@ export function Debrief({
       .slice(0, index + 1)
       .reduce((total, item) => total + item.instantaneousExpectedRegret, 0),
   }));
-  const probabilities = snapshot.hiddenTruth?.probabilities;
-  const optimalArms = snapshot.hiddenTruth?.optimalArms;
+  const hiddenTruth = snapshot.hiddenTruth;
+  const probabilities = hiddenTruth?.probabilities;
+  const optimalArms = hiddenTruth?.optimalArms;
+  const environmentKind = policyCatalog[snapshot.policyId].environment;
+  const numericRewards =
+    environmentKind === "stationary-gaussian" ||
+    environmentKind === "contextual-linear" ||
+    environmentKind === "adversarial";
   const gateResults = gateDetails.map((_, gateIndex) => {
     const selections = snapshot.history.filter((event) => event.selectedArm === gateIndex);
     return {
@@ -383,13 +500,29 @@ export function Debrief({
           : "Run complete"}
       </h2>
       <p>
-        You collected <strong>{snapshot.totalReward} relics</strong> with{" "}
+        The run earned <strong>{snapshot.totalReward.toFixed(3)} total reward</strong> with{" "}
         <strong>{snapshot.cumulativeExpectedRegret.toFixed(2)} expected regret</strong>.
       </p>
+      {snapshot.objective === "best-arm" && (
+        <p className="recommendation-result">
+          Recommended portal:{" "}
+          <strong>
+            {snapshot.recommendation === null
+              ? "Not available"
+              : gateDetails[snapshot.recommendation]?.name}
+          </strong>
+          .
+          {snapshot.passed
+            ? " It matches the strongest portal in this run."
+            : " It does not match the strongest portal in this run."}
+        </p>
+      )}
       <details className="debrief-details">
         <summary>Show environment values and regret by round</summary>
-        {snapshot.lessonId === "epsilon-greedy" &&
+        {environmentKind !== "contextual-linear" &&
+          environmentKind !== "contextual-logistic" &&
           Array.isArray(probabilities) &&
+          probabilities.length === 3 &&
           probabilities.every((value) => typeof value === "number") && (
             <dl className="truth-grid" aria-label="Configured gate reward probabilities">
               {probabilities.map((value, index) => {
@@ -408,7 +541,7 @@ export function Debrief({
               })}
             </dl>
           )}
-        {snapshot.lessonId === "linucb" && (
+        {(environmentKind === "contextual-linear" || environmentKind === "contextual-logistic") && (
           <>
             <p>
               The best gate can change with the signals. The table below compares the optimal gate
@@ -420,6 +553,12 @@ export function Debrief({
             />
           </>
         )}
+        {environmentKind === "stationary-gaussian" && (
+          <MatrixTable label="Gaussian environment means" value={[snapshot.hiddenTruth?.means]} />
+        )}
+        {environmentKind === "changing-bernoulli" && (
+          <pre className="truth-json">{JSON.stringify(snapshot.hiddenTruth?.rounds, null, 2)}</pre>
+        )}
         <div className="debrief-table-wrap">
           <table className="debrief-table">
             <caption>Decision and expected-regret path</caption>
@@ -427,7 +566,9 @@ export function Debrief({
               <tr>
                 <th>Round</th>
                 <th>Chosen</th>
-                {snapshot.lessonId === "linucb" && <th>Optimal</th>}
+                {(snapshot.family === "contextual" ||
+                  snapshot.family === "changing" ||
+                  snapshot.family === "adversarial") && <th>Optimal</th>}
                 <th>Reward</th>
                 <th>Regret</th>
                 <th>Total regret</th>
@@ -438,14 +579,32 @@ export function Debrief({
                 <tr key={event.step}>
                   <th scope="row">{event.step}</th>
                   <td>{gateDetails[event.selectedArm]?.name}</td>
-                  {snapshot.lessonId === "linucb" && (
+                  {(snapshot.family === "contextual" ||
+                    snapshot.family === "changing" ||
+                    snapshot.family === "adversarial") && (
                     <td>
-                      {Array.isArray(optimalArms) && typeof optimalArms[event.step - 1] === "number"
-                        ? gateDetails[Number(optimalArms[event.step - 1])]?.name
-                        : "Not available"}
+                      {(() => {
+                        const rounds = hiddenTruth?.rounds;
+                        const fromRounds =
+                          Array.isArray(rounds) &&
+                          typeof rounds[event.step - 1] === "object" &&
+                          rounds[event.step - 1] !== null
+                            ? (rounds[event.step - 1] as Record<string, unknown>).optimalArm
+                            : undefined;
+                        const arm = Array.isArray(optimalArms)
+                          ? (optimalArms as unknown[])[event.step - 1]
+                          : fromRounds;
+                        return typeof arm === "number" ? gateDetails[arm]?.name : "Not available";
+                      })()}
                     </td>
                   )}
-                  <td>{event.reward ? "Relic" : "Empty"}</td>
+                  <td>
+                    {numericRewards
+                      ? event.reward.toPrecision(4)
+                      : event.reward
+                        ? "Relic"
+                        : "Empty"}
+                  </td>
                   <td>{event.regret.toPrecision(4)}</td>
                   <td>{event.cumulativeRegret.toPrecision(4)}</td>
                 </tr>
@@ -501,12 +660,43 @@ export function UnsupportedBrowser({ reason }: { reason: string }) {
 export function PolicyBars({ snapshot }: { snapshot: LessonSnapshot }) {
   const diagnostic = snapshot.diagnostic;
   if (!diagnostic) return null;
-  const values =
-    snapshot.lessonId === "epsilon-greedy" ? diagnostic.estimatesAfter : diagnostic.ucbScores;
-  if (!Array.isArray(values)) return null;
-  const numeric = values.map(Number);
+  const before =
+    diagnostic.before && typeof diagnostic.before === "object"
+      ? (diagnostic.before as Record<string, unknown>)
+      : diagnostic;
+  const after =
+    diagnostic.after && typeof diagnostic.after === "object"
+      ? (diagnostic.after as Record<string, unknown>)
+      : diagnostic;
+  const candidates: Array<[string, unknown]> =
+    snapshot.policyId === "linucb"
+      ? [["UCB score", diagnostic.ucbScores]]
+      : [
+          ["Confidence index", before.indices ?? after.indices],
+          [
+            "Action probability",
+            before.actionProbabilities ??
+              after.actionProbabilities ??
+              before.probabilities ??
+              after.probabilities,
+          ],
+          ["Posterior mean", before.means ?? after.means],
+          ["Preference", before.preferences ?? after.preferences],
+          ["Weight", before.weights ?? after.weights ?? before.log_weights ?? after.log_weights],
+          ["Estimate", diagnostic.estimatesAfter ?? after.estimates ?? before.estimates],
+          ["Effective count", after.discounted_counts ?? before.discounted_counts],
+        ];
+  const selected = candidates.find(([, value]) => Array.isArray(value) && value.length === 3);
+  if (!selected)
+    return (
+      <p className="field-help">
+        This policy's state is available in the validated snapshot below.
+      </p>
+    );
+  const [label, values] = selected;
+  const numeric = (values as unknown[]).map(Number);
   const scale = Math.max(...numeric.map(Math.abs), 1);
-  if (snapshot.lessonId === "linucb") {
+  if (snapshot.policyId === "linucb") {
     const means = Array.isArray(diagnostic.predictedMeans)
       ? diagnostic.predictedMeans.map(Number)
       : [];
@@ -541,8 +731,9 @@ export function PolicyBars({ snapshot }: { snapshot: LessonSnapshot }) {
     <div
       className="policy-bars"
       role="img"
-      aria-label={`${snapshot.lessonId} scores: ${numeric.map((value, i) => `${gateDetails[i]?.name} ${value.toPrecision(4)}`).join(", ")}`}
+      aria-label={`${label}: ${numeric.map((value, i) => `${gateDetails[i]?.name} ${value.toPrecision(4)}`).join(", ")}`}
     >
+      <small className="policy-bars-label">{label}</small>
       {numeric.map((value, index) => (
         <div key={index}>
           <span>{gateDetails[index]?.symbol}</span>
@@ -613,11 +804,7 @@ export function InspectPanel({
               <dl className="metadata">
                 <div>
                   <dt>Class</dt>
-                  <dd>
-                    {snapshot.lessonId === "epsilon-greedy"
-                      ? "EpsilonGreedyPolicy"
-                      : "LinUCBPolicy"}
-                  </dd>
+                  <dd>{policyCatalog[snapshot.policyId].className}</dd>
                 </div>
                 <div>
                   <dt>PyMAB</dt>
@@ -631,9 +818,14 @@ export function InspectPanel({
                   <dt>Constructor</dt>
                   <dd>
                     <code>
-                      {snapshot.lessonId === "epsilon-greedy"
-                        ? `EpsilonGreedyPolicy(n_arms=3, epsilon=${snapshot.parameters.epsilon})`
-                        : `LinUCBPolicy(n_arms=3, n_features=4, alpha=${snapshot.parameters.alpha}, l2=${snapshot.parameters.l2})`}
+                      {`${policyCatalog[snapshot.policyId].className}(${Object.entries({
+                        n_arms: 3,
+                        ...(snapshot.family === "contextual" ? { n_features: 4 } : {}),
+                        ...(snapshot.policyId === "moss" ? { horizon: snapshot.horizon } : {}),
+                        ...snapshot.parameters,
+                      })
+                        .map(([key, value]) => `${key}=${String(value)}`)
+                        .join(", ")})`}
                     </code>
                   </dd>
                 </div>
@@ -646,7 +838,7 @@ export function InspectPanel({
               </dl>
               <h2>Decision state</h2>
               <PolicyBars snapshot={snapshot} />
-              {snapshot.lessonId === "linucb" && snapshot.diagnostic && (
+              {snapshot.family === "contextual" && snapshot.diagnostic && (
                 <>
                   <MatrixTable
                     label="Current context matrix"
@@ -654,9 +846,18 @@ export function InspectPanel({
                   />
                   <MatrixTable
                     label="Learned coefficient estimates"
-                    value={snapshot.diagnostic.thetaBefore}
+                    value={
+                      snapshot.diagnostic.thetaBefore ??
+                      (snapshot.diagnostic.after as Record<string, unknown> | undefined)?.theta
+                    }
                   />
                 </>
+              )}
+              {snapshot.family === "best-arm" && snapshot.diagnostic?.recommendation !== null && (
+                <p className="inspector-callout">
+                  Current recommendation:{" "}
+                  {gateDetails[Number(snapshot.diagnostic?.recommendation)]?.name}
+                </p>
               )}
               <details>
                 <summary>Full validated snapshot</summary>
@@ -689,8 +890,11 @@ export function InspectPanel({
   );
 }
 
-export function LessonBadge({ lessonId }: { lessonId: LessonId }) {
+export function LessonBadge({ policyId, lessonId }: { policyId?: PolicyId; lessonId?: LessonId }) {
+  const id = policyId ?? lessonId ?? "epsilon-greedy";
   return (
-    <span className="lesson-badge">{lessonId === "epsilon-greedy" ? "ε" : "xᵀθ + bonus"}</span>
+    <span className="lesson-badge" title={policyCatalog[id].className}>
+      {policyCatalog[id].badge}
+    </span>
   );
 }

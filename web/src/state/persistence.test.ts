@@ -37,4 +37,30 @@ describe("lesson persistence", () => {
     storage.setItem("pymab-arcade:v1", JSON.stringify({ version: 2 }));
     expect(loadPersistence(storage)).toEqual(defaultPersistedState);
   });
+
+  it("migrates the two original policy records into version 2", () => {
+    const storage = new MemoryStorage();
+    storage.setItem(
+      "pymab-arcade:v1",
+      JSON.stringify({
+        version: 1,
+        completed: ["epsilon-greedy"],
+        attempts: { "epsilon-greedy": 2, linucb: 1 },
+        preferences: { inspectorOpen: true, reducedMotion: null },
+        recent: {
+          "epsilon-greedy": { seed: 91, parameter: 0.14 },
+          linucb: { seed: 92, parameter: 1.3 },
+        },
+      }),
+    );
+    const migrated = loadPersistence(storage);
+    expect(migrated.version).toBe(2);
+    expect(migrated.completed).toEqual(["epsilon-greedy"]);
+    expect(migrated.recent["epsilon-greedy"].parameters).toEqual({
+      initial_value: 0,
+      epsilon: 0.14,
+    });
+    expect(migrated.recent.linucb.parameters).toEqual({ alpha: 1.3, l2: 1 });
+    expect(Object.keys(migrated.recent)).toHaveLength(27);
+  });
 });

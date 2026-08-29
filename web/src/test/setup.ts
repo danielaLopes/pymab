@@ -18,6 +18,13 @@ Object.defineProperty(globalThis, "ResizeObserver", {
   configurable: true,
 });
 
+Object.defineProperties(Element.prototype, {
+  hasPointerCapture: { value: () => false, configurable: true },
+  setPointerCapture: { value: () => undefined, configurable: true },
+  releasePointerCapture: { value: () => undefined, configurable: true },
+  scrollIntoView: { value: () => undefined, configurable: true },
+});
+
 afterEach(() => {
   window.localStorage?.clear();
   window.location.hash = "";

@@ -30,7 +30,7 @@ test("run setup panels", async ({ page }) => {
   await page.goto("./#/lesson/epsilon-greedy");
   await expect(page.getByRole("radio", { name: "Free play" })).toBeEnabled({ timeout: 30_000 });
   await page.getByRole("radio", { name: "Free play" }).click();
-  await expect(page.getByText("Portal relic chances")).toBeVisible();
+  await expect(page.getByText("Portal reward chances")).toBeVisible();
   await expect(page.getByRole("region", { name: "Configure this run" })).toHaveScreenshot(
     "epsilon-free-play-run-setup.png",
     screenshotOptions,

@@ -6,6 +6,7 @@ import json
 from typing import Any
 
 import pymab
+from pymab_demo.catalog import POLICY_CATALOG
 from pymab_demo.protocol import DemoError, dumps
 from pymab_demo.sessions import LessonSession, create_session
 
@@ -34,10 +35,10 @@ def dispatch(request: dict[str, Any]) -> dict[str, Any]:
     if not session_id:
         raise ValueError("sessionId is required")
     if command == "startLesson":
-        lesson_id = str(request.get("lessonId"))
+        lesson_id = str(request.get("policyId", request.get("lessonId")))
         mode = str(request.get("mode"))
-        if lesson_id not in ("epsilon-greedy", "linucb"):
-            raise ValueError("unknown lessonId")
+        if lesson_id not in POLICY_CATALOG:
+            raise ValueError("unknown policyId")
         if mode not in ("guided", "challenge", "freePlay"):
             raise ValueError("unknown mode")
         if session_id in _sessions and not _sessions[session_id].disposed:
@@ -46,7 +47,7 @@ def dispatch(request: dict[str, Any]) -> dict[str, Any]:
         environment = None if raw_environment is None else dict(raw_environment)
         new_session = create_session(
             session_id=session_id,
-            lesson_id=lesson_id,  # type: ignore[arg-type]
+            lesson_id=lesson_id,
             mode=mode,  # type: ignore[arg-type]
             seed=int(request.get("seed", 0)),
             parameters=dict(request.get("parameters", {})),

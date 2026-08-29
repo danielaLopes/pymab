@@ -1,10 +1,10 @@
 PyMAB Arcade
 ============
 
-PyMAB Arcade is an interactive companion to this documentation. It teaches
-``EpsilonGreedyPolicy`` and ``LinUCBPolicy`` through short, reproducible
-expeditions, then exposes the exact policy inputs, diagnostics, and equivalent
-Python behind each decision.
+PyMAB Arcade is an interactive companion to this documentation. It covers all
+27 concrete policies exported by ``pymab.policies`` through short,
+reproducible runs. Each lesson exposes the real constructor settings, policy
+state, reward environment, and equivalent Python behind the decisions.
 
 `Launch PyMAB Arcade <../demo/>`_
 
@@ -27,6 +27,20 @@ current light, echo, and tide before choosing a gate, but it does not navigate a
 path or optimize a delayed sequence of rewards. Problems where an action changes
 the next state belong to stateful reinforcement learning, not this demo.
 
+Policy families and environments
+--------------------------------
+
+The mission atlas groups policies into Foundations, Optimism, Bayesian
+methods, Changing environments, Best arm identification, Adversarial rewards,
+and Contextual bandits. The grouping helps you compare related methods. Every
+policy still has its own route and runs its own checked-out Python class.
+
+Free play keeps policy parameters separate from the reward environment. You
+can edit Bernoulli probabilities, Gaussian means and noise, nonstationary phase
+schedules, adversarial reward tables, or contextual coefficient matrices. Best
+arm lessons report a final recommendation. Other lessons emphasize cumulative
+reward and expected regret.
+
 Browser requirements
 --------------------
 
@@ -34,6 +48,10 @@ Use a current release of Chromium, Firefox, or Safari with WebAssembly and
 module Web Worker support. The first lesson load downloads the Python runtime,
 NumPy, and PyMAB; subsequent loads can reuse the browser cache. A compatibility
 message is shown when the required browser features are unavailable.
+
+``BernoulliBayesianUCBPolicy`` needs SciPy for its posterior confidence bound.
+The Arcade loads the pinned local SciPy package only when that lesson first
+starts. The package is then cached for later runs.
 
 Local development
 -----------------

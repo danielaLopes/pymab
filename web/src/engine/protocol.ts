@@ -1,22 +1,34 @@
 import { z } from "zod";
 
-export const lessonIdSchema = z.enum(["epsilon-greedy", "linucb"]);
+import { policyIds } from "@/catalog/policies";
+
+export const policyIdSchema = z.enum(policyIds);
 export const lessonModeSchema = z.enum(["guided", "challenge", "freePlay"]);
+export const policyFamilySchema = z.enum([
+  "foundations",
+  "optimism",
+  "bayesian",
+  "changing",
+  "best-arm",
+  "adversarial",
+  "contextual",
+]);
+export const policyObjectiveSchema = z.enum(["cumulative-reward", "best-arm"]);
+
+const parameterValueSchema = z.union([z.number(), z.boolean(), z.string(), z.null()]);
 
 const requestBase = z.object({ requestId: z.string().min(1) });
 const sessionBase = requestBase.extend({ sessionId: z.string().min(1) });
-const environmentSchema = z.object({
-  probabilities: z.tuple([z.number(), z.number(), z.number()]),
-});
+const environmentSchema = z.record(z.string(), z.unknown());
 
 export const requestSchema = z.discriminatedUnion("type", [
   requestBase.extend({ type: z.literal("initialize"), sourceCommit: z.string().optional() }),
   sessionBase.extend({
     type: z.literal("startLesson"),
-    lessonId: lessonIdSchema,
+    policyId: policyIdSchema,
     mode: lessonModeSchema,
     seed: z.number().int(),
-    parameters: z.record(z.string(), z.number()),
+    parameters: z.record(z.string(), parameterValueSchema),
     environment: environmentSchema.optional(),
     sourceCommit: z.string().optional(),
   }),
@@ -42,7 +54,9 @@ const historyEventSchema = z.object({
 });
 
 export const lessonSnapshotSchema = z.object({
-  lessonId: lessonIdSchema,
+  policyId: policyIdSchema,
+  family: policyFamilySchema,
+  objective: policyObjectiveSchema,
   mode: lessonModeSchema,
   seed: z.number().int(),
   packageVersion: z.string(),
@@ -50,7 +64,7 @@ export const lessonSnapshotSchema = z.object({
   sessionId: z.string(),
   step: z.number().int().nonnegative(),
   horizon: z.number().int().positive(),
-  parameters: z.record(z.string(), z.number()),
+  parameters: z.record(z.string(), parameterValueSchema),
   environment: environmentSchema.nullable(),
   gateIds: z.array(z.string()).length(3),
   selectedArm: z.number().int().min(0).max(2).nullable(),
@@ -64,6 +78,7 @@ export const lessonSnapshotSchema = z.object({
   publicContext: z.array(z.array(z.number())).nullable(),
   explanationKey: z.string(),
   diagnostic: z.record(z.string(), z.unknown()).nullable(),
+  recommendation: z.number().int().min(0).max(2).nullable(),
   history: z.array(historyEventSchema),
   hiddenTruth: z.record(z.string(), z.unknown()).nullable(),
   generatedCode: z.string(),
@@ -107,11 +122,12 @@ export const responseSchema = z.discriminatedUnion("type", [
 
 export const progressSchema = z.object({
   type: z.literal("progress"),
-  stage: z.enum(["runtime", "numpy", "pymab", "lesson"]),
+  stage: z.enum(["runtime", "numpy", "scipy", "pymab", "lesson"]),
   message: z.string(),
 });
 
-export type LessonId = z.infer<typeof lessonIdSchema>;
+export type PolicyId = z.infer<typeof policyIdSchema>;
+export type LessonId = PolicyId;
 export type LessonMode = z.infer<typeof lessonModeSchema>;
 export type LessonRequest = z.infer<typeof requestSchema>;
 export type LessonResponse = z.infer<typeof responseSchema>;

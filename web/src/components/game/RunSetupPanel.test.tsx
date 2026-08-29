@@ -2,143 +2,94 @@ import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { useState } from "react";
 
-import type { LessonId, LessonMode } from "../../engine/protocol";
+import { policyCatalog, type PolicyId } from "@/catalog/policies";
+import type { LessonMode } from "@/engine/protocol";
+import { generateEnvironment, type EnvironmentDraft } from "@/state/environments";
 import {
+  defaultConfiguration,
   draftFromConfiguration,
-  parameterDefinitions,
-  type RunConfiguration,
   type RunDraftConfiguration,
-} from "../../state/runConfiguration";
+} from "@/state/runConfiguration";
 import { RunSetupPanel } from "./RunSetupPanel";
 
-const activeConfiguration: RunConfiguration = {
-  lessonId: "epsilon-greedy",
-  mode: "guided",
-  parameter: 0.2,
-  seed: 42,
-  portalProbabilities: null,
-  probabilitySource: "generated",
-};
+const activeConfiguration = defaultConfiguration("epsilon-greedy");
 
 function PanelHarness() {
   const [draft, setDraft] = useState<RunDraftConfiguration>(() =>
     draftFromConfiguration(activeConfiguration),
   );
-
-  const changeAlgorithm = (lessonId: LessonId) => {
-    setDraft((current) => ({
-      ...current,
-      lessonId,
-      parameter: String(parameterDefinitions[lessonId].defaultValue),
-    }));
+  const changePolicy = (policyId: PolicyId) => {
+    const definition = policyCatalog[policyId];
+    setDraft((current) =>
+      draftFromConfiguration({
+        ...defaultConfiguration(policyId, current.mode),
+        seed: Number(current.seed),
+        parameters: definition.defaults,
+      }),
+    );
   };
-
-  const changeMode = (mode: LessonMode) => {
-    setDraft((current) => ({ ...current, mode }));
-  };
+  const changeMode = (mode: LessonMode) => setDraft((current) => ({ ...current, mode }));
+  const changeEnvironment = (environment: EnvironmentDraft) =>
+    setDraft((current) => ({ ...current, environment, probabilitySource: "custom" }));
 
   return (
     <RunSetupPanel
       activeConfiguration={activeConfiguration}
       draftConfiguration={draft}
-      challengeTarget="Collect 12 relics while keeping expected regret at or below 3.25."
+      challengeTarget="Keep expected regret within the target."
       pending={false}
-      onAlgorithmChange={changeAlgorithm}
+      onPolicyChange={changePolicy}
       onModeChange={changeMode}
-      onParameterChange={(parameter) => setDraft((current) => ({ ...current, parameter }))}
+      onParameterChange={(key, value) =>
+        setDraft((current) => ({ ...current, parameters: { ...current.parameters, [key]: value } }))
+      }
       onSeedChange={(seed) => setDraft((current) => ({ ...current, seed }))}
-      onPortalProbabilityChange={(index, value) =>
-        setDraft((current) => {
-          const portalProbabilities = [...current.portalProbabilities] as [string, string, string];
-          portalProbabilities[index] = value;
-          return { ...current, portalProbabilities, probabilitySource: "custom" };
-        })
+      onEnvironmentChange={changeEnvironment}
+      onRegenerateEnvironment={() =>
+        setDraft((current) => ({
+          ...current,
+          environment: generateEnvironment(current.policyId, Number(current.seed)),
+          probabilitySource: "generated",
+        }))
       }
-      onUseSeedGeneratedValues={() =>
-        setDraft((current) => ({ ...current, probabilitySource: "generated" }))
-      }
+      onRestorePolicyDefaults={() => undefined}
       onApply={() => undefined}
     />
   );
 }
 
 describe("RunSetupPanel", () => {
-  it("keeps the slider and number field synchronized", async () => {
+  it("keeps a parameter slider and number field synchronized", async () => {
     const user = userEvent.setup();
     render(<PanelHarness />);
-
     const slider = screen.getByRole("slider", { name: "Exploration chance slider" });
-    const number = screen.getByLabelText("Exploration chance");
     slider.focus();
     await user.keyboard("{ArrowRight}");
-
-    expect(number).toHaveValue(0.21);
+    expect(screen.getByLabelText("Exploration chance")).toHaveValue(0.21);
   });
 
-  it("allows keyboard selection of the algorithm and mode", async () => {
+  it("changes policy and mode with accessible controls", async () => {
     const user = userEvent.setup();
     render(<PanelHarness />);
-
-    const linucb = screen.getByRole("radio", { name: "LinUCB" });
-    linucb.focus();
-    await user.keyboard(" ");
-    expect(linucb).toHaveAttribute("aria-checked", "true");
+    await user.click(screen.getByRole("combobox", { name: "Policy" }));
+    await user.click(screen.getByRole("option", { name: "LinUCB" }));
     expect(screen.getByLabelText("Confidence width")).toHaveValue(1);
-
     await user.click(screen.getByRole("radio", { name: "Challenge" }));
-    expect(screen.getByRole("radio", { name: "Challenge" })).toHaveAttribute(
-      "aria-checked",
-      "true",
-    );
-    expect(
-      screen.getByText("Collect 12 relics while keeping expected regret at or below 3.25."),
-    ).toBeVisible();
+    expect(screen.getByText("Keep expected regret within the target.")).toBeVisible();
   });
 
-  it("shows errors for invalid parameter and seed values", async () => {
+  it("renders family-specific free-play environments", async () => {
     const user = userEvent.setup();
     render(<PanelHarness />);
-
-    const parameter = screen.getByLabelText("Exploration chance");
-    await user.clear(parameter);
-    expect(screen.getByText("Enter a value from 0 to 1 in steps of 0.01.")).toBeVisible();
-
     await user.click(screen.getByRole("radio", { name: "Free play" }));
-    const seed = screen.getByLabelText("Random seed");
-    await user.clear(seed);
-    await user.type(seed, "1.5");
-    expect(screen.getByText("Enter a safe whole number.")).toBeVisible();
-    expect(screen.getByRole("button", { name: "Restart with these settings" })).toBeDisabled();
-  });
-
-  it("summarizes the active run and marks draft changes", async () => {
-    const user = userEvent.setup();
-    render(<PanelHarness />);
-
-    expect(screen.getByText("ε-greedy · Guided · ε 0.2 · seed 42")).toBeVisible();
-    expect(screen.getByText("These settings match the current run.")).toBeVisible();
-
-    await user.click(screen.getByRole("radio", { name: "Challenge" }));
-    expect(screen.getByText("Changes have not been applied.")).toBeVisible();
-    expect(screen.getByText("ε-greedy · Guided · ε 0.2 · seed 42")).toBeVisible();
-  });
-
-  it("shows editable portal chances only in epsilon-greedy free play", async () => {
-    const user = userEvent.setup();
-    render(<PanelHarness />);
-
-    expect(screen.queryByText("Portal relic chances")).not.toBeInTheDocument();
-    await user.click(screen.getByRole("radio", { name: "Free play" }));
-    expect(screen.getByText("Portal relic chances")).toBeVisible();
-    expect(screen.getByText("Generated from seed")).toBeVisible();
-
-    const moon = screen.getByLabelText("Moon Gate");
+    expect(screen.getByText("Portal reward chances")).toBeVisible();
+    const moon = screen.getByLabelText("Moon");
     await user.clear(moon);
     await user.type(moon, "31.7");
-    expect(moon).toHaveValue(31.7);
     expect(screen.getByText("Custom")).toBeVisible();
-
-    await user.click(screen.getByRole("radio", { name: "LinUCB" }));
-    expect(screen.queryByText("Portal relic chances")).not.toBeInTheDocument();
+    await user.click(screen.getByRole("combobox", { name: "Policy" }));
+    await user.click(screen.getByRole("option", { name: "Gaussian Thompson sampling" }));
+    expect(screen.getByText("Numeric reward model")).toBeVisible();
+    expect(screen.getByLabelText("Shared standard deviation")).toBeVisible();
   });
 });

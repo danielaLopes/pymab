@@ -6,7 +6,7 @@ test("home is accessible and mission links are present", async ({ page }) => {
   await expect(
     page.getByRole("heading", { name: /See how bandit algorithms choose/ }),
   ).toBeVisible();
-  await expect(page.getByRole("link", { name: /Three Ancient Gates/ })).toBeVisible();
+  await expect(page.getByRole("link", { name: "ε ε-greedy EpsilonGreedyPolicy" })).toBeVisible();
   const results = await new AxeBuilder({ page }).analyze();
   expect(results.violations).toEqual([]);
   await page.getByRole("button", { name: "Motion: system" }).click();
@@ -36,7 +36,7 @@ test("the debrief free play shortcut keeps the active parameter", async ({ page,
   });
   await page.getByRole("button", { name: "Start free play" }).click();
   await expect(page.locator(".current-run strong")).toHaveText(
-    "LinUCB · Free play · α 1 · seed 31415",
+    "LinUCB · Free play · alpha 1 · l2 1 · seed 31415",
   );
   await expect(page.getByLabel("Random seed")).toBeEditable();
 });
@@ -51,7 +51,7 @@ test("real LinUCB decision displays context and score decomposition", async ({ p
   await expect(page.getByText(/Learned estimate/)).toHaveCount(3);
   await page.getByRole("button", { name: "About light" }).hover();
   await expect(page.getByRole("tooltip")).toContainText(
-    "Light can be red or blue. LinUCB sees it before choosing a portal.",
+    "Light can be red or blue. The policy sees it before choosing a portal.",
   );
   await page.getByRole("button", { name: /Inspect PyMAB/ }).click();
   await expect(page.getByRole("table", { name: "LinUCB score decomposition" })).toBeVisible();
@@ -150,10 +150,10 @@ test("free play accepts exact parameters and an editable seed", async ({ page, b
   await page.getByRole("spinbutton", { name: "Exploration chance" }).fill("0.35");
   await page.getByLabel("Random seed").fill("1234");
   await expect(page.getByText("Generated from seed")).toBeVisible();
-  const moonChance = page.getByRole("spinbutton", { name: "Moon Gate" });
+  const moonChance = page.getByRole("spinbutton", { name: "Moon" });
   await moonChance.fill("12.3");
   await expect(page.getByText("Custom")).toBeVisible();
-  await page.getByRole("button", { name: "Use seed-generated values" }).click();
+  await page.getByRole("button", { name: "Regenerate from seed" }).click();
   await expect(page.getByText("Generated from seed")).toBeVisible();
   await expect(moonChance).not.toHaveValue("12.3");
   await moonChance.fill("12.3");
@@ -161,25 +161,29 @@ test("free play accepts exact parameters and an editable seed", async ({ page, b
   await expect(moonChance).toHaveValue("12.3");
   await page.getByRole("button", { name: "Restart with these settings" }).click();
   await expect(page.locator(".current-run strong")).toHaveText(
-    "ε-greedy · Free play · ε 0.35 · seed 5678",
+    "ε-greedy · Free play · epsilon 0.35 · initial_value 0 · seed 5678",
   );
-  await expect(page.locator(".gate-0")).toContainText("Relic chance 12.3%");
+  await expect(page.locator(".gate-0")).toContainText("Reward chance 12.3%");
 });
 
 test("algorithm changes apply once and carry the selected mode", async ({ page, browserName }) => {
   test.skip(browserName !== "chromium", "Interaction scenario runs once in Chromium");
   await page.goto("./#/lesson/epsilon-greedy");
-  await expect(page.getByRole("radio", { name: "LinUCB" })).toBeEnabled({ timeout: 30_000 });
+  await expect(page.getByRole("combobox", { name: "Policy" })).toBeEnabled({
+    timeout: 30_000,
+  });
   await page.getByRole("radio", { name: "Free play" }).click();
   await page.getByLabel("Random seed").fill("9876");
-  await page.getByRole("radio", { name: "LinUCB" }).click();
+  await page.getByRole("combobox", { name: "Policy" }).click();
+  await page.getByRole("option", { name: "LinUCB" }).click();
   await expect(page.getByRole("spinbutton", { name: "Confidence width" })).toHaveValue("1");
-  await expect(page.getByLabel("Random seed")).toHaveValue("9876");
+  await expect(page.getByLabel("Random seed")).toHaveValue("31415");
   await page.getByRole("button", { name: "Restart with these settings" }).click();
   await expect(page.getByRole("heading", { name: "The Labyrinth of Signals" })).toBeVisible();
   await expect(page.locator(".current-run strong")).toContainText("LinUCB · Free play");
 
-  await page.getByRole("radio", { name: "ε-greedy" }).click();
+  await page.getByRole("combobox", { name: "Policy" }).click();
+  await page.getByRole("option", { name: "ε-greedy", exact: true }).click();
   await page.getByRole("button", { name: "Restart with these settings" }).click();
   await expect(page.getByRole("heading", { name: "The Three Ancient Gates" })).toBeVisible();
   await expect(page.locator(".current-run strong")).toContainText("ε-greedy · Free play");

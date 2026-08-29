@@ -1,8 +1,10 @@
-import { initialLessonState, lessonReducer } from "./lessonReducer";
 import type { LessonSnapshot } from "../engine/protocol";
+import { initialLessonState, lessonReducer } from "./lessonReducer";
 
 const snapshot = {
-  lessonId: "epsilon-greedy",
+  policyId: "epsilon-greedy",
+  family: "foundations",
+  objective: "cumulative-reward",
   mode: "guided",
   seed: 42,
   packageVersion: "2.0.0",
@@ -10,7 +12,7 @@ const snapshot = {
   sessionId: "s",
   step: 0,
   horizon: 12,
-  parameters: { epsilon: 0.2 },
+  parameters: { epsilon: 0.2, initial_value: 0 },
   environment: null,
   gateIds: ["moon", "sun", "star"],
   selectedArm: null,
@@ -24,6 +26,7 @@ const snapshot = {
   publicContext: null,
   explanationKey: "ready",
   diagnostic: null,
+  recommendation: null,
   history: [],
   hiddenTruth: null,
   generatedCode: "print('hello')",

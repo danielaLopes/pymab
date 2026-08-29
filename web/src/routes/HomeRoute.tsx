@@ -5,7 +5,7 @@ export function HomeRoute() {
     <main className="home-page">
       <section className="hero">
         <div>
-          <p className="eyebrow">Interactive bandit lessons · Powered by PyMAB</p>
+          <p className="eyebrow">27 interactive bandit lessons · Powered by PyMAB</p>
           <h1>
             See how bandit algorithms choose with <em>incomplete information</em>.
           </h1>
@@ -15,20 +15,19 @@ export function HomeRoute() {
           </p>
         </div>
         <div className="hero-orbit" aria-hidden="true">
-          <LessonBadge lessonId="epsilon-greedy" />
+          <LessonBadge policyId="epsilon-greedy" />
           <span className="orbit-ring" />
-          <LessonBadge lessonId="linucb" />
+          <LessonBadge policyId="linucb" />
         </div>
       </section>
       <section aria-labelledby="choose-mission">
         <div className="section-heading">
           <div>
-            <p className="eyebrow">Lessons</p>
-            <h2 id="choose-mission">Choose a mission</h2>
+            <p className="eyebrow">Policy atlas</p>
+            <h2 id="choose-mission">Choose a family or search all policies</h2>
           </div>
           <p>
-            Start with a guided lesson, test yourself in challenge mode, then adjust the simulation
-            in free play.
+            Every concrete PyMAB policy has a guided run, a challenge, and a free-play environment.
           </p>
         </div>
         <CampaignMap />

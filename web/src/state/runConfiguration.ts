@@ -1,67 +1,48 @@
-import type { LessonId, LessonMode, LessonSnapshot } from "../engine/protocol";
 import {
-  generatePortalProbabilities,
-  probabilityDraft,
-  type PortalProbabilities,
-  type ProbabilitySource,
-} from "./portalProbabilities";
+  policyCatalog,
+  type ParameterDefinition,
+  type ParameterValue,
+  type ParameterValues,
+  type PolicyId,
+} from "@/catalog/policies";
+import type { LessonMode, LessonSnapshot } from "@/engine/protocol";
+import type { ProbabilitySource } from "./portalProbabilities";
+import {
+  environmentFromConfiguration,
+  generateEnvironment,
+  validateEnvironmentDraft,
+  type EnvironmentDraft,
+} from "./environments";
+
+export type DraftParameterValue = string | boolean;
 
 export interface RunConfiguration {
-  lessonId: LessonId;
+  policyId: PolicyId;
   mode: LessonMode;
-  parameter: number;
+  parameters: ParameterValues;
   seed: number;
-  portalProbabilities: PortalProbabilities | null;
+  environment: Record<string, unknown> | null;
   probabilitySource: ProbabilitySource;
 }
 
 export interface RunDraftConfiguration {
-  lessonId: LessonId;
+  policyId: PolicyId;
   mode: LessonMode;
-  parameter: string;
+  parameters: Record<string, DraftParameterValue>;
   seed: string;
-  portalProbabilities: [string, string, string];
+  environment: EnvironmentDraft;
   probabilitySource: ProbabilitySource;
 }
 
-export interface ParameterDefinition {
-  label: string;
-  shortLabel: string;
-  minimum: number;
-  maximum: number;
-  step: number;
-  defaultValue: number;
-}
-
 export interface RunConfigurationErrors {
-  parameter?: string;
+  parameters: Record<string, string>;
   seed?: string;
-  portalProbabilities?: [string | undefined, string | undefined, string | undefined];
+  environment: Record<string, string>;
 }
 
-export const parameterDefinitions: Record<LessonId, ParameterDefinition> = {
-  "epsilon-greedy": {
-    label: "Exploration chance",
-    shortLabel: "ε",
-    minimum: 0,
-    maximum: 1,
-    step: 0.01,
-    defaultValue: 0.2,
-  },
-  linucb: {
-    label: "Confidence width",
-    shortLabel: "α",
-    minimum: 0.05,
-    maximum: 4,
-    step: 0.05,
-    defaultValue: 1,
-  },
-};
-
-export const algorithmLabels: Record<LessonId, string> = {
-  "epsilon-greedy": "ε-greedy",
-  linucb: "LinUCB",
-};
+export const algorithmLabels = Object.fromEntries(
+  Object.values(policyCatalog).map((item) => [item.id, item.label]),
+) as Record<PolicyId, string>;
 
 export const modeLabels: Record<LessonMode, string> = {
   guided: "Guided",
@@ -70,6 +51,7 @@ export const modeLabels: Record<LessonMode, string> = {
 };
 
 function isStepAligned(value: number, definition: ParameterDefinition): boolean {
+  if (definition.minimum === undefined || definition.step === undefined) return true;
   const steps = (value - definition.minimum) / definition.step;
   return Math.abs(steps - Math.round(steps)) < 1e-8;
 }
@@ -78,14 +60,39 @@ export function formatParameter(value: number): string {
   return String(Number(value.toFixed(10)));
 }
 
-export function draftFromConfiguration(config: RunConfiguration): RunDraftConfiguration {
-  const probabilities = config.portalProbabilities ?? generatePortalProbabilities(config.seed);
+function draftParameters(values: ParameterValues): Record<string, DraftParameterValue> {
+  return Object.fromEntries(
+    Object.entries(values).map(([key, value]) => [
+      key,
+      typeof value === "boolean" ? value : value === null ? "" : String(value),
+    ]),
+  );
+}
+
+export function defaultConfiguration(
+  policyId: PolicyId,
+  mode: LessonMode = "guided",
+): RunConfiguration {
+  const definition = policyCatalog[policyId];
+  const seed = mode === "challenge" ? definition.challengeSeed : definition.guidedSeed;
+  const parameters = mode === "freePlay" ? definition.defaults : definition.guidedParameters;
   return {
-    lessonId: config.lessonId,
+    policyId,
+    mode,
+    parameters: { ...parameters },
+    seed,
+    environment: null,
+    probabilitySource: "generated",
+  };
+}
+
+export function draftFromConfiguration(config: RunConfiguration): RunDraftConfiguration {
+  return {
+    policyId: config.policyId,
     mode: config.mode,
-    parameter: formatParameter(config.parameter),
+    parameters: draftParameters(config.parameters),
     seed: String(config.seed),
-    portalProbabilities: probabilityDraft(probabilities),
+    environment: environmentFromConfiguration(config.policyId, config.seed, config.environment),
     probabilitySource: config.probabilitySource,
   };
 }
@@ -94,43 +101,76 @@ export function configurationFromSnapshot(
   snapshot: LessonSnapshot,
   probabilitySource: ProbabilitySource = "generated",
 ): RunConfiguration {
-  const parameter =
-    snapshot.lessonId === "epsilon-greedy"
-      ? snapshot.parameters.epsilon
-      : snapshot.parameters.alpha;
-  if (typeof parameter !== "number") {
-    throw new Error("The worker returned a snapshot without the selected parameter.");
-  }
   return {
-    lessonId: snapshot.lessonId,
+    policyId: snapshot.policyId,
     mode: snapshot.mode,
-    parameter,
+    parameters: { ...snapshot.parameters },
     seed: snapshot.seed,
-    portalProbabilities:
-      snapshot.environment?.probabilities && snapshot.lessonId === "epsilon-greedy"
-        ? [...snapshot.environment.probabilities]
-        : null,
+    environment: snapshot.environment ? { ...snapshot.environment } : null,
     probabilitySource,
   };
+}
+
+function validateParameter(
+  definition: ParameterDefinition,
+  draftValue: DraftParameterValue | undefined,
+): { value: ParameterValue | null; error?: string } {
+  if (definition.kind === "boolean") {
+    if (typeof draftValue !== "boolean") return { value: null, error: "Choose on or off." };
+    return { value: draftValue };
+  }
+  if (definition.kind === "select") {
+    if (
+      typeof draftValue !== "string" ||
+      !definition.options?.some((option) => option.value === draftValue)
+    ) {
+      return { value: null, error: "Choose one of the available values." };
+    }
+    return { value: draftValue };
+  }
+
+  const text = typeof draftValue === "string" ? draftValue.trim() : "";
+  if (definition.kind === "optional-number" && text === "") return { value: null };
+  const numeric = Number(text);
+  const invalid =
+    text === "" ||
+    !Number.isFinite(numeric) ||
+    (definition.minimum !== undefined && numeric < definition.minimum) ||
+    (definition.maximum !== undefined && numeric > definition.maximum) ||
+    (definition.kind === "integer" && !Number.isInteger(numeric)) ||
+    !isStepAligned(numeric, definition);
+  if (invalid) {
+    const range =
+      definition.minimum !== undefined && definition.maximum !== undefined
+        ? ` from ${definition.minimum} to ${definition.maximum}`
+        : "";
+    const step = definition.step !== undefined ? ` in steps of ${definition.step}` : "";
+    return { value: null, error: `Enter a valid value${range}${step}.` };
+  }
+  return { value: numeric };
 }
 
 export function validateRunDraft(draft: RunDraftConfiguration): {
   configuration: RunConfiguration | null;
   errors: RunConfigurationErrors;
 } {
-  const definition = parameterDefinitions[draft.lessonId];
-  const errors: RunConfigurationErrors = {};
-  const parameterText = draft.parameter.trim();
-  const parameter = Number(parameterText);
+  const definition = policyCatalog[draft.policyId];
+  const errors: RunConfigurationErrors = { parameters: {}, environment: {} };
+  const parameters: ParameterValues = {};
+  for (const parameter of definition.parameters) {
+    const result = validateParameter(parameter, draft.parameters[parameter.key]);
+    if (result.error) errors.parameters[parameter.key] = result.error;
+    else parameters[parameter.key] = result.value;
+  }
 
+  const initialEpsilon = parameters.initial_epsilon;
+  const minimumEpsilon = parameters.min_epsilon;
   if (
-    parameterText === "" ||
-    !Number.isFinite(parameter) ||
-    parameter < definition.minimum ||
-    parameter > definition.maximum ||
-    !isStepAligned(parameter, definition)
+    typeof initialEpsilon === "number" &&
+    typeof minimumEpsilon === "number" &&
+    minimumEpsilon > initialEpsilon
   ) {
-    errors.parameter = `Enter a value from ${definition.minimum} to ${definition.maximum} in steps of ${definition.step}.`;
+    errors.parameters.min_epsilon = "Minimum exploration cannot exceed the initial value.";
   }
 
   const seedText = draft.seed.trim();
@@ -139,46 +179,36 @@ export function validateRunDraft(draft: RunDraftConfiguration): {
     errors.seed = "Enter a safe whole number.";
   }
 
-  let portalProbabilities: PortalProbabilities | null = null;
-  if (draft.lessonId === "epsilon-greedy" && draft.mode === "freePlay") {
-    const probabilityErrors: [string | undefined, string | undefined, string | undefined] = [
-      undefined,
-      undefined,
-      undefined,
-    ];
-    const normalized = draft.portalProbabilities.map((text, index) => {
-      const trimmed = text.trim();
-      const percentage = Number(trimmed);
-      if (
-        trimmed === "" ||
-        !Number.isFinite(percentage) ||
-        percentage < 0 ||
-        percentage > 100 ||
-        Math.abs(percentage * 10 - Math.round(percentage * 10)) > 1e-8
-      ) {
-        probabilityErrors[index] = "Enter 0 to 100 in steps of 0.1.";
-      }
-      return Math.round(percentage * 10) / 1000;
-    });
-    if (probabilityErrors.some(Boolean)) errors.portalProbabilities = probabilityErrors;
-    else portalProbabilities = normalized as PortalProbabilities;
+  let environment: Record<string, unknown> | null = null;
+  if (draft.mode === "freePlay") {
+    const validation = validateEnvironmentDraft(draft.environment);
+    errors.environment = validation.errors;
+    environment = validation.value;
   }
 
-  if (errors.parameter || errors.seed || errors.portalProbabilities) {
+  if (
+    Object.keys(errors.parameters).length ||
+    errors.seed ||
+    Object.keys(errors.environment).length
+  ) {
     return { configuration: null, errors };
   }
 
   return {
     configuration: {
-      lessonId: draft.lessonId,
+      policyId: draft.policyId,
       mode: draft.mode,
-      parameter,
+      parameters,
       seed,
-      portalProbabilities,
+      environment,
       probabilitySource: draft.probabilitySource,
     },
     errors,
   };
+}
+
+export function regenerateDraftEnvironment(policyId: PolicyId, seed: number): EnvironmentDraft {
+  return generateEnvironment(policyId, seed);
 }
 
 export function configurationsMatch(
@@ -187,18 +217,5 @@ export function configurationsMatch(
 ): boolean {
   if (!active) return false;
   const { configuration } = validateRunDraft(draft);
-  return (
-    configuration !== null &&
-    configuration.lessonId === active.lessonId &&
-    configuration.mode === active.mode &&
-    configuration.parameter === active.parameter &&
-    configuration.seed === active.seed &&
-    configuration.probabilitySource === active.probabilitySource &&
-    ((configuration.portalProbabilities === null && active.portalProbabilities === null) ||
-      (configuration.portalProbabilities !== null &&
-        active.portalProbabilities !== null &&
-        configuration.portalProbabilities.every(
-          (value, index) => value === active.portalProbabilities?.[index],
-        )))
-  );
+  return configuration !== null && JSON.stringify(configuration) === JSON.stringify(active);
 }

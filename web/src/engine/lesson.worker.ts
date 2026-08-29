@@ -8,6 +8,7 @@ interface RuntimeManifest {
   bridgeFilename: string;
   sourceCommit: string;
   numpyFilename: string;
+  scipyFilename: string;
   assets: Record<string, string>;
 }
 
@@ -26,9 +27,20 @@ const scope = self as DedicatedWorkerGlobalScope;
 const baseUrl = new URL(import.meta.env.BASE_URL, scope.location.origin);
 let runtime: PyodideRuntime | null = null;
 let manifest: RuntimeManifest | null = null;
+let scipyLoaded = false;
 
-function progress(stage: "runtime" | "numpy" | "pymab" | "lesson", message: string) {
+function progress(stage: "runtime" | "numpy" | "scipy" | "pymab" | "lesson", message: string) {
   scope.postMessage({ type: "progress", stage, message });
+}
+
+async function loadScipy(): Promise<void> {
+  if (scipyLoaded) return;
+  if (!runtime || !manifest?.scipyFilename)
+    throw new Error("The local SciPy package is unavailable");
+  progress("scipy", "Loading SciPy for Bayesian confidence bounds");
+  await fetchVerified(manifest.scipyFilename);
+  await runtime.loadPackage("scipy");
+  scipyLoaded = true;
 }
 
 async function fetchVerified(relative: string): Promise<Uint8Array> {
@@ -83,6 +95,9 @@ scope.addEventListener("message", (event: MessageEvent<unknown>) => {
     const request = requestSchema.parse(event.data);
     await boot();
     if (!runtime || !manifest) throw new Error("Runtime boot did not complete");
+    if (request.type === "startLesson" && request.policyId === "bernoulli-bayesian-ucb") {
+      await loadScipy();
+    }
     const withCommit =
       request.type === "initialize" || request.type === "startLesson"
         ? { ...request, sourceCommit: manifest.sourceCommit }

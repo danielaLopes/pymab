@@ -5,8 +5,8 @@ Which Policy Should I Use?
 --------------------------
 
 Use this as a starting point, then benchmark with your reward assumptions.
-For a visual introduction to epsilon-greedy and LinUCB, work through
-:doc:`arcade` before comparing them in a full experiment.
+For a visual introduction to any concrete policy, work through :doc:`arcade`
+before comparing policies in a full experiment.
 
 ``RandomPolicy``
    Baseline only. Include it in benchmarks so improvements have a sanity-check
@@ -86,3 +86,37 @@ the table. Also check realized reward and optimal-action rate:
 For public examples, always include ``RandomPolicy`` and at least one simple
 baseline. A policy that cannot beat random or greedy in a controlled simulation
 should not be trusted in a production experiment.
+
+Open a Policy in the Arcade
+---------------------------
+
+The links below open the corresponding checked-out class with its constructor
+controls and matching reward environment.
+
+* `RandomPolicy <../demo/#/lesson/random>`_
+* `GreedyPolicy <../demo/#/lesson/greedy>`_
+* `EpsilonGreedyPolicy <../demo/#/lesson/epsilon-greedy>`_
+* `DecayingEpsilonGreedyPolicy <../demo/#/lesson/decaying-epsilon-greedy>`_
+* `SoftmaxPolicy <../demo/#/lesson/softmax>`_
+* `GradientBanditPolicy <../demo/#/lesson/gradient-bandit>`_
+* `UCBPolicy <../demo/#/lesson/ucb>`_
+* `KLUCBPolicy <../demo/#/lesson/kl-ucb>`_
+* `MOSSPolicy <../demo/#/lesson/moss>`_
+* `BernoulliThompsonSamplingPolicy <../demo/#/lesson/bernoulli-thompson-sampling>`_
+* `GaussianThompsonSamplingPolicy <../demo/#/lesson/gaussian-thompson-sampling>`_
+* `BernoulliBayesianUCBPolicy <../demo/#/lesson/bernoulli-bayesian-ucb>`_
+* `GaussianBayesianUCBPolicy <../demo/#/lesson/gaussian-bayesian-ucb>`_
+* `SlidingWindowUCBPolicy <../demo/#/lesson/sliding-window-ucb>`_
+* `DiscountedUCBPolicy <../demo/#/lesson/discounted-ucb>`_
+* `SlidingWindowBernoulliThompsonSamplingPolicy <../demo/#/lesson/sliding-window-bernoulli-thompson-sampling>`_
+* `DiscountedBernoulliThompsonSamplingPolicy <../demo/#/lesson/discounted-bernoulli-thompson-sampling>`_
+* `ChangePointUCBPolicy <../demo/#/lesson/change-point-ucb>`_
+* `CUSUMUCBPolicy <../demo/#/lesson/cusum-ucb>`_
+* `PageHinkleyUCBPolicy <../demo/#/lesson/page-hinkley-ucb>`_
+* `SuccessiveEliminationPolicy <../demo/#/lesson/successive-elimination>`_
+* `MedianEliminationPolicy <../demo/#/lesson/median-elimination>`_
+* `EXP3Policy <../demo/#/lesson/exp3>`_
+* `LinearEpsilonGreedyPolicy <../demo/#/lesson/linear-epsilon-greedy>`_
+* `LinUCBPolicy <../demo/#/lesson/linucb>`_
+* `LinearThompsonSamplingPolicy <../demo/#/lesson/linear-thompson-sampling>`_
+* `LogisticContextualBanditPolicy <../demo/#/lesson/logistic-contextual-bandit>`_

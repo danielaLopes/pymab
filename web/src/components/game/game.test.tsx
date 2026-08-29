@@ -11,8 +11,9 @@ describe("Infinite Crossroads components", () => {
     expect(screen.getByRole("button", { name: /Star Gate, Possibility/ })).toBeEnabled();
   });
 
-  it("provides two navigable campaign missions", () => {
+  it("provides one route for every concrete policy", () => {
     render(<CampaignMap />, { wrapper: MemoryRouter });
-    expect(screen.getAllByRole("link")).toHaveLength(2);
+    expect(screen.getAllByRole("link")).toHaveLength(27);
+    expect(screen.getByRole("status")).toHaveTextContent("27 policies");
   });
 });
