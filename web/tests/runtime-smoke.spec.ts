@@ -45,8 +45,14 @@ test("real LinUCB decision displays context and score decomposition", async ({ p
   await page.goto("./#/lesson/linucb");
   const advance = page.getByRole("button", { name: "Advance one round" });
   await expect(advance).toBeEnabled({ timeout: 30_000 });
+  await expect(page.getByText("No estimate yet")).toHaveCount(3);
   await advance.click();
   await expect(page.getByRole("list", { name: "Current round signals" })).toBeVisible();
+  await expect(page.getByText(/Learned estimate/)).toHaveCount(3);
+  await page.getByRole("button", { name: "About light" }).hover();
+  await expect(page.getByRole("tooltip")).toContainText(
+    "Light can be red or blue. LinUCB sees it before choosing a portal.",
+  );
   await page.getByRole("button", { name: /Inspect PyMAB/ }).click();
   await expect(page.getByRole("table", { name: "LinUCB score decomposition" })).toBeVisible();
   const results = await new AxeBuilder({ page }).analyze();
@@ -143,10 +149,21 @@ test("free play accepts exact parameters and an editable seed", async ({ page, b
   await page.getByRole("radio", { name: "Free play" }).click();
   await page.getByRole("spinbutton", { name: "Exploration chance" }).fill("0.35");
   await page.getByLabel("Random seed").fill("1234");
+  await expect(page.getByText("Generated from seed")).toBeVisible();
+  const moonChance = page.getByRole("spinbutton", { name: "Moon Gate" });
+  await moonChance.fill("12.3");
+  await expect(page.getByText("Custom")).toBeVisible();
+  await page.getByRole("button", { name: "Use seed-generated values" }).click();
+  await expect(page.getByText("Generated from seed")).toBeVisible();
+  await expect(moonChance).not.toHaveValue("12.3");
+  await moonChance.fill("12.3");
+  await page.getByLabel("Random seed").fill("5678");
+  await expect(moonChance).toHaveValue("12.3");
   await page.getByRole("button", { name: "Restart with these settings" }).click();
   await expect(page.locator(".current-run strong")).toHaveText(
-    "ε-greedy · Free play · ε 0.35 · seed 1234",
+    "ε-greedy · Free play · ε 0.35 · seed 5678",
   );
+  await expect(page.locator(".gate-0")).toContainText("Relic chance 12.3%");
 });
 
 test("algorithm changes apply once and carry the selected mode", async ({ page, browserName }) => {

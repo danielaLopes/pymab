@@ -5,6 +5,9 @@ export const lessonModeSchema = z.enum(["guided", "challenge", "freePlay"]);
 
 const requestBase = z.object({ requestId: z.string().min(1) });
 const sessionBase = requestBase.extend({ sessionId: z.string().min(1) });
+const environmentSchema = z.object({
+  probabilities: z.tuple([z.number(), z.number(), z.number()]),
+});
 
 export const requestSchema = z.discriminatedUnion("type", [
   requestBase.extend({ type: z.literal("initialize"), sourceCommit: z.string().optional() }),
@@ -14,6 +17,7 @@ export const requestSchema = z.discriminatedUnion("type", [
     mode: lessonModeSchema,
     seed: z.number().int(),
     parameters: z.record(z.string(), z.number()),
+    environment: environmentSchema.optional(),
     sourceCommit: z.string().optional(),
   }),
   sessionBase.extend({ type: z.literal("step") }),
@@ -47,6 +51,7 @@ export const lessonSnapshotSchema = z.object({
   step: z.number().int().nonnegative(),
   horizon: z.number().int().positive(),
   parameters: z.record(z.string(), z.number()),
+  environment: environmentSchema.nullable(),
   gateIds: z.array(z.string()).length(3),
   selectedArm: z.number().int().min(0).max(2).nullable(),
   reward: z.number().nullable(),

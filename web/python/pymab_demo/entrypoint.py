@@ -42,6 +42,8 @@ def dispatch(request: dict[str, Any]) -> dict[str, Any]:
             raise ValueError("unknown mode")
         if session_id in _sessions and not _sessions[session_id].disposed:
             raise ValueError("sessionId is already active")
+        raw_environment = request.get("environment")
+        environment = None if raw_environment is None else dict(raw_environment)
         new_session = create_session(
             session_id=session_id,
             lesson_id=lesson_id,  # type: ignore[arg-type]
@@ -49,6 +51,7 @@ def dispatch(request: dict[str, Any]) -> dict[str, Any]:
             seed=int(request.get("seed", 0)),
             parameters=dict(request.get("parameters", {})),
             source_commit=str(request.get("sourceCommit", "unknown")),
+            environment=environment,
         )
         _sessions[session_id] = new_session
         return {

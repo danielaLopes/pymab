@@ -1,10 +1,18 @@
 import type { LessonId, LessonMode, LessonSnapshot } from "../engine/protocol";
+import {
+  generatePortalProbabilities,
+  probabilityDraft,
+  type PortalProbabilities,
+  type ProbabilitySource,
+} from "./portalProbabilities";
 
 export interface RunConfiguration {
   lessonId: LessonId;
   mode: LessonMode;
   parameter: number;
   seed: number;
+  portalProbabilities: PortalProbabilities | null;
+  probabilitySource: ProbabilitySource;
 }
 
 export interface RunDraftConfiguration {
@@ -12,6 +20,8 @@ export interface RunDraftConfiguration {
   mode: LessonMode;
   parameter: string;
   seed: string;
+  portalProbabilities: [string, string, string];
+  probabilitySource: ProbabilitySource;
 }
 
 export interface ParameterDefinition {
@@ -26,6 +36,7 @@ export interface ParameterDefinition {
 export interface RunConfigurationErrors {
   parameter?: string;
   seed?: string;
+  portalProbabilities?: [string | undefined, string | undefined, string | undefined];
 }
 
 export const parameterDefinitions: Record<LessonId, ParameterDefinition> = {
@@ -68,15 +79,21 @@ export function formatParameter(value: number): string {
 }
 
 export function draftFromConfiguration(config: RunConfiguration): RunDraftConfiguration {
+  const probabilities = config.portalProbabilities ?? generatePortalProbabilities(config.seed);
   return {
     lessonId: config.lessonId,
     mode: config.mode,
     parameter: formatParameter(config.parameter),
     seed: String(config.seed),
+    portalProbabilities: probabilityDraft(probabilities),
+    probabilitySource: config.probabilitySource,
   };
 }
 
-export function configurationFromSnapshot(snapshot: LessonSnapshot): RunConfiguration {
+export function configurationFromSnapshot(
+  snapshot: LessonSnapshot,
+  probabilitySource: ProbabilitySource = "generated",
+): RunConfiguration {
   const parameter =
     snapshot.lessonId === "epsilon-greedy"
       ? snapshot.parameters.epsilon
@@ -89,6 +106,11 @@ export function configurationFromSnapshot(snapshot: LessonSnapshot): RunConfigur
     mode: snapshot.mode,
     parameter,
     seed: snapshot.seed,
+    portalProbabilities:
+      snapshot.environment?.probabilities && snapshot.lessonId === "epsilon-greedy"
+        ? [...snapshot.environment.probabilities]
+        : null,
+    probabilitySource,
   };
 }
 
@@ -117,7 +139,32 @@ export function validateRunDraft(draft: RunDraftConfiguration): {
     errors.seed = "Enter a safe whole number.";
   }
 
-  if (errors.parameter || errors.seed) {
+  let portalProbabilities: PortalProbabilities | null = null;
+  if (draft.lessonId === "epsilon-greedy" && draft.mode === "freePlay") {
+    const probabilityErrors: [string | undefined, string | undefined, string | undefined] = [
+      undefined,
+      undefined,
+      undefined,
+    ];
+    const normalized = draft.portalProbabilities.map((text, index) => {
+      const trimmed = text.trim();
+      const percentage = Number(trimmed);
+      if (
+        trimmed === "" ||
+        !Number.isFinite(percentage) ||
+        percentage < 0 ||
+        percentage > 100 ||
+        Math.abs(percentage * 10 - Math.round(percentage * 10)) > 1e-8
+      ) {
+        probabilityErrors[index] = "Enter 0 to 100 in steps of 0.1.";
+      }
+      return Math.round(percentage * 10) / 1000;
+    });
+    if (probabilityErrors.some(Boolean)) errors.portalProbabilities = probabilityErrors;
+    else portalProbabilities = normalized as PortalProbabilities;
+  }
+
+  if (errors.parameter || errors.seed || errors.portalProbabilities) {
     return { configuration: null, errors };
   }
 
@@ -127,6 +174,8 @@ export function validateRunDraft(draft: RunDraftConfiguration): {
       mode: draft.mode,
       parameter,
       seed,
+      portalProbabilities,
+      probabilitySource: draft.probabilitySource,
     },
     errors,
   };
@@ -143,6 +192,13 @@ export function configurationsMatch(
     configuration.lessonId === active.lessonId &&
     configuration.mode === active.mode &&
     configuration.parameter === active.parameter &&
-    configuration.seed === active.seed
+    configuration.seed === active.seed &&
+    configuration.probabilitySource === active.probabilitySource &&
+    ((configuration.portalProbabilities === null && active.portalProbabilities === null) ||
+      (configuration.portalProbabilities !== null &&
+        active.portalProbabilities !== null &&
+        configuration.portalProbabilities.every(
+          (value, index) => value === active.portalProbabilities?.[index],
+        )))
   );
 }

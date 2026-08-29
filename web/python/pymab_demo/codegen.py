@@ -5,15 +5,18 @@ from __future__ import annotations
 from pymab._random import stable_seed
 
 
-def epsilon_example(*, seed: int, epsilon: float, horizon: int) -> str:
+def epsilon_example(
+    *, seed: int, epsilon: float, horizon: int, probabilities: tuple[float, ...]
+) -> str:
     """Return a standalone epsilon-greedy reproduction."""
 
     action_seed = stable_seed(seed, "epsilon-greedy", "lesson", "action")
     reward_seed = stable_seed(seed, "epsilon-greedy", "lesson", "reward")
+    means = ", ".join(repr(value) for value in probabilities)
     return f"""import numpy as np
 from pymab.policies import EpsilonGreedyPolicy
 
-means = np.array([0.25, 0.50, 0.75])
+means = np.array([{means}])
 policy = EpsilonGreedyPolicy(n_arms=3, epsilon={epsilon!r})
 action_rng = np.random.default_rng(np.random.SeedSequence({action_seed}))
 reward_rng = np.random.default_rng(np.random.SeedSequence({reward_seed}))

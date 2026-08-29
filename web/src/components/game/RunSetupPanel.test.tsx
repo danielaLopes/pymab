@@ -16,6 +16,8 @@ const activeConfiguration: RunConfiguration = {
   mode: "guided",
   parameter: 0.2,
   seed: 42,
+  portalProbabilities: null,
+  probabilitySource: "generated",
 };
 
 function PanelHarness() {
@@ -45,6 +47,16 @@ function PanelHarness() {
       onModeChange={changeMode}
       onParameterChange={(parameter) => setDraft((current) => ({ ...current, parameter }))}
       onSeedChange={(seed) => setDraft((current) => ({ ...current, seed }))}
+      onPortalProbabilityChange={(index, value) =>
+        setDraft((current) => {
+          const portalProbabilities = [...current.portalProbabilities] as [string, string, string];
+          portalProbabilities[index] = value;
+          return { ...current, portalProbabilities, probabilitySource: "custom" };
+        })
+      }
+      onUseSeedGeneratedValues={() =>
+        setDraft((current) => ({ ...current, probabilitySource: "generated" }))
+      }
       onApply={() => undefined}
     />
   );
@@ -109,5 +121,24 @@ describe("RunSetupPanel", () => {
     await user.click(screen.getByRole("radio", { name: "Challenge" }));
     expect(screen.getByText("Changes have not been applied.")).toBeVisible();
     expect(screen.getByText("ε-greedy · Guided · ε 0.2 · seed 42")).toBeVisible();
+  });
+
+  it("shows editable portal chances only in epsilon-greedy free play", async () => {
+    const user = userEvent.setup();
+    render(<PanelHarness />);
+
+    expect(screen.queryByText("Portal relic chances")).not.toBeInTheDocument();
+    await user.click(screen.getByRole("radio", { name: "Free play" }));
+    expect(screen.getByText("Portal relic chances")).toBeVisible();
+    expect(screen.getByText("Generated from seed")).toBeVisible();
+
+    const moon = screen.getByLabelText("Moon Gate");
+    await user.clear(moon);
+    await user.type(moon, "31.7");
+    expect(moon).toHaveValue(31.7);
+    expect(screen.getByText("Custom")).toBeVisible();
+
+    await user.click(screen.getByRole("radio", { name: "LinUCB" }));
+    expect(screen.queryByText("Portal relic chances")).not.toBeInTheDocument();
   });
 });

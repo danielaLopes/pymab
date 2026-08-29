@@ -10,6 +10,8 @@ const active: RunConfiguration = {
   mode: "freePlay",
   parameter: 1,
   seed: 123,
+  portalProbabilities: null,
+  probabilitySource: "generated",
 };
 
 describe("run configuration", () => {
@@ -36,5 +38,25 @@ describe("run configuration", () => {
     expect(
       configurationsMatch({ ...draftFromConfiguration(active), mode: "challenge" }, active),
     ).toBe(false);
+  });
+
+  it("validates free-play portal chances without silently rounding", () => {
+    const draft = draftFromConfiguration({
+      lessonId: "epsilon-greedy",
+      mode: "freePlay",
+      parameter: 0.2,
+      seed: 123,
+      portalProbabilities: [0.123, 0.456, 0.789],
+      probabilitySource: "custom",
+    });
+    expect(validateRunDraft(draft).configuration?.portalProbabilities).toEqual([
+      0.123, 0.456, 0.789,
+    ]);
+    expect(
+      validateRunDraft({
+        ...draft,
+        portalProbabilities: ["12.34", "45.6", "78.9"],
+      }).configuration,
+    ).toBeNull();
   });
 });

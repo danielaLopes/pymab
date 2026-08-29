@@ -126,3 +126,31 @@ def test_generated_examples_parse_and_match_session_metrics(
     assert actual["cumulativeExpectedRegret"] == pytest.approx(
         expected["cumulativeExpectedRegret"]
     )
+
+
+def test_entrypoint_accepts_free_play_environment_and_rejects_it_elsewhere() -> None:
+    started = send(
+        type="startLesson",
+        requestId="custom",
+        sessionId="custom",
+        lessonId="epsilon-greedy",
+        mode="freePlay",
+        seed=9,
+        parameters={"epsilon": 0.2},
+        environment={"probabilities": [0.123, 0.456, 0.789]},
+    )
+    assert started["snapshot"]["environment"] == {  # type: ignore[index]
+        "probabilities": [0.123, 0.456, 0.789]
+    }
+
+    rejected = send(
+        type="startLesson",
+        requestId="wrong",
+        sessionId="wrong",
+        lessonId="linucb",
+        mode="freePlay",
+        seed=9,
+        parameters={"alpha": 1.0, "l2": 1.0},
+        environment={"probabilities": [0.123, 0.456, 0.789]},
+    )
+    assert rejected["error"]["code"] == "INVALID_REQUEST"  # type: ignore[index]

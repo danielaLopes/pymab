@@ -13,6 +13,7 @@ def make_session(
     mode: str = "guided",
     seed: int = 42,
     parameters: dict[str, float] | None = None,
+    environment: dict[str, object] | None = None,
 ):
     return create_session(
         session_id="session",
@@ -26,6 +27,7 @@ def make_session(
             else {"alpha": 1.0, "l2": 1.0}
         ),
         source_commit="abc123",
+        environment=environment,
     )
 
 
@@ -85,6 +87,50 @@ def test_step_after_completion_is_an_idempotent_snapshot() -> None:
     session = make_session()
     completed = session.run_to_end()
     assert session.step() == completed
+
+
+def test_epsilon_free_play_uses_and_exposes_custom_probabilities() -> None:
+    probabilities = [0.123, 0.456, 0.789]
+    session = make_session(
+        mode="freePlay", environment={"probabilities": probabilities}
+    )
+    started = session.snapshot()
+    assert started["environment"] == {"probabilities": tuple(probabilities)}
+    completed = session.run_to_end()
+    assert completed["hiddenTruth"]["probabilities"] == tuple(probabilities)
+    assert "means = np.array([0.123, 0.456, 0.789])" in completed["generatedCode"]
+
+
+@pytest.mark.parametrize(
+    ("lesson", "mode", "environment", "message"),
+    [
+        ("linucb", "freePlay", {"probabilities": [0.1, 0.2, 0.3]}, "only available"),
+        (
+            "epsilon-greedy",
+            "guided",
+            {"probabilities": [0.1, 0.2, 0.3]},
+            "only available",
+        ),
+        ("epsilon-greedy", "freePlay", {"probabilities": [0.1, 0.2]}, "exactly three"),
+        (
+            "epsilon-greedy",
+            "freePlay",
+            {"probabilities": [0.1, 0.2, 1.1]},
+            "from 0 to 1",
+        ),
+        (
+            "epsilon-greedy",
+            "freePlay",
+            {"probabilities": [0.1005, 0.2, 0.3]},
+            "steps of 0.001",
+        ),
+    ],
+)
+def test_custom_environment_validation(
+    lesson: str, mode: str, environment: dict[str, object], message: str
+) -> None:
+    with pytest.raises(ValueError, match=message):
+        make_session(lesson, mode=mode, environment=environment)
 
 
 @pytest.mark.parametrize(

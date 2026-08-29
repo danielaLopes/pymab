@@ -14,9 +14,11 @@ import {
   type RunConfiguration,
   type RunDraftConfiguration,
 } from "@/state/runConfiguration";
+import { formatProbabilityPercent } from "@/state/portalProbabilities";
 
 const lessonIds: LessonId[] = ["epsilon-greedy", "linucb"];
 const lessonModes: LessonMode[] = ["guided", "challenge", "freePlay"];
+const portalNames = ["Moon", "Sun", "Star"] as const;
 
 export interface RunSetupPanelProps {
   activeConfiguration: RunConfiguration | null;
@@ -27,6 +29,8 @@ export interface RunSetupPanelProps {
   onModeChange: (mode: LessonMode) => void;
   onParameterChange: (value: string) => void;
   onSeedChange: (value: string) => void;
+  onPortalProbabilityChange: (index: number, value: string) => void;
+  onUseSeedGeneratedValues: () => void;
   onApply: () => void;
 }
 
@@ -45,6 +49,8 @@ export function RunSetupPanel({
   onModeChange,
   onParameterChange,
   onSeedChange,
+  onPortalProbabilityChange,
+  onUseSeedGeneratedValues,
   onApply,
 }: RunSetupPanelProps) {
   const definition = parameterDefinitions[draftConfiguration.lessonId];
@@ -55,6 +61,8 @@ export function RunSetupPanel({
     ? Math.min(definition.maximum, Math.max(definition.minimum, numericParameter))
     : definition.defaultValue;
   const fixedSeed = draftConfiguration.mode !== "freePlay";
+  const showPortalProbabilities =
+    draftConfiguration.lessonId === "epsilon-greedy" && draftConfiguration.mode === "freePlay";
 
   return (
     <section className="run-setup" aria-labelledby="run-setup-title">
@@ -181,6 +189,89 @@ export function RunSetupPanel({
             </p>
           )}
         </div>
+
+        {showPortalProbabilities && (
+          <fieldset className="portal-probabilities">
+            <legend>Portal relic chances</legend>
+            <div className="portal-probabilities-heading">
+              <p>Set the chance that each portal contains a relic.</p>
+              <div className="probability-source">
+                <span>
+                  {draftConfiguration.probabilitySource === "generated"
+                    ? "Generated from seed"
+                    : "Custom"}
+                </span>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  disabled={pending || Boolean(errors.seed)}
+                  onClick={onUseSeedGeneratedValues}
+                >
+                  Use seed-generated values
+                </Button>
+              </div>
+            </div>
+            <div className="portal-probability-grid">
+              {portalNames.map((name, index) => {
+                const value = draftConfiguration.portalProbabilities[index];
+                const numericValue = Number(value);
+                const sliderProbability = Number.isFinite(numericValue)
+                  ? Math.min(100, Math.max(0, numericValue))
+                  : 50;
+                const error = errors.portalProbabilities?.[index];
+                const inputId = `portal-probability-${index}`;
+                const errorId = `${inputId}-error`;
+                return (
+                  <div className="portal-probability-card" key={name}>
+                    <div className="run-setup-label-row">
+                      <Label htmlFor={inputId}>{name} Gate</Label>
+                      <span>{formatProbabilityPercent(sliderProbability / 100)}%</span>
+                    </div>
+                    <div className="parameter-inputs">
+                      <Slider
+                        aria-label={`${name} Gate relic chance slider`}
+                        min={0}
+                        max={100}
+                        step={0.1}
+                        value={[sliderProbability]}
+                        disabled={pending}
+                        onValueChange={(values) => {
+                          const next = values[0];
+                          if (next !== undefined) {
+                            onPortalProbabilityChange(index, formatProbabilityPercent(next / 100));
+                          }
+                        }}
+                      />
+                      <div className="probability-number-wrap">
+                        <Input
+                          id={inputId}
+                          className="parameter-number"
+                          type="number"
+                          inputMode="decimal"
+                          min={0}
+                          max={100}
+                          step={0.1}
+                          value={value}
+                          disabled={pending}
+                          aria-invalid={Boolean(error)}
+                          aria-describedby={error ? errorId : undefined}
+                          onChange={(event) => onPortalProbabilityChange(index, event.target.value)}
+                        />
+                        <span aria-hidden="true">%</span>
+                      </div>
+                    </div>
+                    {error && (
+                      <p id={errorId} className="field-error" role="alert">
+                        {error}
+                      </p>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </fieldset>
+        )}
       </div>
 
       <div className="run-setup-footer">

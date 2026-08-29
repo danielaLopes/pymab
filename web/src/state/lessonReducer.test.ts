@@ -11,6 +11,7 @@ const snapshot = {
   step: 0,
   horizon: 12,
   parameters: { epsilon: 0.2 },
+  environment: null,
   gateIds: ["moon", "sun", "star"],
   selectedArm: null,
   reward: null,

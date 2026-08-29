@@ -15,7 +15,13 @@ import {
 } from "../components/game";
 import { RunSetupPanel } from "../components/game/RunSetupPanel";
 import { explanationCopy, lessonContent } from "../content/lessons";
-import type { LessonId, LessonMode, LessonResponse, LessonSnapshot } from "../engine/protocol";
+import type {
+  LessonId,
+  LessonMode,
+  LessonRequest,
+  LessonResponse,
+  LessonSnapshot,
+} from "../engine/protocol";
 import { useRuntime } from "../engine/RuntimeProvider";
 import { detectBrowserSupport } from "../engine/support";
 import { WorkerClient } from "../engine/WorkerClient";
@@ -29,6 +35,7 @@ import {
   type RunConfiguration,
   type RunDraftConfiguration,
 } from "../state/runConfiguration";
+import { generatePortalProbabilities, probabilityDraft } from "../state/portalProbabilities";
 
 interface LessonNavigationState {
   runConfiguration?: RunConfiguration;
@@ -51,6 +58,8 @@ function defaultConfiguration(lessonId: LessonId): RunConfiguration {
     mode: "guided",
     parameter: parameterDefinitions[lessonId].defaultValue,
     seed: lessonContent[lessonId].guidedSeed,
+    portalProbabilities: null,
+    probabilitySource: "generated",
   };
 }
 
@@ -97,7 +106,7 @@ export function LessonRoute() {
       try {
         const previousSessionId = sessionRef.current;
         const sessionId = WorkerClient.requestId();
-        const response = await client.send({
+        const request: LessonRequest = {
           type: "startLesson",
           requestId: WorkerClient.requestId(),
           sessionId,
@@ -108,9 +117,15 @@ export function LessonRoute() {
             configuration.lessonId === "epsilon-greedy"
               ? { epsilon: configuration.parameter }
               : { alpha: configuration.parameter, l2: 1 },
-        });
+          ...(configuration.lessonId === "epsilon-greedy" &&
+          configuration.mode === "freePlay" &&
+          configuration.portalProbabilities
+            ? { environment: { probabilities: configuration.portalProbabilities } }
+            : {}),
+        };
+        const response = await client.send(request);
         const snapshot = snapshotFrom(response);
-        const active = configurationFromSnapshot(snapshot);
+        const active = configurationFromSnapshot(snapshot, configuration.probabilitySource);
         sessionRef.current = sessionId;
         if (previousSessionId) {
           void client
@@ -254,14 +269,20 @@ export function LessonRoute() {
   };
 
   const changeMode = (mode: LessonMode) => {
-    setDraftConfiguration((current) => ({
-      ...current,
-      mode,
-      seed:
+    setDraftConfiguration((current) => {
+      const seed =
         mode === "freePlay"
-          ? String(persistedRef.current.recent[current.lessonId].seed)
-          : String(fixedSeed(current.lessonId, mode)),
-    }));
+          ? persistedRef.current.recent[current.lessonId].seed
+          : fixedSeed(current.lessonId, mode);
+      return {
+        ...current,
+        mode,
+        seed: String(seed),
+        ...(current.probabilitySource === "generated"
+          ? { portalProbabilities: probabilityDraft(generatePortalProbabilities(seed)) }
+          : {}),
+      };
+    });
   };
 
   const applyDraft = () => {
@@ -326,7 +347,38 @@ export function LessonRoute() {
       onParameterChange={(parameter) =>
         setDraftConfiguration((current) => ({ ...current, parameter }))
       }
-      onSeedChange={(seed) => setDraftConfiguration((current) => ({ ...current, seed }))}
+      onSeedChange={(seed) =>
+        setDraftConfiguration((current) => {
+          const numericSeed = Number(seed);
+          return {
+            ...current,
+            seed,
+            ...(current.probabilitySource === "generated" && Number.isSafeInteger(numericSeed)
+              ? {
+                  portalProbabilities: probabilityDraft(generatePortalProbabilities(numericSeed)),
+                }
+              : {}),
+          };
+        })
+      }
+      onPortalProbabilityChange={(index, value) =>
+        setDraftConfiguration((current) => {
+          const portalProbabilities = [...current.portalProbabilities] as [string, string, string];
+          portalProbabilities[index] = value;
+          return { ...current, portalProbabilities, probabilitySource: "custom" };
+        })
+      }
+      onUseSeedGeneratedValues={() =>
+        setDraftConfiguration((current) => {
+          const seed = Number(current.seed);
+          if (!Number.isSafeInteger(seed)) return current;
+          return {
+            ...current,
+            portalProbabilities: probabilityDraft(generatePortalProbabilities(seed)),
+            probabilitySource: "generated",
+          };
+        })
+      }
       onApply={applyDraft}
     />
   );
@@ -404,15 +456,21 @@ export function LessonRoute() {
                   ...activeConfiguration,
                   mode: "challenge",
                   seed: content.challengeSeed,
+                  portalProbabilities: null,
+                  probabilitySource: "generated",
                 })
               }
-              onFreePlay={() =>
+              onFreePlay={() => {
+                const seed = persistedRef.current.recent[lessonId].seed;
                 void startConfiguration({
                   ...activeConfiguration,
                   mode: "freePlay",
-                  seed: persistedRef.current.recent[lessonId].seed,
-                })
-              }
+                  seed,
+                  portalProbabilities:
+                    lessonId === "epsilon-greedy" ? generatePortalProbabilities(seed) : null,
+                  probabilitySource: "generated",
+                });
+              }}
             />
           )}
         </div>

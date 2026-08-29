@@ -20,6 +20,7 @@ from pymab_demo.fixtures import (
     LessonId,
     Mode,
     horizon_for,
+    validate_environment,
     validate_parameters,
 )
 
@@ -36,12 +37,14 @@ class LessonSession(ABC):
         seed: int,
         parameters: dict[str, object],
         source_commit: str,
+        environment: dict[str, object] | None = None,
     ) -> None:
         self.session_id = session_id
         self.lesson_id = lesson_id
         self.mode = mode
         self.seed = seed
         self.parameters = validate_parameters(lesson_id, parameters)
+        self.environment = validate_environment(lesson_id, mode, environment)
         self.source_commit = source_commit
         self.horizon = horizon_for(lesson_id, mode)
         self.history: list[dict[str, Any]] = []
@@ -114,6 +117,7 @@ class LessonSession(ABC):
             "step": len(self.history),
             "horizon": self.horizon,
             "parameters": self.parameters,
+            "environment": self._public_environment(),
             "gateIds": GATE_IDS,
             "selectedArm": None if last is None else last["selectedArm"],
             "reward": None if last is None else last["reward"],
@@ -137,6 +141,11 @@ class LessonSession(ABC):
     def _hidden_truth(self) -> dict[str, Any]:
         """Return environment truth for completed-run debriefs."""
 
+    def _public_environment(self) -> dict[str, Any] | None:
+        """Return environment values that are intentionally visible during a run."""
+
+        return None
+
     @abstractmethod
     def generated_code(self) -> str:
         """Create an equivalent public-API example."""
@@ -146,15 +155,18 @@ class EpsilonLessonSession(LessonSession):
     """Three Bernoulli gates taught with ``EpsilonGreedyPolicy``."""
 
     def _initialize(self) -> None:
+        self.probabilities = self.environment.get("probabilities", EPSILON_MEANS)
         self.policy = EpsilonGreedyPolicy(n_arms=3, epsilon=self.parameters["epsilon"])
         self.action_rng = generator(self.seed, "epsilon-greedy", "lesson", "action")
         self.reward_rng = generator(self.seed, "epsilon-greedy", "lesson", "reward")
 
     def _perform_step(self) -> dict[str, Any]:
         action, diagnostic = epsilon_decision(self.policy, self.action_rng)
-        potential = (self.reward_rng.random(3) < np.asarray(EPSILON_MEANS)).astype(int)
+        potential = (self.reward_rng.random(3) < np.asarray(self.probabilities)).astype(
+            int
+        )
         reward = int(potential[action])
-        regret = float(max(EPSILON_MEANS) - EPSILON_MEANS[action])
+        regret = float(max(self.probabilities) - self.probabilities[action])
         self.policy.update(action=action, reward=float(reward))
         diagnostic.update(
             {
@@ -191,13 +203,24 @@ class EpsilonLessonSession(LessonSession):
         }
 
     def _hidden_truth(self) -> dict[str, Any]:
-        return {"probabilities": EPSILON_MEANS, "optimalArm": 2}
+        return {
+            "probabilities": self.probabilities,
+            "optimalArm": int(np.argmax(self.probabilities)),
+        }
+
+    def _public_environment(self) -> dict[str, Any] | None:
+        if self.mode != "freePlay":
+            return None
+        return {"probabilities": self.probabilities}
 
     def generated_code(self) -> str:
         from pymab_demo.codegen import epsilon_example
 
         return epsilon_example(
-            seed=self.seed, epsilon=self.parameters["epsilon"], horizon=self.horizon
+            seed=self.seed,
+            epsilon=self.parameters["epsilon"],
+            horizon=self.horizon,
+            probabilities=self.probabilities,
         )
 
 
@@ -298,6 +321,7 @@ def create_session(
     seed: int,
     parameters: dict[str, object],
     source_commit: str,
+    environment: dict[str, object] | None = None,
 ) -> LessonSession:
     """Construct the correct concrete lesson session."""
 
@@ -311,4 +335,5 @@ def create_session(
         seed=seed,
         parameters=parameters,
         source_commit=source_commit,
+        environment=environment,
     )

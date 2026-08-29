@@ -486,6 +486,80 @@ main {
   color: var(--muted);
   background: rgba(255, 255, 255, 0.025);
 }
+.portal-probabilities {
+  grid-column: 1 / -1;
+  min-width: 0;
+  margin: 0;
+  padding: 1.1rem 0 0;
+  border: 0;
+  border-top: 1px solid var(--line);
+}
+.portal-probabilities-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: start;
+  gap: 1.5rem;
+  margin: 0.25rem 0 1rem;
+}
+.portal-probabilities legend {
+  padding: 0;
+  color: var(--ink);
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+.portal-probabilities-heading > p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.68rem;
+}
+.probability-source {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+}
+.probability-source > span {
+  color: var(--gold);
+  font:
+    0.62rem ui-monospace,
+    monospace;
+  white-space: nowrap;
+}
+.probability-source [data-slot="button"] {
+  border-color: var(--line);
+  color: var(--ink);
+  background: rgba(255, 255, 255, 0.03);
+}
+.portal-probability-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.8rem;
+}
+.portal-probability-card {
+  min-width: 0;
+  padding: 0.9rem;
+  border: 1px solid var(--line);
+  border-radius: 0.7rem;
+  background: rgba(3, 17, 21, 0.38);
+}
+.portal-probability-card .parameter-inputs {
+  grid-template-columns: minmax(5rem, 1fr) 5.8rem;
+  gap: 0.7rem;
+}
+.probability-number-wrap {
+  position: relative;
+}
+.probability-number-wrap [data-slot="input"] {
+  padding-right: 1.5rem;
+}
+.probability-number-wrap > span {
+  position: absolute;
+  right: 0.6rem;
+  top: 50%;
+  color: var(--muted);
+  font-size: 0.7rem;
+  transform: translateY(-50%);
+  pointer-events: none;
+}
 .field-help,
 .field-error {
   margin: 0.4rem 0 0;
@@ -671,6 +745,43 @@ main {
   font-size: 0.55rem;
   letter-spacing: 0.1em;
 }
+.cue-help {
+  display: inline-grid;
+  place-items: center;
+  width: 1rem;
+  height: 1rem;
+  margin-left: 0.35rem;
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  color: var(--muted);
+  background: transparent;
+  font:
+    600 0.58rem ui-monospace,
+    monospace;
+  vertical-align: middle;
+}
+.cue-help:hover,
+.cue-help:focus-visible {
+  color: var(--deep);
+  border-color: var(--mint);
+  background: var(--mint);
+}
+.arcade-tooltip {
+  z-index: 50;
+  max-width: 15rem;
+  padding: 0.55rem 0.7rem;
+  border: 1px solid rgba(128, 226, 187, 0.28);
+  border-radius: 0.5rem;
+  color: var(--ink);
+  background: #09272c;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+  font-size: 0.7rem;
+  line-height: 1.45;
+}
+.arcade-tooltip-arrow {
+  fill: #09272c;
+}
 .cue-strip strong {
   font-size: 0.72rem;
 }
@@ -735,6 +846,19 @@ main {
   display: block;
   font-size: 0.62rem;
   margin-top: 0.15rem;
+}
+.gate-insight {
+  display: block;
+  width: fit-content;
+  margin: 0.45rem auto 0;
+  padding: 0.22rem 0.45rem;
+  border: 1px solid rgba(128, 226, 187, 0.2);
+  border-radius: 1rem;
+  color: var(--mint);
+  background: rgba(5, 24, 29, 0.75);
+  font:
+    0.58rem ui-monospace,
+    monospace;
 }
 .gate:hover .gate-arch {
   transform: translateY(-4px);
@@ -1203,6 +1327,15 @@ pre {
     gap: 0.75rem;
   }
   .run-setup-grid {
+    grid-template-columns: 1fr;
+  }
+  .portal-probabilities-heading,
+  .probability-source {
+    align-items: stretch;
+    flex-direction: column;
+    gap: 0.65rem;
+  }
+  .portal-probability-grid {
     grid-template-columns: 1fr;
   }
   .run-setup-footer [data-slot="button"] {

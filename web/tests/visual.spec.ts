@@ -26,6 +26,15 @@ test("run setup panels", async ({ page }) => {
     await expect(panel).toBeVisible({ timeout: 30_000 });
     await expect(panel).toHaveScreenshot(`${lesson}-run-setup.png`, screenshotOptions);
   }
+
+  await page.goto("./#/lesson/epsilon-greedy");
+  await expect(page.getByRole("radio", { name: "Free play" })).toBeEnabled({ timeout: 30_000 });
+  await page.getByRole("radio", { name: "Free play" }).click();
+  await expect(page.getByText("Portal relic chances")).toBeVisible();
+  await expect(page.getByRole("region", { name: "Configure this run" })).toHaveScreenshot(
+    "epsilon-free-play-run-setup.png",
+    screenshotOptions,
+  );
 });
 
 test("epsilon round and inspector", async ({ page }) => {

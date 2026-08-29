@@ -51,7 +51,7 @@ def _number(value: object, *, name: str) -> float:
 def _in_range_and_step(value: float, limits: tuple[float, float, float]) -> bool:
     minimum, maximum, step = limits
     steps = (value - minimum) / step
-    return minimum <= value <= maximum and np.isclose(steps, round(steps))
+    return bool(minimum <= value <= maximum and np.isclose(steps, round(steps)))
 
 
 def validate_parameters(
@@ -71,6 +71,39 @@ def validate_parameters(
     if l2 != 1.0:
         raise ValueError("l2 must be 1.0")
     return {"alpha": alpha, "l2": l2}
+
+
+def validate_environment(
+    lesson_id: LessonId, mode: Mode, environment: dict[str, object] | None
+) -> dict[str, tuple[float, float, float]]:
+    """Validate an optional free-play reward environment."""
+
+    if environment is None:
+        return {}
+    if lesson_id != "epsilon-greedy" or mode != "freePlay":
+        raise ValueError(
+            "a custom environment is only available in epsilon-greedy free play"
+        )
+    if set(environment) != {"probabilities"}:
+        raise ValueError("environment must contain only probabilities")
+    raw_probabilities = environment["probabilities"]
+    if not isinstance(raw_probabilities, (list, tuple)) or len(raw_probabilities) != 3:
+        raise ValueError("probabilities must contain exactly three values")
+
+    parsed = tuple(
+        _number(value, name=f"probabilities[{index}]")
+        for index, value in enumerate(raw_probabilities)
+    )
+    values = (parsed[0], parsed[1], parsed[2])
+    if any(
+        not np.isfinite(value)
+        or value < 0
+        or value > 1
+        or not np.isclose(value * 1000, round(value * 1000))
+        for value in values
+    ):
+        raise ValueError("probabilities must be from 0 to 1 in steps of 0.001")
+    return {"probabilities": values}
 
 
 def horizon_for(lesson_id: LessonId, mode: Mode) -> int:

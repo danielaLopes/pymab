@@ -2,6 +2,8 @@ import { useEffect, useRef, useState } from "react";
 import type { CSSProperties, ReactNode } from "react";
 import { Link } from "react-router-dom";
 
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+
 import type { LessonId, LessonSnapshot, RuntimeProgress } from "../../engine/protocol";
 import { loadPersistence, savePersistence } from "../../state/persistence";
 
@@ -10,6 +12,12 @@ const gateDetails = [
   { name: "Sun Gate", symbol: "☼", rune: "Promise" },
   { name: "Star Gate", symbol: "✦", rune: "Possibility" },
 ];
+
+const cueHelp: Record<string, string> = {
+  light: "Light can be red or blue. LinUCB sees it before choosing a portal.",
+  echo: "Echo can be low or high. LinUCB sees it before choosing a portal.",
+  tide: "Tide can be low or high. LinUCB sees it before choosing a portal.",
+};
 
 export function AppShell({ children }: { children: ReactNode }) {
   const [motionOverride, setMotionOverride] = useState<boolean | null>(
@@ -120,18 +128,30 @@ export function CueStrip({ snapshot }: { snapshot: LessonSnapshot | null }) {
       </p>
     );
   return (
-    <ul className="cue-strip" aria-label="Current round signals">
-      {snapshot.visibleCues.map((cue) => (
-        <li key={cue.name}>
-          <span aria-hidden="true">
-            {cue.name === "light" ? "◐" : cue.name === "echo" ? "≋" : "≈"}
-          </span>
-          <small>{cue.name}</small>
-          <strong>{cue.label.replace(` ${cue.name}`, "")}</strong>
-          <code>{cue.value > 0 ? "+1" : "−1"}</code>
-        </li>
-      ))}
-    </ul>
+    <TooltipProvider>
+      <ul className="cue-strip" aria-label="Current round signals">
+        {snapshot.visibleCues.map((cue) => (
+          <li key={cue.name}>
+            <span aria-hidden="true">
+              {cue.name === "light" ? "◐" : cue.name === "echo" ? "≋" : "≈"}
+            </span>
+            <small>
+              {cue.name}
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button className="cue-help" type="button" aria-label={`About ${cue.name}`}>
+                    ?
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent>{cueHelp[cue.name]}</TooltipContent>
+              </Tooltip>
+            </small>
+            <strong>{cue.label.replace(` ${cue.name}`, "")}</strong>
+            <code>{cue.value > 0 ? "+1" : "−1"}</code>
+          </li>
+        ))}
+      </ul>
+    </TooltipProvider>
   );
 }
 
@@ -139,11 +159,13 @@ export function Gate({
   index,
   selected,
   reward,
+  insight,
   onInspect,
 }: {
   index: number;
   selected: boolean;
   reward: number | null;
+  insight?: string | null;
   onInspect: () => void;
 }) {
   const gate = gateDetails[index]!;
@@ -151,7 +173,7 @@ export function Gate({
     <button
       type="button"
       className={`gate gate-${index} ${selected ? "selected" : ""}`}
-      aria-label={`${gate.name}, ${gate.rune}${selected ? ", selected by PyMAB" : ""}`}
+      aria-label={`${gate.name}, ${gate.rune}${insight ? `, ${insight}` : ""}${selected ? ", selected by PyMAB" : ""}`}
       onClick={onInspect}
     >
       <span className="gate-arch" aria-hidden="true">
@@ -160,6 +182,7 @@ export function Gate({
       </span>
       <strong>{gate.name}</strong>
       <small>{gate.rune}</small>
+      {insight && <span className="gate-insight">{insight}</span>}
       {selected && reward !== null && (
         <span className={`reward-token ${reward ? "won" : "empty"}`}>
           {reward ? "+1 RELIC" : "EMPTY"}
@@ -176,6 +199,30 @@ export function Chamber({
   snapshot: LessonSnapshot | null;
   animationState?: string;
 }) {
+  const predictedMeans = snapshot?.diagnostic?.predictedMeans;
+  const learnedEstimates =
+    Array.isArray(predictedMeans) && predictedMeans.length === 3
+      ? predictedMeans.map((value) => (typeof value === "number" ? value : null))
+      : null;
+  const configuredProbabilities =
+    snapshot?.lessonId === "epsilon-greedy" && snapshot.mode === "freePlay"
+      ? snapshot.environment?.probabilities
+      : null;
+
+  const insightFor = (index: number): string | null => {
+    const probability = configuredProbabilities?.[index];
+    if (typeof probability === "number") {
+      return `Relic chance ${(probability * 100).toFixed(1)}%`;
+    }
+    if (snapshot?.lessonId === "linucb") {
+      const estimate = learnedEstimates?.[index];
+      return typeof estimate === "number"
+        ? `Learned estimate ${estimate.toFixed(2)}`
+        : "No estimate yet";
+    }
+    return null;
+  };
+
   return (
     <section className={`chamber ${animationState}`} aria-label="Independent decision round">
       <div className="chamber-haze" aria-hidden="true" />
@@ -187,6 +234,7 @@ export function Chamber({
             index={index}
             selected={snapshot?.selectedArm === index}
             reward={snapshot?.reward ?? null}
+            insight={insightFor(index)}
             onInspect={() => undefined}
           />
         ))}
