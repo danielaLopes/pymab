@@ -4,7 +4,6 @@ import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { isPolicyId, policyCatalog, type PolicyId } from "@/catalog/policies";
 
 import {
-  Chamber,
   Debrief,
   ErrorRecovery,
   InspectPanel,
@@ -15,6 +14,7 @@ import {
   RunControls,
   UnsupportedBrowser,
 } from "../components/game";
+import { DecisionHistoryBoard } from "../components/game/DecisionHistoryBoard";
 import { RunSetupPanel } from "../components/game/RunSetupPanel";
 import { explanationCopy, lessonContent } from "../content/lessons";
 import type { LessonMode, LessonRequest, LessonResponse, LessonSnapshot } from "../engine/protocol";
@@ -70,6 +70,7 @@ export function LessonRoute() {
   const [autoRunning, setAutoRunning] = useState(false);
   const autoRef = useRef(false);
   const sessionRef = useRef("");
+  const routeTransitionRef = useRef<Promise<void>>(Promise.resolve());
   const persistedRef = useRef(persisted);
   const recordedSessionRef = useRef("");
   const locationStateRef = useRef<unknown>(routeState);
@@ -85,6 +86,14 @@ export function LessonRoute() {
       dispatch({ type: "pending", value: true });
       try {
         const previousSessionId = sessionRef.current;
+        if (previousSessionId) {
+          sessionRef.current = "";
+          await client.send({
+            type: "dispose",
+            requestId: WorkerClient.requestId(),
+            sessionId: previousSessionId,
+          });
+        }
         const sessionId = WorkerClient.requestId();
         const request: LessonRequest = {
           type: "startLesson",
@@ -100,15 +109,6 @@ export function LessonRoute() {
         const snapshot = snapshotFrom(response);
         const active = configurationFromSnapshot(snapshot, configuration.probabilitySource);
         sessionRef.current = sessionId;
-        if (previousSessionId) {
-          void client
-            .send({
-              type: "dispose",
-              requestId: WorkerClient.requestId(),
-              sessionId: previousSessionId,
-            })
-            .catch(() => undefined);
-        }
         setActiveConfiguration(active);
         setDraftConfiguration(draftFromConfiguration(active));
 
@@ -156,23 +156,26 @@ export function LessonRoute() {
     const initialConfiguration = requestedConfiguration ?? defaultConfiguration(policyId);
 
     let active = true;
-    void client
-      .initialize()
+    const transition = routeTransitionRef.current
+      .catch(() => undefined)
       .then(async () => {
-        if (!active) return;
-        const started = await startConfiguration(initialConfiguration);
-        if (active && started && requestedConfiguration) {
-          void navigate(`/lesson/${policyId}`, { replace: true, state: null });
-        }
-      })
-      .catch((error: unknown) => {
-        if (active) {
-          dispatch({
-            type: "error",
-            message: error instanceof Error ? error.message : String(error),
-          });
+        try {
+          await client.initialize();
+          if (!active) return;
+          const started = await startConfiguration(initialConfiguration);
+          if (active && started && requestedConfiguration) {
+            void navigate(`/lesson/${policyId}`, { replace: true, state: null });
+          }
+        } catch (error: unknown) {
+          if (active) {
+            dispatch({
+              type: "error",
+              message: error instanceof Error ? error.message : String(error),
+            });
+          }
         }
       });
+    routeTransitionRef.current = transition;
     return () => {
       active = false;
       autoRef.current = false;
@@ -191,7 +194,7 @@ export function LessonRoute() {
           requestId: WorkerClient.requestId(),
           sessionId,
         })
-        .catch(() => client.restart());
+        .catch(() => undefined);
     },
     [client],
   );
@@ -421,12 +424,7 @@ export function LessonRoute() {
       <div className="lesson-layout">
         <div className="game-column">
           <ProgressTrail snapshot={state.snapshot} />
-          <Chamber
-            snapshot={state.snapshot}
-            animationState={
-              state.pending ? "deciding" : state.snapshot?.reward === 1 ? "reward" : "idle"
-            }
-          />
+          <DecisionHistoryBoard snapshot={state.snapshot} pending={state.pending} />
           <OutcomeReveal snapshot={state.snapshot} explanation={explanation} />
           {!state.snapshot?.completed && (
             <RunControls

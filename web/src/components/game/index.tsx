@@ -2,7 +2,6 @@ import { useEffect, useRef, useState } from "react";
 import type { CSSProperties, ReactNode } from "react";
 import { Link } from "react-router-dom";
 
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import {
   familyDefinitions,
   familyOrder,
@@ -13,18 +12,7 @@ import {
 
 import type { LessonId, LessonSnapshot, RuntimeProgress } from "../../engine/protocol";
 import { loadPersistence, savePersistence } from "../../state/persistence";
-
-const gateDetails = [
-  { name: "Moon Gate", symbol: "☾", rune: "Memory" },
-  { name: "Sun Gate", symbol: "☼", rune: "Promise" },
-  { name: "Star Gate", symbol: "✦", rune: "Possibility" },
-];
-
-const cueHelp: Record<string, string> = {
-  light: "Light can be red or blue. The policy sees it before choosing a portal.",
-  echo: "Echo can be low or high. The policy sees it before choosing a portal.",
-  tide: "Tide can be low or high. The policy sees it before choosing a portal.",
-};
+import { pathDetails } from "./decisionHistory";
 
 export function AppShell({ children }: { children: ReactNode }) {
   const [motionOverride, setMotionOverride] = useState<boolean | null>(
@@ -162,181 +150,6 @@ export function MissionHeader({
       </h1>
       <p>{intro}</p>
     </header>
-  );
-}
-
-export function CueStrip({ snapshot }: { snapshot: LessonSnapshot | null }) {
-  if (!snapshot?.visibleCues.length)
-    return (
-      <p className="cue-empty">
-        This lesson has no context signals, so the available information is the same in every round.
-      </p>
-    );
-  return (
-    <TooltipProvider>
-      <ul className="cue-strip" aria-label="Current round signals">
-        {snapshot.visibleCues.map((cue) => (
-          <li key={cue.name}>
-            <span aria-hidden="true">
-              {cue.name === "light" ? "◐" : cue.name === "echo" ? "≋" : "≈"}
-            </span>
-            <small>
-              {cue.name}
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <button className="cue-help" type="button" aria-label={`About ${cue.name}`}>
-                    ?
-                  </button>
-                </TooltipTrigger>
-                <TooltipContent>{cueHelp[cue.name]}</TooltipContent>
-              </Tooltip>
-            </small>
-            <strong>{cue.label.replace(` ${cue.name}`, "")}</strong>
-            <code>{cue.value > 0 ? "+1" : "−1"}</code>
-          </li>
-        ))}
-      </ul>
-    </TooltipProvider>
-  );
-}
-
-export function Gate({
-  index,
-  selected,
-  reward,
-  insight,
-  onInspect,
-}: {
-  index: number;
-  selected: boolean;
-  reward: number | null;
-  insight?: string | null;
-  onInspect: () => void;
-}) {
-  const gate = gateDetails[index]!;
-  return (
-    <button
-      type="button"
-      className={`gate gate-${index} ${selected ? "selected" : ""}`}
-      aria-label={`${gate.name}, ${gate.rune}${insight ? `, ${insight}` : ""}${selected ? ", selected by PyMAB" : ""}`}
-      onClick={onInspect}
-    >
-      <span className="gate-arch" aria-hidden="true">
-        <span className="gate-symbol">{gate.symbol}</span>
-        {selected && <span className="gate-glow" />}
-      </span>
-      <strong>{gate.name}</strong>
-      <small>{gate.rune}</small>
-      {insight && <span className="gate-insight">{insight}</span>}
-      {selected && reward !== null && (
-        <span className={`reward-token ${reward > 0 ? "won" : "empty"}`}>
-          {reward === 1 ? "+1 RELIC" : reward === 0 ? "EMPTY" : reward.toFixed(2)}
-        </span>
-      )}
-    </button>
-  );
-}
-
-export function Chamber({
-  snapshot,
-  animationState = "idle",
-}: {
-  snapshot: LessonSnapshot | null;
-  animationState?: string;
-}) {
-  const diagnosticAfter = snapshot?.diagnostic?.after;
-  const after =
-    diagnosticAfter && typeof diagnosticAfter === "object"
-      ? (diagnosticAfter as Record<string, unknown>)
-      : null;
-  const predictedMeans =
-    snapshot?.diagnostic?.predictedMeans ?? after?.predictedMeans ?? after?.estimates;
-  const learnedEstimates =
-    Array.isArray(predictedMeans) && predictedMeans.length === 3
-      ? predictedMeans.map((value) => (typeof value === "number" ? value : null))
-      : null;
-  const publicEnvironment = snapshot?.environment;
-  const configuredProbabilities =
-    snapshot?.mode === "freePlay" && Array.isArray(publicEnvironment?.probabilities)
-      ? (publicEnvironment.probabilities as unknown[])
-      : null;
-  const configuredMeans =
-    snapshot?.mode === "freePlay" && Array.isArray(publicEnvironment?.means)
-      ? (publicEnvironment.means as unknown[])
-      : null;
-  const configuredTheta =
-    snapshot?.mode === "freePlay" && Array.isArray(publicEnvironment?.theta)
-      ? (publicEnvironment.theta as unknown[])
-      : null;
-  const cueFeature =
-    snapshot?.visibleCues.length === 3
-      ? [1, ...snapshot.visibleCues.map((cue) => cue.value)]
-      : null;
-  const activeState = Array.isArray(after?.active) ? after.active : null;
-
-  const insightFor = (index: number): string | null => {
-    const probability = configuredProbabilities?.[index];
-    if (typeof probability === "number") {
-      return `Reward chance ${(probability * 100).toFixed(1)}%`;
-    }
-    const mean = configuredMeans?.[index];
-    if (typeof mean === "number") return `Mean reward ${mean.toFixed(2)}`;
-    const thetaRow = configuredTheta?.[index];
-    if (Array.isArray(thetaRow) && cueFeature && thetaRow.length === 4) {
-      const coefficients = thetaRow as unknown[];
-      const linear = coefficients.reduce<number>(
-        (total, coefficient, featureIndex) =>
-          total + Number(coefficient) * cueFeature[featureIndex]!,
-        0,
-      );
-      if (policyCatalog[snapshot!.policyId].environment === "contextual-logistic") {
-        return `Current reward chance ${(100 / (1 + Math.exp(-linear))).toFixed(1)}%`;
-      }
-      return `Current expected reward ${linear.toFixed(2)}`;
-    }
-    if (snapshot?.family === "contextual") {
-      const estimate = learnedEstimates?.[index];
-      return typeof estimate === "number"
-        ? `Learned estimate ${estimate.toFixed(2)}`
-        : "No estimate yet";
-    }
-    if (snapshot?.family === "best-arm" && activeState) {
-      return activeState[index] ? "Active candidate" : "Eliminated";
-    }
-    return null;
-  };
-
-  return (
-    <section
-      className={`chamber world-${snapshot?.family ?? "foundations"} ${animationState}`}
-      aria-label="Independent decision round"
-    >
-      <div className="chamber-haze" aria-hidden="true" />
-      <CueStrip snapshot={snapshot} />
-      {snapshot?.family === "changing" && (
-        <div className="phase-timeline" aria-label="Changing environment timeline">
-          <span style={{ width: `${(snapshot.step / snapshot.horizon) * 100}%` }} />
-          <strong>Round {snapshot.step || 1}: the environment may change over time</strong>
-        </div>
-      )}
-      {snapshot?.family === "adversarial" && (
-        <p className="world-note">
-          The arena assigns rewards each round. Only the selected reward is revealed.
-        </p>
-      )}
-      <div className="gates">
-        {gateDetails.map((_, index) => (
-          <Gate
-            key={index}
-            index={index}
-            selected={snapshot?.selectedArm === index}
-            reward={snapshot?.reward ?? null}
-            insight={insightFor(index)}
-            onInspect={() => undefined}
-          />
-        ))}
-      </div>
-    </section>
   );
 }
 
@@ -482,7 +295,7 @@ export function Debrief({
     environmentKind === "stationary-gaussian" ||
     environmentKind === "contextual-linear" ||
     environmentKind === "adversarial";
-  const gateResults = gateDetails.map((_, gateIndex) => {
+  const gateResults = pathDetails.map((_, gateIndex) => {
     const selections = snapshot.history.filter((event) => event.selectedArm === gateIndex);
     return {
       selections: selections.length,
@@ -509,7 +322,7 @@ export function Debrief({
           <strong>
             {snapshot.recommendation === null
               ? "Not available"
-              : gateDetails[snapshot.recommendation]?.name}
+              : pathDetails[snapshot.recommendation]?.name}
           </strong>
           .
           {snapshot.passed
@@ -524,12 +337,12 @@ export function Debrief({
           Array.isArray(probabilities) &&
           probabilities.length === 3 &&
           probabilities.every((value) => typeof value === "number") && (
-            <dl className="truth-grid" aria-label="Configured gate reward probabilities">
+            <dl className="truth-grid" aria-label="Configured path reward probabilities">
               {probabilities.map((value, index) => {
                 const result = gateResults[index]!;
                 return (
-                  <div key={gateDetails[index]?.name}>
-                    <dt>{gateDetails[index]?.name}</dt>
+                  <div key={pathDetails[index]?.name}>
+                    <dt>{pathDetails[index]?.name}</dt>
                     <dd>{Math.round(value * 100)}% reward chance</dd>
                     <dd>
                       {result.selections
@@ -544,11 +357,11 @@ export function Debrief({
         {(environmentKind === "contextual-linear" || environmentKind === "contextual-logistic") && (
           <>
             <p>
-              The best gate can change with the signals. The table below compares the optimal gate
+              The best path can change with the signals. The table below compares the optimal path
               with the policy's choice in each round.
             </p>
             <MatrixTable
-              label="Hidden environment coefficients by gate"
+              label="Hidden environment coefficients by path"
               value={snapshot.hiddenTruth?.theta}
             />
           </>
@@ -578,7 +391,7 @@ export function Debrief({
               {regretPath.map((event) => (
                 <tr key={event.step}>
                   <th scope="row">{event.step}</th>
-                  <td>{gateDetails[event.selectedArm]?.name}</td>
+                  <td>{pathDetails[event.selectedArm]?.name}</td>
                   {(snapshot.family === "contextual" ||
                     snapshot.family === "changing" ||
                     snapshot.family === "adversarial") && (
@@ -594,7 +407,7 @@ export function Debrief({
                         const arm = Array.isArray(optimalArms)
                           ? (optimalArms as unknown[])[event.step - 1]
                           : fromRounds;
-                        return typeof arm === "number" ? gateDetails[arm]?.name : "Not available";
+                        return typeof arm === "number" ? pathDetails[arm]?.name : "Not available";
                       })()}
                     </td>
                   )}
@@ -706,7 +519,7 @@ export function PolicyBars({ snapshot }: { snapshot: LessonSnapshot }) {
         <caption>LinUCB score decomposition</caption>
         <thead>
           <tr>
-            <th>Gate</th>
+            <th>Path</th>
             <th>Prediction</th>
             <th>Bonus</th>
             <th>UCB</th>
@@ -715,7 +528,7 @@ export function PolicyBars({ snapshot }: { snapshot: LessonSnapshot }) {
         <tbody>
           {numeric.map((value, index) => (
             <tr key={index}>
-              <th>{gateDetails[index]?.name}</th>
+              <th>{pathDetails[index]?.name}</th>
               <td>{means[index]?.toPrecision(4)}</td>
               <td>+ {bonuses[index]?.toPrecision(4)}</td>
               <td>
@@ -731,12 +544,12 @@ export function PolicyBars({ snapshot }: { snapshot: LessonSnapshot }) {
     <div
       className="policy-bars"
       role="img"
-      aria-label={`${label}: ${numeric.map((value, i) => `${gateDetails[i]?.name} ${value.toPrecision(4)}`).join(", ")}`}
+      aria-label={`${label}: ${numeric.map((value, i) => `${pathDetails[i]?.name} ${value.toPrecision(4)}`).join(", ")}`}
     >
       <small className="policy-bars-label">{label}</small>
       {numeric.map((value, index) => (
         <div key={index}>
-          <span>{gateDetails[index]?.symbol}</span>
+          <span>{pathDetails[index]?.symbol}</span>
           <i
             style={{ "--bar": `${Math.max(3, (Math.abs(value) / scale) * 100)}%` } as CSSProperties}
           />
@@ -756,7 +569,7 @@ function MatrixTable({ label, value }: { label: string; value: unknown }) {
       <tbody>
         {matrix.map((row, rowIndex) => (
           <tr key={rowIndex}>
-            <th scope="row">Gate {rowIndex + 1}</th>
+            <th scope="row">Path {rowIndex + 1}</th>
             {row.map((cell, columnIndex) => (
               <td key={columnIndex}>{Number(cell).toPrecision(4)}</td>
             ))}
@@ -856,7 +669,7 @@ export function InspectPanel({
               {snapshot.family === "best-arm" && snapshot.diagnostic?.recommendation !== null && (
                 <p className="inspector-callout">
                   Current recommendation:{" "}
-                  {gateDetails[Number(snapshot.diagnostic?.recommendation)]?.name}
+                  {pathDetails[Number(snapshot.diagnostic?.recommendation)]?.name}
                 </p>
               )}
               <details>

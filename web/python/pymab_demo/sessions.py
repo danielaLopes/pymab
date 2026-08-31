@@ -3,7 +3,9 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from typing import Any
+from copy import deepcopy
+from statistics import NormalDist
+from typing import Any, cast
 
 import numpy as np
 
@@ -468,8 +470,9 @@ class CatalogPolicySession(LessonSession):
             return value.copy()
         return value
 
-    def _policy_state(self) -> dict[str, Any]:
-        state: dict[str, Any] = {"policyClass": type(self.policy).__name__}
+    def _policy_state(self, policy: object | None = None) -> dict[str, Any]:
+        inspected = self.policy if policy is None else policy
+        state: dict[str, Any] = {"policyClass": type(inspected).__name__}
         attributes = (
             "step",
             "counts",
@@ -499,16 +502,173 @@ class CatalogPolicySession(LessonSession):
             "b",
         )
         for name in attributes:
-            if hasattr(self.policy, name):
-                state[name] = self._array(getattr(self.policy, name))
-        action_probabilities = getattr(self.policy, "action_probabilities", None)
+            if hasattr(inspected, name):
+                state[name] = self._array(getattr(inspected, name))
+        action_probabilities = getattr(inspected, "action_probabilities", None)
         if callable(action_probabilities):
             state["actionProbabilities"] = action_probabilities()
-        indices = getattr(self.policy, "indices", None)
-        counts = getattr(self.policy, "counts", None)
+        indices = getattr(inspected, "indices", None)
+        counts = getattr(inspected, "counts", None)
         if callable(indices) and isinstance(counts, np.ndarray) and np.all(counts > 0):
             state["indices"] = indices()
         return state
+
+    def _preview_decision(
+        self, context: np.ndarray | None
+    ) -> tuple[int, dict[str, Any]]:
+        """Preview the real decision without consuming policy or RNG state."""
+
+        probe_policy = deepcopy(self.policy)
+        probe_rng = deepcopy(self.action_rng)
+        if isinstance(probe_policy, ContextualPolicy):
+            if context is None:
+                raise RuntimeError("contextual policy did not receive a context")
+            action = int(probe_policy.select_action(context=context, rng=probe_rng))
+        elif isinstance(probe_policy, Policy):
+            action = int(probe_policy.select_action(rng=probe_rng))
+        else:  # pragma: no cover - catalog type invariant
+            raise RuntimeError("catalog returned an unsupported policy object")
+        return action, self._decision_presentation(context, probe_policy)
+
+    def _decision_presentation(
+        self, context: np.ndarray | None, probe_policy: object
+    ) -> dict[str, Any]:
+        """Return exact, labelled values used to explain the pending decision."""
+
+        policy_id = self.lesson_id
+        policy = self.policy
+        typed_policy = cast(Any, policy)
+        typed_probe = cast(Any, probe_policy)
+        state = self._policy_state()
+        decision: dict[str, Any] = {}
+
+        def set_values(label: str, values: object) -> None:
+            decision["label"] = label
+            decision["values"] = self._array(values)
+
+        if policy_id == "random":
+            set_values("Action probability", np.full(3, 1.0 / 3.0))
+        elif policy_id in {
+            "greedy",
+            "decaying-epsilon-greedy",
+            "successive-elimination",
+            "median-elimination",
+        }:
+            set_values("Estimate", state.get("estimates", np.zeros(3)))
+        elif policy_id == "softmax":
+            set_values("Action probability", state["actionProbabilities"])
+        elif policy_id == "gradient-bandit":
+            set_values("Action probability", typed_probe.probabilities)
+            decision["secondaryLabel"] = "Preference"
+            decision["secondaryValues"] = state["preferences"]
+        elif policy_id in {
+            "ucb",
+            "kl-ucb",
+            "moss",
+            "sliding-window-ucb",
+            "discounted-ucb",
+            "change-point-ucb",
+            "cusum-ucb",
+            "page-hinkley-ucb",
+        }:
+            indices = state.get("indices")
+            if indices is not None:
+                set_values("Confidence index", indices)
+            else:
+                set_values("Estimate", state.get("estimates", np.zeros(3)))
+                counts = np.asarray(state.get("counts", np.zeros(3)), dtype=float)
+                decision["unseenArms"] = np.flatnonzero(counts == 0)
+        elif policy_id in {
+            "bernoulli-thompson-sampling",
+            "sliding-window-bernoulli-thompson-sampling",
+            "discounted-bernoulli-thompson-sampling",
+        }:
+            rng = deepcopy(self.action_rng)
+            samples = rng.beta(
+                float(typed_policy.alpha_prior) + np.asarray(state["successes"]),
+                float(typed_policy.beta_prior) + np.asarray(state["failures"]),
+            )
+            set_values("Posterior sample", samples)
+        elif policy_id == "gaussian-thompson-sampling":
+            rng = deepcopy(self.action_rng)
+            samples = rng.normal(
+                np.asarray(state["means"]),
+                1.0 / np.sqrt(np.asarray(state["precisions"])),
+            )
+            set_values("Posterior sample", samples)
+        elif policy_id == "bernoulli-bayesian-ucb":
+            from scipy.stats import beta as beta_distribution
+
+            bounds = beta_distribution.ppf(
+                float(typed_policy.quantile),
+                float(typed_policy.alpha_prior) + np.asarray(state["successes"]),
+                float(typed_policy.beta_prior) + np.asarray(state["failures"]),
+            )
+            set_values("Credible upper bound", bounds)
+        elif policy_id == "gaussian-bayesian-ucb":
+            z_value = NormalDist().inv_cdf(float(typed_policy.quantile))
+            bounds = np.asarray(state["means"]) + z_value / np.sqrt(
+                np.asarray(state["precisions"])
+            )
+            set_values("Credible upper bound", bounds)
+        elif policy_id == "exp3":
+            set_values("Action probability", state["actionProbabilities"])
+        elif policy_id in {"linear-epsilon-greedy", "logistic-contextual-bandit"}:
+            if context is None:
+                raise RuntimeError("contextual decision presentation requires context")
+            scores = np.einsum("ij,ij->i", context, np.asarray(state["theta"]))
+            if policy_id == "logistic-contextual-bandit":
+                set_values("Predicted reward chance", 1.0 / (1.0 + np.exp(-scores)))
+            else:
+                set_values("Predicted reward", scores)
+        elif policy_id == "linear-thompson-sampling":
+            if context is None:
+                raise RuntimeError("contextual decision presentation requires context")
+            rng = deepcopy(self.action_rng)
+            samples = np.zeros(3, dtype=float)
+            matrices = np.asarray(state["a"])
+            vectors = np.asarray(state["b"])
+            scale = float(typed_policy.exploration_scale)
+            for arm in range(3):
+                inverse = np.linalg.solve(matrices[arm], np.eye(context.shape[1]))
+                mean = np.linalg.solve(matrices[arm], vectors[arm])
+                theta_sample = rng.multivariate_normal(mean, (scale**2) * inverse)
+                samples[arm] = float(theta_sample @ context[arm])
+            set_values("Posterior sample", samples)
+
+        if policy_id in {
+            "decaying-epsilon-greedy",
+            "linear-epsilon-greedy",
+            "logistic-contextual-bandit",
+        }:
+            rng = deepcopy(self.action_rng)
+            sampled = float(rng.random())
+            epsilon = float(typed_policy.epsilon)
+            decision.update(
+                {
+                    "epsilon": epsilon,
+                    "selectionBranch": "explore" if sampled < epsilon else "exploit",
+                }
+            )
+
+        if self.spec.environment == "changing-bernoulli":
+            phases = self.environment.get(
+                "phases",
+                (
+                    {"start": 0},
+                    {"start": max(1, self.horizon // 3)},
+                    {"start": max(2, (2 * self.horizon) // 3)},
+                ),
+            )
+            step = len(self.history)
+            active_index = max(
+                index
+                for index, phase in enumerate(phases)
+                if int(phase["start"]) <= step
+            )
+            decision["environmentPhase"] = active_index + 1
+
+        return decision
 
     def _recommendation(self) -> int | None:
         if self.spec.objective != "best-arm":
@@ -520,6 +680,7 @@ class CatalogPolicySession(LessonSession):
     def _perform_step(self) -> dict[str, Any]:
         rewards, expected, context, cues, truth = self._environment_round()
         before = self._policy_state()
+        preview_action, decision = self._preview_decision(context)
         if isinstance(self.policy, ContextualPolicy):
             if context is None:
                 raise RuntimeError("contextual policy did not receive a context")
@@ -534,6 +695,8 @@ class CatalogPolicySession(LessonSession):
             self.policy.update(action=action, reward=reward)
         else:  # pragma: no cover - catalog type invariant
             raise RuntimeError("catalog returned an unsupported policy object")
+        if action != preview_action:
+            raise RuntimeError("decision diagnostic diverged from policy selection")
         optimal = int(np.argmax(expected))
         regret = float(expected[optimal] - expected[action])
         after = self._policy_state()
@@ -563,6 +726,7 @@ class CatalogPolicySession(LessonSession):
             "diagnostic": {
                 "before": before,
                 "after": after,
+                "decision": decision,
                 "recommendation": recommendation,
                 "contextMatrix": context,
             },

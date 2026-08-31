@@ -43,7 +43,7 @@ test("epsilon round and inspector", async ({ page }) => {
   await expect(advance).toBeEnabled({ timeout: 30_000 });
   await advance.click();
   await expect(page.getByText(/Round 1:/)).toBeVisible();
-  await expect(page).toHaveScreenshot("epsilon-chamber.png", screenshotOptions);
+  await expect(page).toHaveScreenshot("epsilon-history-board.png", screenshotOptions);
   await page.getByRole("button", { name: /Inspect PyMAB/ }).click();
   await expect(page.getByRole("heading", { name: "Decision state" })).toBeVisible();
   await expect(page).toHaveScreenshot("epsilon-inspector.png", screenshotOptions);
@@ -54,11 +54,32 @@ test("LinUCB contextual round and inspector", async ({ page }) => {
   const advance = page.getByRole("button", { name: "Advance one round" });
   await expect(advance).toBeEnabled({ timeout: 30_000 });
   await advance.click();
-  await expect(page.getByRole("list", { name: "Current round signals" })).toBeVisible();
-  await expect(page).toHaveScreenshot("linucb-chamber.png", screenshotOptions);
+  await expect(page.getByRole("row", { name: /Round 1.*Signals: light/ })).toBeVisible();
+  await expect(page).toHaveScreenshot("linucb-history-board.png", screenshotOptions);
   await page.getByRole("button", { name: /Inspect PyMAB/ }).click();
   await expect(page.getByRole("table", { name: "LinUCB score decomposition" })).toBeVisible();
   await expect(page).toHaveScreenshot("linucb-inspector.png", screenshotOptions);
+});
+
+test("history board across policy families", async ({ page }) => {
+  const policies = [
+    "epsilon-greedy",
+    "ucb",
+    "gaussian-thompson-sampling",
+    "sliding-window-ucb",
+    "successive-elimination",
+    "exp3",
+    "linucb",
+  ] as const;
+  for (const policyId of policies) {
+    await page.goto(`./#/lesson/${policyId}`);
+    const advance = page.getByRole("button", { name: "Advance one round" });
+    await expect(advance).toBeEnabled({ timeout: 30_000 });
+    await advance.click();
+    const board = page.getByRole("region", { name: "Decision history" });
+    await expect(board.getByRole("row", { name: /Round 1\./ })).toBeVisible();
+    await expect(board).toHaveScreenshot(`${policyId}-history-region.png`, screenshotOptions);
+  }
 });
 
 test("both guided debriefs", async ({ page }) => {

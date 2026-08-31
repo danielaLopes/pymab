@@ -1,6 +1,8 @@
 import { expect, test } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
 
+import { policyCatalog, policyIds } from "../src/catalog/policies";
+
 test("home is accessible and mission links are present", async ({ page }) => {
   await page.goto("./#/");
   await expect(
@@ -13,13 +15,31 @@ test("home is accessible and mission links are present", async ({ page }) => {
   await expect(page.locator("html")).toHaveAttribute("data-reduced-motion", "true");
 });
 
+test("every policy route renders the shared history board", async ({ page, browserName }) => {
+  test.skip(browserName !== "chromium", "Complete route inventory runs once in Chromium");
+  test.setTimeout(120_000);
+  for (const policyId of policyIds) {
+    await test.step(policyId, async () => {
+      await page.goto(`./#/lesson/${policyId}`);
+      await expect(page.locator(".current-run strong")).toContainText(
+        policyCatalog[policyId].label,
+        { timeout: 30_000 },
+      );
+      await expect(page.getByRole("region", { name: "Decision history" })).toBeVisible({
+        timeout: 30_000,
+      });
+      await expect(page.getByRole("columnheader", { name: /Moon Path/ })).toBeVisible();
+    });
+  }
+});
+
 test("real PyMAB wheel completes a seeded epsilon decision", async ({ page }) => {
   await page.goto("./#/lesson/epsilon-greedy");
   const advance = page.getByRole("button", { name: "Advance one round" });
   await expect(advance).toBeEnabled({ timeout: 30_000 });
   await advance.click();
   await expect(page.getByText("Round 1: Relic found")).toBeVisible();
-  await expect(page.getByRole("button", { name: /Star Gate.*selected by PyMAB/ })).toBeVisible();
+  await expect(page.getByRole("cell", { name: /Round 1, Star Path, chosen/ })).toBeVisible();
   await page.getByRole("button", { name: /Inspect PyMAB/ }).click();
   await expect(page.getByText("2.0.0", { exact: true })).toBeVisible();
   const results = await new AxeBuilder({ page }).analyze();
@@ -45,13 +65,12 @@ test("real LinUCB decision displays context and score decomposition", async ({ p
   await page.goto("./#/lesson/linucb");
   const advance = page.getByRole("button", { name: "Advance one round" });
   await expect(advance).toBeEnabled({ timeout: 30_000 });
-  await expect(page.getByText("No estimate yet")).toHaveCount(3);
   await advance.click();
-  await expect(page.getByRole("list", { name: "Current round signals" })).toBeVisible();
-  await expect(page.getByText(/Learned estimate/)).toHaveCount(3);
+  await expect(page.getByRole("row", { name: /Round 1.*Signals: light/ })).toBeVisible();
+  await expect(page.getByRole("cell", { name: /UCB score/ })).toHaveCount(3);
   await page.getByRole("button", { name: "About light" }).hover();
   await expect(page.getByRole("tooltip")).toContainText(
-    "Light can be red or blue. The policy sees it before choosing a portal.",
+    "Light can be red or blue. The policy sees it before choosing a path.",
   );
   await page.getByRole("button", { name: /Inspect PyMAB/ }).click();
   await expect(page.getByRole("table", { name: "LinUCB score decomposition" })).toBeVisible();
@@ -82,10 +101,10 @@ test("completed run reveals environment values and the full regret path", async 
     timeout: 30_000,
   });
   await page.getByText("Show environment values and regret by round").click();
-  await expect(page.locator(".truth-grid div").filter({ hasText: "Star Gate" })).toContainText(
+  await expect(page.locator(".truth-grid div").filter({ hasText: "Star Path" })).toContainText(
     "75% reward chance",
   );
-  await expect(page.locator(".truth-grid div").filter({ hasText: "Moon Gate" })).toContainText(
+  await expect(page.locator(".truth-grid div").filter({ hasText: "Moon Path" })).toContainText(
     "Not selected in this run",
   );
   await expect(
@@ -163,7 +182,9 @@ test("free play accepts exact parameters and an editable seed", async ({ page, b
   await expect(page.locator(".current-run strong")).toHaveText(
     "ε-greedy · Free play · epsilon 0.35 · initial_value 0 · seed 5678",
   );
-  await expect(page.locator(".gate-0")).toContainText("Reward chance 12.3%");
+  await expect(page.getByRole("columnheader", { name: /Moon Path/ })).toContainText(
+    "12.3% reward chance",
+  );
 });
 
 test("algorithm changes apply once and carry the selected mode", async ({ page, browserName }) => {

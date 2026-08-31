@@ -21,6 +21,7 @@ export default defineConfig({
     },
     {
       name: "firefox",
+      fullyParallel: false,
       testIgnore: /visual\.spec\.ts/,
       use: { ...devices["Desktop Firefox"] },
     },

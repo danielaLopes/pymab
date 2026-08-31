@@ -94,6 +94,9 @@ def test_every_additional_policy_steps_resets_and_completes() -> None:
         first = session.step()
         assert first["step"] == 1
         assert first["diagnostic"]["after"]["policyClass"] == spec.policy_class.__name__
+        decision = first["diagnostic"]["decision"]
+        assert decision["label"]
+        assert len(decision["values"]) == 3
         reset = session.reset()
         assert reset["step"] == 0
         completed = session.run_to_end()

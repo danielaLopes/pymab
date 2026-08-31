@@ -1,0 +1,301 @@
+import { useEffect, useMemo, useRef, useState } from "react";
+
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+
+import type { LessonSnapshot } from "../../engine/protocol";
+import {
+  buildDecisionHistory,
+  pathDetails,
+  publicPathDetail,
+  type DecisionHistoryCell,
+  type DecisionHistoryRow,
+} from "./decisionHistory";
+
+const PAST_ROW_HEIGHT = 84;
+const CURRENT_ROW_HEIGHT = 96;
+
+const cueHelp: Record<string, string> = {
+  light: "Light can be red or blue. The policy sees it before choosing a path.",
+  echo: "Echo can be low or high. The policy sees it before choosing a path.",
+  tide: "Tide can be low or high. The policy sees it before choosing a path.",
+};
+
+function RewardMark({ cell }: { cell: DecisionHistoryCell }) {
+  if (!cell.selected) {
+    return (
+      <span className="history-reward history-reward-unknown" aria-hidden="true">
+        ?
+      </span>
+    );
+  }
+  if (!cell.reward) return null;
+  if (cell.reward.kind === "relic") {
+    return (
+      <span className="history-reward history-reward-relic" title={cell.reward.label}>
+        ✦
+      </span>
+    );
+  }
+  if (cell.reward.kind === "empty") {
+    return (
+      <span className="history-reward history-reward-empty" title={cell.reward.label}>
+        ◇
+      </span>
+    );
+  }
+  return (
+    <span
+      className={`history-reward history-reward-numeric ${cell.reward.value < 0 ? "negative" : ""}`}
+    >
+      {cell.reward.label.replace("Reward ", "")}
+    </span>
+  );
+}
+
+function ContextRail({ row }: { row: DecisionHistoryRow }) {
+  return (
+    <div className="history-round-rail" role="rowheader">
+      <strong>Round {row.round}</strong>
+      {row.cues.length ? (
+        <div className="history-cues" aria-label={`Round ${row.round} signals`}>
+          {row.cues.map((cue) => (
+            <Tooltip key={cue.name}>
+              <TooltipTrigger asChild>
+                <button
+                  className="history-cue-button"
+                  type="button"
+                  aria-label={`About ${cue.name}`}
+                >
+                  <i aria-hidden="true">{cue.symbol}</i>
+                  <small>{cue.name}</small>
+                  <b>{cue.value}</b>
+                </button>
+              </TooltipTrigger>
+              <TooltipContent>{cueHelp[cue.name]}</TooltipContent>
+            </Tooltip>
+          ))}
+        </div>
+      ) : (
+        <span className="history-round-note">
+          {row.phase ? `Environment phase ${row.phase}` : "Same information each round"}
+        </span>
+      )}
+      <div className="history-row-badges">
+        {row.reason && (
+          <span className={`decision-reason ${row.reason.toLowerCase()}`}>{row.reason}</span>
+        )}
+        {row.alarm && <span className="change-alarm">Change detected</span>}
+      </div>
+    </div>
+  );
+}
+
+function cellDescription(row: DecisionHistoryRow, cell: DecisionHistoryCell): string {
+  const path = pathDetails[cell.arm]!.name;
+  const parts = [`Round ${row.round}`, path];
+  if (cell.selected) {
+    parts.push("chosen", cell.reward?.label ?? "outcome unavailable");
+  } else {
+    parts.push("Reward not observed");
+  }
+  if (cell.primary && cell.primaryLabel) parts.push(`${cell.primaryLabel} ${cell.primary}`);
+  if (cell.state) parts.push(cell.state);
+  return parts.join(", ");
+}
+
+function DecisionCell({ row, cell }: { row: DecisionHistoryRow; cell: DecisionHistoryCell }) {
+  return (
+    <div
+      className={`history-cell path-${cell.arm} ${cell.selected ? "selected" : "unselected"} ${cell.state ? `state-${cell.state}` : ""}`}
+      role="cell"
+      aria-label={cellDescription(row, cell)}
+    >
+      <span className="history-mini-gate" aria-hidden="true">
+        {pathDetails[cell.arm]!.symbol}
+      </span>
+      {cell.selected && <span className="history-explorer" aria-hidden="true" />}
+      <RewardMark cell={cell} />
+      <span className="history-cell-values">
+        {cell.primary && (
+          <strong>
+            <small>{cell.primaryLabel}</small>
+            {cell.primary}
+          </strong>
+        )}
+        {cell.secondary && <small>{cell.secondary}</small>}
+      </span>
+      {cell.state && cell.state !== "active" && (
+        <span className={`history-state history-state-${cell.state}`}>{cell.state}</span>
+      )}
+    </div>
+  );
+}
+
+function HistoryRow({ row, current }: { row: DecisionHistoryRow; current: boolean }) {
+  const chosen = row.cells[row.selectedArm]!;
+  const cueSummary = row.cues.length
+    ? ` Signals: ${row.cues.map((cue) => `${cue.name} ${cue.value}`).join(", ")}.`
+    : "";
+  return (
+    <div
+      className={`decision-history-row ${current ? "current" : ""}`}
+      role="row"
+      tabIndex={0}
+      aria-label={`Round ${row.round}. ${pathDetails[row.selectedArm]!.name} chosen. ${chosen.reward?.label ?? "Outcome unavailable"}.${cueSummary}`}
+    >
+      <ContextRail row={row} />
+      {row.cells.map((cell) => (
+        <DecisionCell key={cell.arm} row={row} cell={cell} />
+      ))}
+    </div>
+  );
+}
+
+function AwaitingRow() {
+  return (
+    <div
+      className="decision-history-row current awaiting"
+      role="row"
+      aria-label="Round 1 awaiting the first decision"
+    >
+      <div className="history-round-rail" role="rowheader">
+        <strong>Round 1</strong>
+        <span className="history-round-note">Awaiting the first decision</span>
+      </div>
+      {pathDetails.map((path, arm) => (
+        <div className={`history-cell path-${arm} unselected`} role="cell" key={path.name}>
+          <span className="history-mini-gate" aria-hidden="true">
+            {path.symbol}
+          </span>
+          <span className="history-cell-values">
+            <strong>Available</strong>
+          </span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function ChoiceTrail({ rows }: { rows: DecisionHistoryRow[] }) {
+  if (rows.length < 2) return null;
+  const height = (rows.length - 1) * PAST_ROW_HEIGHT + CURRENT_ROW_HEIGHT;
+  const points = rows
+    .map((row, index) => {
+      const rowCenter =
+        index === rows.length - 1
+          ? index * PAST_ROW_HEIGHT + CURRENT_ROW_HEIGHT / 2
+          : index * PAST_ROW_HEIGHT + PAST_ROW_HEIGHT / 2;
+      return `${(row.selectedArm + 0.5) * 100},${rowCenter}`;
+    })
+    .join(" ");
+  return (
+    <svg
+      className="choice-trail"
+      viewBox={`0 0 300 ${height}`}
+      preserveAspectRatio="none"
+      aria-hidden="true"
+    >
+      <polyline points={points} />
+    </svg>
+  );
+}
+
+export function DecisionHistoryBoard({
+  snapshot,
+  pending = false,
+}: {
+  snapshot: LessonSnapshot | null;
+  pending?: boolean;
+}) {
+  const rows = useMemo(() => (snapshot ? buildDecisionHistory(snapshot) : []), [snapshot]);
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const [following, setFollowing] = useState(true);
+
+  useEffect(() => {
+    if (!following) return;
+    const container = scrollRef.current;
+    if (container) container.scrollTop = container.scrollHeight;
+  }, [following, rows.length]);
+
+  const jumpToCurrent = () => {
+    setFollowing(true);
+    const container = scrollRef.current;
+    if (container) container.scrollTop = container.scrollHeight;
+  };
+
+  return (
+    <TooltipProvider>
+      <section
+        className={`decision-history-board world-${snapshot?.family ?? "foundations"} ${pending ? "deciding" : ""}`}
+        aria-label="Decision history"
+      >
+        <div className="history-board-heading">
+          <div>
+            <p className="eyebrow">Choice trail</p>
+            <h2>Every round, every observed outcome</h2>
+          </div>
+          {!following && (
+            <button type="button" className="jump-current" onClick={jumpToCurrent}>
+              Jump to current round
+            </button>
+          )}
+        </div>
+        <div
+          className="history-scroll"
+          ref={scrollRef}
+          onScroll={(event) => {
+            const target = event.currentTarget;
+            setFollowing(target.scrollHeight - target.scrollTop - target.clientHeight < 24);
+          }}
+        >
+          <div
+            className="history-grid"
+            role="table"
+            aria-rowcount={Math.max(rows.length, 1) + 1}
+            aria-colcount={4}
+          >
+            <div className="history-column-headers" role="row">
+              <div role="columnheader">Round</div>
+              {pathDetails.map((path, arm) => (
+                <div role="columnheader" key={path.name}>
+                  <span aria-hidden="true">{path.symbol}</span>
+                  <strong>{path.name}</strong>
+                  {snapshot && publicPathDetail(snapshot, arm) && (
+                    <small>{publicPathDetail(snapshot, arm)}</small>
+                  )}
+                </div>
+              ))}
+            </div>
+            <div className="history-rows">
+              <ChoiceTrail rows={rows} />
+              {rows.length ? (
+                rows.map((row, index) => (
+                  <HistoryRow key={row.round} row={row} current={index === rows.length - 1} />
+                ))
+              ) : (
+                <AwaitingRow />
+              )}
+            </div>
+          </div>
+        </div>
+        <div className="history-legend" aria-label="Decision history legend">
+          <span>
+            <i className="legend-chosen" aria-hidden="true" /> Chosen
+          </span>
+          <span>
+            <i aria-hidden="true">✦</i> Relic found
+          </span>
+          <span>
+            <i aria-hidden="true">◇</i> No relic
+          </span>
+          <span>
+            <i aria-hidden="true">?</i> Reward not observed
+          </span>
+          <span>
+            <i className="legend-trail" aria-hidden="true" /> Choice trail
+          </span>
+        </div>
+      </section>
+    </TooltipProvider>
+  );
+}

@@ -18,12 +18,18 @@ Learning model
 --------------
 
 Each lesson offers a guided run, a fixed-seed parameter challenge, and free
-play. The animated chamber is intentionally stateless: every crossroads is one
-independent bandit round. Only the policy's learned estimates and cumulative
-metrics carry forward.
+play. A shared decision-history board keeps one row per round across all 27
+policies. It shows the chosen path, the observed reward, and the values the
+policy compared before choosing. Rewards for unchosen paths remain unknown.
+Contextual lessons also keep the Light, Echo, and Tide signals beside each
+round. Numeric environments show signed rewards instead of relic markers.
+
+The board remembers past decisions, but the environment is intentionally
+stateless: every row is one independent bandit round. Only the policy's learned
+estimates and cumulative metrics carry forward.
 
 This distinction matters. A contextual bandit such as LinUCB observes the
-current light, echo, and tide before choosing a gate, but it does not navigate a
+current light, echo, and tide before choosing a path, but it does not navigate a
 path or optimize a delayed sequence of rewards. Problems where an action changes
 the next state belong to stateful reinforcement learning, not this demo.
 

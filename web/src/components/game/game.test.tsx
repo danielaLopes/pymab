@@ -1,14 +1,16 @@
 import { render, screen } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 
-import { CampaignMap, Chamber } from ".";
+import { DecisionHistoryBoard } from "./DecisionHistoryBoard";
+import { CampaignMap } from ".";
 
 describe("Infinite Crossroads components", () => {
-  it("gives every persistent gate a non-colour identity", () => {
-    render(<Chamber snapshot={null} />);
-    expect(screen.getByRole("button", { name: /Moon Gate, Memory/ })).toBeEnabled();
-    expect(screen.getByRole("button", { name: /Sun Gate, Promise/ })).toBeEnabled();
-    expect(screen.getByRole("button", { name: /Star Gate, Possibility/ })).toBeEnabled();
+  it("gives every path a persistent non-colour identity", () => {
+    render(<DecisionHistoryBoard snapshot={null} />);
+    expect(screen.getByRole("columnheader", { name: /Moon Path/ })).toBeVisible();
+    expect(screen.getByRole("columnheader", { name: /Sun Path/ })).toBeVisible();
+    expect(screen.getByRole("columnheader", { name: /Star Path/ })).toBeVisible();
+    expect(screen.getByRole("row", { name: /awaiting the first decision/i })).toBeVisible();
   });
 
   it("provides one route for every concrete policy", () => {
