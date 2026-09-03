@@ -235,12 +235,19 @@ export function LessonRoute() {
   }, [advance]);
 
   const changePolicy = (nextPolicyId: PolicyId) => {
+    if (nextPolicyId === policyId) return;
     const next = defaultConfiguration(nextPolicyId, draftConfiguration.mode);
     if (draftConfiguration.mode === "freePlay") {
       next.seed = persistedRef.current.recent[nextPolicyId].seed;
       next.parameters = { ...persistedRef.current.recent[nextPolicyId].parameters };
     }
-    setDraftConfiguration(draftFromConfiguration(next));
+    autoRef.current = false;
+    setAutoRunning(false);
+    setActiveConfiguration(null);
+    dispatch({ type: "loading" });
+    void navigate(`/lesson/${nextPolicyId}`, {
+      state: { runConfiguration: next } satisfies LessonNavigationState,
+    });
   };
 
   const changeMode = (mode: LessonMode) => {

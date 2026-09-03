@@ -207,7 +207,7 @@ export function RunSetupPanel({
           <p className="eyebrow">Run setup</p>
           <h2 id="run-setup-title">Configure this run</h2>
         </div>
-        <p>Changes take effect when you start the run.</p>
+        <p>Choosing a policy starts it immediately. Other changes apply when you restart.</p>
       </div>
 
       <div className="run-setup-grid">

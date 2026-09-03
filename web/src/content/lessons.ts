@@ -1,10 +1,11 @@
 import { familyDefinitions, policyCatalog, type PolicyId } from "@/catalog/policies";
+import { readablePolicyClassName } from "./policyNames";
 
 export const lessonContent = Object.fromEntries(
   Object.values(policyCatalog).map((policy) => [
     policy.id,
     {
-      eyebrow: `${familyDefinitions[policy.family].label} · ${policy.className}`,
+      eyebrow: `${familyDefinitions[policy.family].label} · ${readablePolicyClassName(policy.className)}`,
       title: policy.title,
       intro: policy.intro,
       guidedSeed: policy.guidedSeed,

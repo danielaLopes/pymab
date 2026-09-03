@@ -187,7 +187,10 @@ test("free play accepts exact parameters and an editable seed", async ({ page, b
   );
 });
 
-test("algorithm changes apply once and carry the selected mode", async ({ page, browserName }) => {
+test("policy selection starts the new policy immediately and carries the mode", async ({
+  page,
+  browserName,
+}) => {
   test.skip(browserName !== "chromium", "Interaction scenario runs once in Chromium");
   await page.goto("./#/lesson/epsilon-greedy");
   await expect(page.getByRole("combobox", { name: "Policy" })).toBeEnabled({
@@ -197,15 +200,22 @@ test("algorithm changes apply once and carry the selected mode", async ({ page, 
   await page.getByLabel("Random seed").fill("9876");
   await page.getByRole("combobox", { name: "Policy" }).click();
   await page.getByRole("option", { name: "LinUCB" }).click();
+  await expect(page).toHaveURL(/#\/lesson\/linucb$/);
+  await expect(page.getByRole("heading", { name: "The Labyrinth of Signals" })).toBeVisible();
+  await expect(page.locator(".mission-header .eyebrow")).toHaveText(
+    "Contextual bandits · Lin UCB Policy",
+  );
+  await expect(page.getByText("LinUCBPolicy", { exact: true })).toBeVisible();
   await expect(page.getByRole("spinbutton", { name: "Confidence width" })).toHaveValue("1");
   await expect(page.getByLabel("Random seed")).toHaveValue("31415");
-  await page.getByRole("button", { name: "Restart with these settings" }).click();
-  await expect(page.getByRole("heading", { name: "The Labyrinth of Signals" })).toBeVisible();
+  await expect(page.locator(".current-run strong")).toContainText("LinUCB · Free play");
+  await page.getByRole("button", { name: "Advance one round" }).click();
+  await expect(page).toHaveURL(/#\/lesson\/linucb$/);
   await expect(page.locator(".current-run strong")).toContainText("LinUCB · Free play");
 
   await page.getByRole("combobox", { name: "Policy" }).click();
   await page.getByRole("option", { name: "ε-greedy", exact: true }).click();
-  await page.getByRole("button", { name: "Restart with these settings" }).click();
+  await expect(page).toHaveURL(/#\/lesson\/epsilon-greedy$/);
   await expect(page.getByRole("heading", { name: "The Three Ancient Gates" })).toBeVisible();
   await expect(page.locator(".current-run strong")).toContainText("ε-greedy · Free play");
 });

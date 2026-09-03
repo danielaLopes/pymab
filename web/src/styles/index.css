@@ -478,6 +478,11 @@ main {
   max-width: 58rem;
   margin-bottom: 2rem;
 }
+.mission-header .eyebrow {
+  text-transform: none;
+  letter-spacing: 0.06em;
+  font-size: 0.76rem;
+}
 .mission-header .back-link,
 .mission-header > a {
   display: inline-block;
