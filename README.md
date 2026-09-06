@@ -109,6 +109,10 @@ Adaptive replay requires the logging design explicitly. Use
 `logging_scheme="uniform"` only for uniformly randomized logs; non-uniform
 logs also require propensities and use rejection sampling.
 
+For a detailed treatment of single-slot recommendations and defensive
+verification, including fit checks, offline evaluation and rollout guardrails,
+see [Contextual bandit use cases](docs/contextual-bandit-use-cases.md).
+
 ## Probability environments
 
 Additive Gaussian drift is intentionally rejected for Bernoulli means. Use

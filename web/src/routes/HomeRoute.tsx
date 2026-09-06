@@ -1,4 +1,6 @@
 import { CampaignMap, LessonBadge } from "../components/game";
+import { Link } from "react-router-dom";
+import { scenarioCatalog } from "@/catalog/scenarios";
 
 export function HomeRoute() {
   return (
@@ -31,6 +33,37 @@ export function HomeRoute() {
           </p>
         </div>
         <CampaignMap />
+      </section>
+      <section className="applied-scenarios" aria-labelledby="applied-scenarios-heading">
+        <div className="section-heading">
+          <div>
+            <p className="eyebrow">Applied scenarios</p>
+            <h2 id="applied-scenarios-heading">See the same loop in practical settings</h2>
+          </div>
+          <p>
+            These focused simulations show where contextual bandits fit and where their boundaries
+            matter.
+          </p>
+        </div>
+        <div className="scenario-card-grid">
+          {Object.values(scenarioCatalog).map((scenario) => (
+            <Link
+              className={`scenario-card scenario-${scenario.id}`}
+              to={`/scenario/${scenario.id}`}
+              key={scenario.id}
+            >
+              <span className="scenario-card-icon" aria-hidden="true">
+                {scenario.id === "recommendations" ? "▤" : "⬡"}
+              </span>
+              <span>
+                <small>{scenario.className}</small>
+                <strong>{scenario.title}</strong>
+                <p>{scenario.summary}</p>
+              </span>
+              <b aria-hidden="true">→</b>
+            </Link>
+          ))}
+        </div>
       </section>
       <section className="how-it-works" aria-labelledby="how-heading">
         <div>

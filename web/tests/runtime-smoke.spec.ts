@@ -315,3 +315,63 @@ test("narrow layout has no horizontal overflow", async ({ page }) => {
   );
   expect(overflow).toBe(false);
 });
+
+test("applied recommendation scenario learns from click feedback", async ({ page }) => {
+  await page.goto("./#/scenario/recommendations");
+  const advance = page.getByRole("button", { name: "Advance one round" });
+  await expect(advance).toBeEnabled({ timeout: 30_000 });
+  await expect(page.getByRole("columnheader", { name: /Article/ })).toBeVisible();
+  await advance.click();
+  await expect(page.getByRole("row", { name: /Round 1.*Signals: visitor/ })).toBeVisible();
+  await expect(page.getByRole("cell", { name: /Predicted click probability/ })).toHaveCount(3);
+  await expect(page.getByText(/Round 1: (Click|No click)/)).toBeVisible();
+  const results = await new AxeBuilder({ page }).analyze();
+  expect(results.violations).toEqual([]);
+});
+
+test("defensive verification exposes utility and keeps its safety boundary visible", async ({
+  page,
+}) => {
+  await page.goto("./#/scenario/defensive-verification");
+  const advance = page.getByRole("button", { name: "Advance one round" });
+  await expect(advance).toBeEnabled({ timeout: 30_000 });
+  await expect(page.getByText("Safety boundary", { exact: true })).toBeVisible();
+  await expect(page.getByRole("columnheader", { name: /Strong verification/ })).toBeVisible();
+  await advance.click();
+  await expect(page.getByRole("row", { name: /Round 1.*Signals: risk/ })).toBeVisible();
+  await expect(page.getByText(/utility\)/)).toBeVisible();
+  await page.getByRole("button", { name: /Inspect PyMAB/ }).click();
+  await expect(page.getByRole("table", { name: "LinUCB score decomposition" })).toBeVisible();
+});
+
+test("scenario selection and free-play controls remain on the chosen route", async ({ page }) => {
+  await page.goto("./#/scenario/recommendations");
+  await expect(page.getByRole("combobox", { name: "Scenario" })).toBeEnabled({ timeout: 30_000 });
+  await page.getByRole("combobox", { name: "Scenario" }).click();
+  await page.getByRole("option", { name: "Defensive verification" }).click();
+  await expect(page).toHaveURL(/#\/scenario\/defensive-verification$/);
+  await expect(page.getByRole("button", { name: "Advance one round" })).toBeEnabled();
+  await page.getByRole("radio", { name: "Free play" }).click();
+  await expect(page.getByLabel("Random seed")).toBeEditable();
+  await page.getByLabel("Random seed").fill("808");
+  await page.getByRole("button", { name: "Start configured run" }).click();
+  await page.getByRole("button", { name: "Advance one round" }).click();
+  await expect(page).toHaveURL(/#\/scenario\/defensive-verification$/);
+});
+
+test("scenario home and lesson avoid page-level overflow at 320 pixels", async ({ page }) => {
+  await page.setViewportSize({ width: 320, height: 760 });
+  for (const route of ["./#/", "./#/scenario/recommendations"] as const) {
+    await page.goto(route);
+    if (route.includes("scenario")) {
+      await expect(page.getByRole("button", { name: "Advance one round" })).toBeEnabled({
+        timeout: 30_000,
+      });
+    }
+    expect(
+      await page.evaluate(
+        () => document.documentElement.scrollWidth > document.documentElement.clientWidth,
+      ),
+    ).toBe(false);
+  }
+});

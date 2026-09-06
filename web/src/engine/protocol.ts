@@ -3,6 +3,8 @@ import { z } from "zod";
 import { policyIds } from "@/catalog/policies";
 
 export const policyIdSchema = z.enum(policyIds);
+export const scenarioIds = ["recommendations", "defensive-verification"] as const;
+export const scenarioIdSchema = z.enum(scenarioIds);
 export const lessonModeSchema = z.enum(["guided", "challenge", "freePlay"]);
 export const policyFamilySchema = z.enum([
   "foundations",
@@ -32,6 +34,15 @@ export const requestSchema = z.discriminatedUnion("type", [
     environment: environmentSchema.optional(),
     sourceCommit: z.string().optional(),
   }),
+  sessionBase.extend({
+    type: z.literal("startScenario"),
+    scenarioId: scenarioIdSchema,
+    mode: lessonModeSchema,
+    seed: z.number().int(),
+    parameters: z.record(z.string(), parameterValueSchema),
+    environment: environmentSchema.optional(),
+    sourceCommit: z.string().optional(),
+  }),
   sessionBase.extend({ type: z.literal("step") }),
   sessionBase.extend({ type: z.literal("runToEnd") }),
   sessionBase.extend({ type: z.literal("reset") }),
@@ -40,8 +51,31 @@ export const requestSchema = z.discriminatedUnion("type", [
 
 const cueSchema = z.object({
   name: z.string(),
-  value: z.union([z.literal(-1), z.literal(1)]),
+  value: z.union([z.number(), z.string()]),
   label: z.string(),
+});
+const armPresentationSchema = z.object({
+  name: z.string(),
+  shortName: z.string(),
+  symbolKind: z.enum([
+    "moon",
+    "sun",
+    "star",
+    "article",
+    "product",
+    "tutorial",
+    "allow",
+    "light-check",
+    "strong-verification",
+  ]),
+});
+const presentationSchema = z.object({
+  experienceKind: z.enum(["policy", "scenario"]),
+  experienceId: z.string(),
+  arms: z.array(armPresentationSchema).length(3),
+  rewardPresentation: z.enum(["binary", "numeric", "utility"]),
+  positiveOutcomeLabel: z.string(),
+  zeroOutcomeLabel: z.string(),
 });
 const historyEventSchema = z.object({
   selectedArm: z.number().int().min(0).max(2),
@@ -55,6 +89,7 @@ const historyEventSchema = z.object({
 
 export const lessonSnapshotSchema = z.object({
   policyId: policyIdSchema,
+  scenarioId: scenarioIdSchema.nullable(),
   family: policyFamilySchema,
   objective: policyObjectiveSchema,
   mode: lessonModeSchema,
@@ -67,6 +102,7 @@ export const lessonSnapshotSchema = z.object({
   parameters: z.record(z.string(), parameterValueSchema),
   environment: environmentSchema.nullable(),
   gateIds: z.array(z.string()).length(3),
+  presentation: presentationSchema,
   selectedArm: z.number().int().min(0).max(2).nullable(),
   reward: z.number().nullable(),
   totalReward: z.number(),
@@ -127,6 +163,7 @@ export const progressSchema = z.object({
 });
 
 export type PolicyId = z.infer<typeof policyIdSchema>;
+export type ScenarioId = z.infer<typeof scenarioIdSchema>;
 export type LessonId = PolicyId;
 export type LessonMode = z.infer<typeof lessonModeSchema>;
 export type LessonRequest = z.infer<typeof requestSchema>;

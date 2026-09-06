@@ -99,7 +99,9 @@ scope.addEventListener("message", (event: MessageEvent<unknown>) => {
       await loadScipy();
     }
     const withCommit =
-      request.type === "initialize" || request.type === "startLesson"
+      request.type === "initialize" ||
+      request.type === "startLesson" ||
+      request.type === "startScenario"
         ? { ...request, sourceCommit: manifest.sourceCommit }
         : request;
     const requestJson = JSON.stringify(withCommit);

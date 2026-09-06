@@ -8,9 +8,10 @@ from typing import Any
 import pymab
 from pymab_demo.catalog import POLICY_CATALOG
 from pymab_demo.protocol import DemoError, dumps
+from pymab_demo.scenarios import SCENARIO_IDS, ScenarioSession, create_scenario_session
 from pymab_demo.sessions import LessonSession, create_session
 
-_sessions: dict[str, LessonSession] = {}
+_sessions: dict[str, LessonSession | ScenarioSession] = {}
 
 
 def _error(request_id: str, error: DemoError) -> str:
@@ -60,6 +61,33 @@ def dispatch(request: dict[str, Any]) -> dict[str, Any]:
             "requestId": request_id,
             "sessionId": session_id,
             "snapshot": new_session.snapshot(),
+        }
+    if command == "startScenario":
+        scenario_id = str(request.get("scenarioId"))
+        mode = str(request.get("mode"))
+        if scenario_id not in SCENARIO_IDS:
+            raise ValueError("unknown scenarioId")
+        if mode not in ("guided", "challenge", "freePlay"):
+            raise ValueError("unknown mode")
+        if session_id in _sessions and not _sessions[session_id].disposed:
+            raise ValueError("sessionId is already active")
+        raw_environment = request.get("environment")
+        environment = None if raw_environment is None else dict(raw_environment)
+        scenario_session = create_scenario_session(
+            session_id=session_id,
+            scenario_id=scenario_id,
+            mode=mode,  # type: ignore[arg-type]
+            seed=int(request.get("seed", 0)),
+            parameters=dict(request.get("parameters", {})),
+            source_commit=str(request.get("sourceCommit", "unknown")),
+            environment=environment,
+        )
+        _sessions[session_id] = scenario_session
+        return {
+            "type": "lessonStarted",
+            "requestId": request_id,
+            "sessionId": session_id,
+            "snapshot": scenario_session.snapshot(),
         }
     current_session = _sessions.get(session_id)
     if current_session is None or current_session.disposed:

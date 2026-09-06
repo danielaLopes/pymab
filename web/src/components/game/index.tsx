@@ -161,19 +161,23 @@ export function OutcomeReveal({
   explanation: string;
 }) {
   const reward = snapshot?.reward;
-  const binary = snapshot
-    ? ["stationary-bernoulli", "changing-bernoulli", "best-arm", "contextual-logistic"].includes(
-        policyCatalog[snapshot.policyId].environment,
-      )
-    : true;
+  const binary = snapshot?.presentation.rewardPresentation === "binary";
+  const outcomeLabel =
+    snapshot?.diagnostic && typeof snapshot.diagnostic.outcomeLabel === "string"
+      ? snapshot.diagnostic.outcomeLabel
+      : null;
   const result =
     reward === null || reward === undefined
       ? ""
-      : binary
-        ? reward > 0
-          ? "Relic found"
-          : "No relic this time"
-        : `Reward ${reward.toFixed(3)}`;
+      : outcomeLabel
+        ? snapshot?.presentation.rewardPresentation === "utility"
+          ? `${outcomeLabel} (${reward > 0 ? "+" : ""}${reward.toFixed(2)} utility)`
+          : outcomeLabel
+        : binary
+          ? reward > 0
+            ? snapshot?.presentation.positiveOutcomeLabel
+            : snapshot?.presentation.zeroOutcomeLabel
+          : `Reward ${reward.toFixed(3)}`;
   return (
     <div className="outcome" aria-live="polite">
       <span className="outcome-icon" aria-hidden="true">
@@ -212,7 +216,13 @@ export function ProgressTrail({ snapshot }: { snapshot: LessonSnapshot | null })
       </div>
       <dl>
         <div>
-          <dt>{snapshot?.objective === "best-arm" ? "Samples" : "Total reward"}</dt>
+          <dt>
+            {snapshot?.objective === "best-arm"
+              ? "Samples"
+              : snapshot?.presentation.rewardPresentation === "utility"
+                ? "Total utility"
+                : "Total reward"}
+          </dt>
           <dd>
             {snapshot?.objective === "best-arm" ? step : (snapshot?.totalReward ?? 0).toFixed(2)}
           </dd>
@@ -291,11 +301,9 @@ export function Debrief({
   const probabilities = hiddenTruth?.probabilities;
   const optimalArms = hiddenTruth?.optimalArms;
   const environmentKind = policyCatalog[snapshot.policyId].environment;
-  const numericRewards =
-    environmentKind === "stationary-gaussian" ||
-    environmentKind === "contextual-linear" ||
-    environmentKind === "adversarial";
-  const gateResults = pathDetails.map((_, gateIndex) => {
+  const numericRewards = snapshot.presentation.rewardPresentation !== "binary";
+  const arms = snapshot.presentation.arms;
+  const gateResults = arms.map((_, gateIndex) => {
     const selections = snapshot.history.filter((event) => event.selectedArm === gateIndex);
     return {
       selections: selections.length,
@@ -313,8 +321,12 @@ export function Debrief({
           : "Run complete"}
       </h2>
       <p>
-        The run earned <strong>{snapshot.totalReward.toFixed(3)} total reward</strong> with{" "}
-        <strong>{snapshot.cumulativeExpectedRegret.toFixed(2)} expected regret</strong>.
+        The run earned{" "}
+        <strong>
+          {snapshot.totalReward.toFixed(3)} total{" "}
+          {snapshot.presentation.rewardPresentation === "utility" ? "utility" : "reward"}
+        </strong>{" "}
+        with <strong>{snapshot.cumulativeExpectedRegret.toFixed(2)} expected regret</strong>.
       </p>
       {snapshot.objective === "best-arm" && (
         <p className="recommendation-result">
@@ -322,7 +334,7 @@ export function Debrief({
           <strong>
             {snapshot.recommendation === null
               ? "Not available"
-              : pathDetails[snapshot.recommendation]?.name}
+              : arms[snapshot.recommendation]?.name}
           </strong>
           .
           {snapshot.passed
@@ -341,8 +353,8 @@ export function Debrief({
               {probabilities.map((value, index) => {
                 const result = gateResults[index]!;
                 return (
-                  <div key={pathDetails[index]?.name}>
-                    <dt>{pathDetails[index]?.name}</dt>
+                  <div key={arms[index]?.name}>
+                    <dt>{arms[index]?.name}</dt>
                     <dd>{Math.round(value * 100)}% reward chance</dd>
                     <dd>
                       {result.selections
@@ -357,12 +369,14 @@ export function Debrief({
         {(environmentKind === "contextual-linear" || environmentKind === "contextual-logistic") && (
           <>
             <p>
-              The best path can change with the signals. The table below compares the optimal path
-              with the policy's choice in each round.
+              The best {snapshot.scenarioId ? "action" : "path"} can change with the signals. The
+              table below compares the optimal {snapshot.scenarioId ? "action" : "path"} with the
+              policy's choice in each round.
             </p>
             <MatrixTable
-              label="Hidden environment coefficients by path"
+              label={`Hidden environment coefficients by ${snapshot.scenarioId ? "action" : "path"}`}
               value={snapshot.hiddenTruth?.theta}
+              rows={snapshot.presentation.arms.map((arm) => arm.name)}
             />
           </>
         )}
@@ -391,7 +405,7 @@ export function Debrief({
               {regretPath.map((event) => (
                 <tr key={event.step}>
                   <th scope="row">{event.step}</th>
-                  <td>{pathDetails[event.selectedArm]?.name}</td>
+                  <td>{arms[event.selectedArm]?.name}</td>
                   {(snapshot.family === "contextual" ||
                     snapshot.family === "changing" ||
                     snapshot.family === "adversarial") && (
@@ -407,7 +421,7 @@ export function Debrief({
                         const arm = Array.isArray(optimalArms)
                           ? (optimalArms as unknown[])[event.step - 1]
                           : fromRounds;
-                        return typeof arm === "number" ? pathDetails[arm]?.name : "Not available";
+                        return typeof arm === "number" ? arms[arm]?.name : "Not available";
                       })()}
                     </td>
                   )}
@@ -415,8 +429,8 @@ export function Debrief({
                     {numericRewards
                       ? event.reward.toPrecision(4)
                       : event.reward
-                        ? "Relic"
-                        : "Empty"}
+                        ? snapshot.presentation.positiveOutcomeLabel
+                        : snapshot.presentation.zeroOutcomeLabel}
                   </td>
                   <td>{event.regret.toPrecision(4)}</td>
                   <td>{event.cumulativeRegret.toPrecision(4)}</td>
@@ -485,6 +499,12 @@ export function PolicyBars({ snapshot }: { snapshot: LessonSnapshot }) {
     snapshot.policyId === "linucb"
       ? [["UCB score", diagnostic.ucbScores]]
       : [
+          [
+            typeof (diagnostic.decision as Record<string, unknown> | undefined)?.label === "string"
+              ? String((diagnostic.decision as Record<string, unknown>).label)
+              : "Decision value",
+            (diagnostic.decision as Record<string, unknown> | undefined)?.values,
+          ],
           ["Confidence index", before.indices ?? after.indices],
           [
             "Action probability",
@@ -528,7 +548,7 @@ export function PolicyBars({ snapshot }: { snapshot: LessonSnapshot }) {
         <tbody>
           {numeric.map((value, index) => (
             <tr key={index}>
-              <th>{pathDetails[index]?.name}</th>
+              <th>{snapshot.presentation.arms[index]?.name}</th>
               <td>{means[index]?.toPrecision(4)}</td>
               <td>+ {bonuses[index]?.toPrecision(4)}</td>
               <td>
@@ -544,7 +564,7 @@ export function PolicyBars({ snapshot }: { snapshot: LessonSnapshot }) {
     <div
       className="policy-bars"
       role="img"
-      aria-label={`${label}: ${numeric.map((value, i) => `${pathDetails[i]?.name} ${value.toPrecision(4)}`).join(", ")}`}
+      aria-label={`${label}: ${numeric.map((value, i) => `${snapshot.presentation.arms[i]?.name} ${value.toPrecision(4)}`).join(", ")}`}
     >
       <small className="policy-bars-label">{label}</small>
       {numeric.map((value, index) => (
@@ -560,7 +580,7 @@ export function PolicyBars({ snapshot }: { snapshot: LessonSnapshot }) {
   );
 }
 
-function MatrixTable({ label, value }: { label: string; value: unknown }) {
+function MatrixTable({ label, value, rows }: { label: string; value: unknown; rows?: string[] }) {
   if (!Array.isArray(value) || !value.every((row) => Array.isArray(row))) return null;
   const matrix = value as unknown[][];
   return (
@@ -569,7 +589,7 @@ function MatrixTable({ label, value }: { label: string; value: unknown }) {
       <tbody>
         {matrix.map((row, rowIndex) => (
           <tr key={rowIndex}>
-            <th scope="row">Path {rowIndex + 1}</th>
+            <th scope="row">{rows?.[rowIndex] ?? `Path ${rowIndex + 1}`}</th>
             {row.map((cell, columnIndex) => (
               <td key={columnIndex}>{Number(cell).toPrecision(4)}</td>
             ))}
@@ -656,6 +676,7 @@ export function InspectPanel({
                   <MatrixTable
                     label="Current context matrix"
                     value={snapshot.diagnostic.contextMatrix}
+                    rows={snapshot.presentation.arms.map((arm) => arm.name)}
                   />
                   <MatrixTable
                     label="Learned coefficient estimates"
@@ -663,13 +684,14 @@ export function InspectPanel({
                       snapshot.diagnostic.thetaBefore ??
                       (snapshot.diagnostic.after as Record<string, unknown> | undefined)?.theta
                     }
+                    rows={snapshot.presentation.arms.map((arm) => arm.name)}
                   />
                 </>
               )}
               {snapshot.family === "best-arm" && snapshot.diagnostic?.recommendation !== null && (
                 <p className="inspector-callout">
                   Current recommendation:{" "}
-                  {pathDetails[Number(snapshot.diagnostic?.recommendation)]?.name}
+                  {snapshot.presentation.arms[Number(snapshot.diagnostic?.recommendation)]?.name}
                 </p>
               )}
               <details>

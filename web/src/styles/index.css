@@ -260,6 +260,114 @@ main {
   max-width: 35rem;
   line-height: 1.6;
 }
+.applied-scenarios {
+  margin-top: 5rem;
+}
+.scenario-card-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1.2rem;
+}
+.scenario-card {
+  min-height: 12rem;
+  padding: 1.4rem;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 1.1rem;
+  align-items: start;
+  border: 1px solid var(--line);
+  border-radius: 1.1rem;
+  color: var(--ink);
+  background: linear-gradient(145deg, rgba(15, 54, 56, 0.92), rgba(7, 30, 35, 0.98));
+  text-decoration: none;
+  transition:
+    border-color 0.2s,
+    translate 0.2s;
+}
+.scenario-card:hover,
+.scenario-card:focus-visible {
+  border-color: rgba(128, 226, 187, 0.65);
+  translate: 0 -2px;
+}
+.scenario-card-icon {
+  display: grid;
+  place-items: center;
+  width: 3.2rem;
+  aspect-ratio: 1;
+  border: 1px solid rgba(243, 201, 105, 0.4);
+  border-radius: 0.8rem;
+  color: var(--gold);
+  background: rgba(3, 17, 21, 0.6);
+  font-size: 1.5rem;
+}
+.scenario-card small {
+  color: var(--mint);
+  font:
+    0.58rem ui-monospace,
+    monospace;
+}
+.scenario-card strong {
+  display: block;
+  margin: 0.4rem 0 0.55rem;
+  font:
+    1.55rem "Fraunces",
+    Georgia,
+    serif;
+}
+.scenario-card p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.78rem;
+  line-height: 1.6;
+}
+.scenario-card > b {
+  color: var(--mint);
+}
+.scenario-fit-note {
+  margin: -1rem 0 1.2rem;
+  padding: 0.9rem 1.1rem;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 1rem;
+  align-items: baseline;
+  border: 1px solid rgba(128, 226, 187, 0.28);
+  border-radius: 0.8rem;
+  background: rgba(8, 34, 39, 0.72);
+}
+.scenario-fit-note strong {
+  color: var(--mint);
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+.scenario-fit-note p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.72rem;
+  line-height: 1.55;
+}
+.scenario-environment {
+  grid-column: 1 / -1;
+}
+.scenario-matrix-editor {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.7rem;
+  margin-top: 1rem;
+}
+.scenario-matrix-editor label {
+  display: block;
+  min-height: 2.2rem;
+  color: var(--muted);
+  font-size: 0.62rem;
+  line-height: 1.35;
+}
+.slender-star {
+  width: 1em;
+  height: 1em;
+  fill: currentColor;
+  filter: drop-shadow(0 0 6px currentColor);
+}
 .campaign-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -1782,8 +1890,16 @@ pre {
   .campaign-grid,
   .family-atlas,
   .policy-search-results,
+  .scenario-card-grid,
   .how-it-works {
     grid-template-columns: 1fr;
+  }
+  .scenario-fit-note {
+    grid-template-columns: 1fr;
+    gap: 0.35rem;
+  }
+  .scenario-matrix-editor {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
   .policy-search {
     grid-template-columns: 1fr auto;
@@ -1887,6 +2003,16 @@ pre {
   }
   .campaign-grid {
     gap: 0.7rem;
+  }
+  .scenario-card {
+    grid-template-columns: auto 1fr;
+    padding: 1rem;
+  }
+  .scenario-card > b {
+    display: none;
+  }
+  .scenario-matrix-editor {
+    grid-template-columns: 1fr;
   }
   .family-card {
     padding: 1rem;

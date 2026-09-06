@@ -5,6 +5,7 @@ import { RuntimeProvider } from "./engine/RuntimeProvider";
 import { HomeRoute } from "./routes/HomeRoute";
 import { LabRoute } from "./routes/LabRoute";
 import { LessonRoute } from "./routes/LessonRoute";
+import { ScenarioRoute } from "./routes/ScenarioRoute";
 
 export function App() {
   return (
@@ -13,6 +14,7 @@ export function App() {
         <Routes>
           <Route path="/" element={<HomeRoute />} />
           <Route path="/lesson/:lessonSlug" element={<LessonRoute />} />
+          <Route path="/scenario/:scenarioSlug" element={<ScenarioRoute />} />
           <Route path="/lab" element={<LabRoute />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>

@@ -5,7 +5,6 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import type { LessonSnapshot } from "../../engine/protocol";
 import {
   buildDecisionHistory,
-  pathDetails,
   publicPathDetail,
   type DecisionHistoryCell,
   type DecisionHistoryRow,
@@ -15,10 +14,41 @@ const PAST_ROW_HEIGHT = 84;
 const CURRENT_ROW_HEIGHT = 96;
 
 const cueHelp: Record<string, string> = {
-  light: "Light can be red or blue. The policy sees it before choosing a path.",
-  echo: "Echo can be low or high. The policy sees it before choosing a path.",
-  tide: "Tide can be low or high. The policy sees it before choosing a path.",
+  light:
+    "Light can be red or blue. The policy sees it before choosing a path. In the default environment, red strongly favors Moon and blue strongly favors Sun.",
+  echo: "Echo can be low or high. The policy sees it before choosing a path. In the default environment, high slightly favors Moon and Sun, while low strongly favors Star.",
+  tide: "Tide can be low or high. The policy sees it before choosing a path. In the default environment, low strongly favors Moon and high strongly favors Sun. Tide has a smaller effect on Star.",
+  visitor: "Whether this visitor is new or returning.",
+  engagement: "Recent activity summarized as low or high engagement.",
+  visit: "Whether this visit happens on a weekday or weekend.",
+  risk: "A normalized score from an existing risk model. This lesson covers only the uncertain middle range.",
+  account: "Whether the account is new or established.",
+  endpoint: "Whether the requested endpoint is routine or sensitive.",
 };
+
+type Arm = LessonSnapshot["presentation"]["arms"][number];
+
+const glyphs: Partial<Record<Arm["symbolKind"], string>> = {
+  moon: "☾",
+  sun: "☼",
+  article: "▤",
+  product: "▣",
+  tutorial: "▶",
+  allow: "✓",
+  "light-check": "◒",
+  "strong-verification": "⬡",
+};
+
+function ArmSymbol({ arm }: { arm: Arm }) {
+  if (arm.symbolKind === "star") {
+    return (
+      <svg className="slender-star" viewBox="0 0 100 100" aria-hidden="true">
+        <polygon points="50,2 56,42 78,22 60,46 98,50 60,54 78,78 56,58 50,98 44,58 22,78 40,54 2,50 40,46 22,22 44,42" />
+      </svg>
+    );
+  }
+  return <>{glyphs[arm.symbolKind] ?? "•"}</>;
+}
 
 function RewardMark({ cell }: { cell: DecisionHistoryCell }) {
   if (!cell.selected) {
@@ -90,8 +120,8 @@ function ContextRail({ row }: { row: DecisionHistoryRow }) {
   );
 }
 
-function cellDescription(row: DecisionHistoryRow, cell: DecisionHistoryCell): string {
-  const path = pathDetails[cell.arm]!.name;
+function cellDescription(row: DecisionHistoryRow, cell: DecisionHistoryCell, arms: Arm[]): string {
+  const path = arms[cell.arm]!.name;
   const parts = [`Round ${row.round}`, path];
   if (cell.selected) {
     parts.push("chosen", cell.reward?.label ?? "outcome unavailable");
@@ -103,15 +133,23 @@ function cellDescription(row: DecisionHistoryRow, cell: DecisionHistoryCell): st
   return parts.join(", ");
 }
 
-function DecisionCell({ row, cell }: { row: DecisionHistoryRow; cell: DecisionHistoryCell }) {
+function DecisionCell({
+  row,
+  cell,
+  arms,
+}: {
+  row: DecisionHistoryRow;
+  cell: DecisionHistoryCell;
+  arms: Arm[];
+}) {
   return (
     <div
       className={`history-cell path-${cell.arm} ${cell.selected ? "selected" : "unselected"} ${cell.state ? `state-${cell.state}` : ""}`}
       role="cell"
-      aria-label={cellDescription(row, cell)}
+      aria-label={cellDescription(row, cell, arms)}
     >
       <span className="history-mini-gate" aria-hidden="true">
-        {pathDetails[cell.arm]!.symbol}
+        <ArmSymbol arm={arms[cell.arm]!} />
       </span>
       {cell.selected && <span className="history-explorer" aria-hidden="true" />}
       <RewardMark cell={cell} />
@@ -131,7 +169,15 @@ function DecisionCell({ row, cell }: { row: DecisionHistoryRow; cell: DecisionHi
   );
 }
 
-function HistoryRow({ row, current }: { row: DecisionHistoryRow; current: boolean }) {
+function HistoryRow({
+  row,
+  current,
+  arms,
+}: {
+  row: DecisionHistoryRow;
+  current: boolean;
+  arms: Arm[];
+}) {
   const chosen = row.cells[row.selectedArm]!;
   const cueSummary = row.cues.length
     ? ` Signals: ${row.cues.map((cue) => `${cue.name} ${cue.value}`).join(", ")}.`
@@ -141,17 +187,17 @@ function HistoryRow({ row, current }: { row: DecisionHistoryRow; current: boolea
       className={`decision-history-row ${current ? "current" : ""}`}
       role="row"
       tabIndex={0}
-      aria-label={`Round ${row.round}. ${pathDetails[row.selectedArm]!.name} chosen. ${chosen.reward?.label ?? "Outcome unavailable"}.${cueSummary}`}
+      aria-label={`Round ${row.round}. ${arms[row.selectedArm]!.name} chosen. ${chosen.reward?.label ?? "Outcome unavailable"}.${cueSummary}`}
     >
       <ContextRail row={row} />
       {row.cells.map((cell) => (
-        <DecisionCell key={cell.arm} row={row} cell={cell} />
+        <DecisionCell key={cell.arm} row={row} cell={cell} arms={arms} />
       ))}
     </div>
   );
 }
 
-function AwaitingRow() {
+function AwaitingRow({ arms }: { arms: Arm[] }) {
   return (
     <div
       className="decision-history-row current awaiting"
@@ -162,10 +208,10 @@ function AwaitingRow() {
         <strong>Round 1</strong>
         <span className="history-round-note">Awaiting the first decision</span>
       </div>
-      {pathDetails.map((path, arm) => (
+      {arms.map((path, arm) => (
         <div className={`history-cell path-${arm} unselected`} role="cell" key={path.name}>
           <span className="history-mini-gate" aria-hidden="true">
-            {path.symbol}
+            <ArmSymbol arm={path} />
           </span>
           <span className="history-cell-values">
             <strong>Available</strong>
@@ -208,6 +254,11 @@ export function DecisionHistoryBoard({
   pending?: boolean;
 }) {
   const rows = useMemo(() => (snapshot ? buildDecisionHistory(snapshot) : []), [snapshot]);
+  const arms = snapshot?.presentation.arms ?? [
+    { name: "Moon Path", shortName: "Moon", symbolKind: "moon" as const },
+    { name: "Sun Path", shortName: "Sun", symbolKind: "sun" as const },
+    { name: "Star Path", shortName: "Star", symbolKind: "star" as const },
+  ];
   const scrollRef = useRef<HTMLDivElement>(null);
   const [following, setFollowing] = useState(true);
 
@@ -256,9 +307,11 @@ export function DecisionHistoryBoard({
           >
             <div className="history-column-headers" role="row">
               <div role="columnheader">Round</div>
-              {pathDetails.map((path, arm) => (
+              {arms.map((path, arm) => (
                 <div role="columnheader" key={path.name}>
-                  <span aria-hidden="true">{path.symbol}</span>
+                  <span aria-hidden="true">
+                    <ArmSymbol arm={path} />
+                  </span>
                   <strong>{path.name}</strong>
                   {snapshot && publicPathDetail(snapshot, arm) && (
                     <small>{publicPathDetail(snapshot, arm)}</small>
@@ -270,10 +323,15 @@ export function DecisionHistoryBoard({
               <ChoiceTrail rows={rows} />
               {rows.length ? (
                 rows.map((row, index) => (
-                  <HistoryRow key={row.round} row={row} current={index === rows.length - 1} />
+                  <HistoryRow
+                    key={row.round}
+                    row={row}
+                    current={index === rows.length - 1}
+                    arms={arms}
+                  />
                 ))
               ) : (
-                <AwaitingRow />
+                <AwaitingRow arms={arms} />
               )}
             </div>
           </div>
@@ -283,10 +341,11 @@ export function DecisionHistoryBoard({
             <i className="legend-chosen" aria-hidden="true" /> Chosen
           </span>
           <span>
-            <i aria-hidden="true">✦</i> Relic found
+            <i aria-hidden="true">✦</i>{" "}
+            {snapshot?.presentation.positiveOutcomeLabel ?? "Relic found"}
           </span>
           <span>
-            <i aria-hidden="true">◇</i> No relic
+            <i aria-hidden="true">◇</i> {snapshot?.presentation.zeroOutcomeLabel ?? "No relic"}
           </span>
           <span>
             <i aria-hidden="true">?</i> Reward not observed

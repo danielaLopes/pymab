@@ -17,6 +17,22 @@ test("campaign map", async ({ page }) => {
     page.getByRole("heading", { name: /See how bandit algorithms choose/ }),
   ).toBeVisible();
   await expect(page).toHaveScreenshot("campaign-map.png", screenshotOptions);
+  await expect(page.locator(".applied-scenarios")).toHaveScreenshot(
+    "applied-scenarios.png",
+    screenshotOptions,
+  );
+});
+
+test("applied contextual scenarios", async ({ page }) => {
+  for (const scenario of ["recommendations", "defensive-verification"] as const) {
+    await page.goto(`./#/scenario/${scenario}`);
+    const advance = page.getByRole("button", { name: "Advance one round" });
+    await expect(advance).toBeEnabled({ timeout: 30_000 });
+    await advance.click();
+    const board = page.getByRole("region", { name: "Decision history" });
+    await expect(board.getByRole("row", { name: /Round 1\./ })).toBeVisible();
+    await expect(board).toHaveScreenshot(`${scenario}-history-region.png`, screenshotOptions);
+  }
 });
 
 test("run setup panels", async ({ page }) => {

@@ -3,6 +3,7 @@ import { buildDecisionHistory, publicPathDetail } from "./decisionHistory";
 
 const baseSnapshot: LessonSnapshot = {
   policyId: "epsilon-greedy",
+  scenarioId: null,
   family: "foundations",
   objective: "cumulative-reward",
   mode: "guided",
@@ -15,6 +16,18 @@ const baseSnapshot: LessonSnapshot = {
   parameters: { epsilon: 0.2, initial_value: 0 },
   environment: null,
   gateIds: ["moon", "sun", "star"],
+  presentation: {
+    experienceKind: "policy",
+    experienceId: "epsilon-greedy",
+    arms: [
+      { name: "Moon Path", shortName: "Moon", symbolKind: "moon" },
+      { name: "Sun Path", shortName: "Sun", symbolKind: "sun" },
+      { name: "Star Path", shortName: "Star", symbolKind: "star" },
+    ],
+    rewardPresentation: "binary",
+    positiveOutcomeLabel: "Relic found",
+    zeroOutcomeLabel: "No relic",
+  },
   selectedArm: null,
   reward: null,
   totalReward: 0,
@@ -89,6 +102,7 @@ describe("decision history presentation", () => {
       ...baseSnapshot,
       policyId: "gaussian-thompson-sampling",
       family: "bayesian",
+      presentation: { ...baseSnapshot.presentation, rewardPresentation: "numeric" },
       step: 1,
       selectedArm: 2,
       reward: -0.125,

@@ -111,6 +111,7 @@ class LessonSession(ABC):
         spec = POLICY_CATALOG[self.lesson_id]
         return {
             "policyId": self.lesson_id,
+            "scenarioId": None,
             "family": spec.family,
             "objective": spec.objective,
             "mode": self.mode,
@@ -123,6 +124,7 @@ class LessonSession(ABC):
             "parameters": self.parameters,
             "environment": self._public_environment(),
             "gateIds": GATE_IDS,
+            "presentation": self._presentation(),
             "selectedArm": None if last is None else last["selectedArm"],
             "reward": None if last is None else last["reward"],
             "totalReward": self.total_reward,
@@ -140,6 +142,26 @@ class LessonSession(ABC):
             "history": self.history,
             "hiddenTruth": self._hidden_truth() if complete else None,
             "generatedCode": self.generated_code(),
+        }
+
+    def _presentation(self) -> dict[str, Any]:
+        binary = POLICY_CATALOG[self.lesson_id].environment in {
+            "stationary-bernoulli",
+            "changing-bernoulli",
+            "best-arm",
+            "contextual-logistic",
+        }
+        return {
+            "experienceKind": "policy",
+            "experienceId": self.lesson_id,
+            "arms": [
+                {"name": "Moon Path", "shortName": "Moon", "symbolKind": "moon"},
+                {"name": "Sun Path", "shortName": "Sun", "symbolKind": "sun"},
+                {"name": "Star Path", "shortName": "Star", "symbolKind": "star"},
+            ],
+            "rewardPresentation": "binary" if binary else "numeric",
+            "positiveOutcomeLabel": "Relic found",
+            "zeroOutcomeLabel": "No relic",
         }
 
     def _passed(self, complete: bool, fixture: LessonFixture | None) -> bool:

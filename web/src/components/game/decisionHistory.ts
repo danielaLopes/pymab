@@ -1,11 +1,9 @@
-import { policyCatalog } from "@/catalog/policies";
-
 import type { LessonSnapshot } from "../../engine/protocol";
 
 export const pathDetails = [
   { name: "Moon Path", symbol: "☾", shortName: "Moon" },
   { name: "Sun Path", symbol: "☼", shortName: "Sun" },
-  { name: "Star Path", symbol: "✦", shortName: "Star" },
+  { name: "Star Path", symbol: "✧", shortName: "Star" },
 ] as const;
 
 export interface HistoryCue {
@@ -74,21 +72,31 @@ function formatValue(label: string, value: number): string {
   return formatNumber(value);
 }
 
-function rewardFor(snapshot: LessonSnapshot, reward: number): HistoryReward {
-  const environment = policyCatalog[snapshot.policyId].environment;
-  const binary = [
-    "stationary-bernoulli",
-    "changing-bernoulli",
-    "best-arm",
-    "contextual-logistic",
-  ].includes(environment);
-  if (binary) {
+function rewardFor(snapshot: LessonSnapshot, event: HistoryEvent): HistoryReward {
+  const reward = event.reward;
+  const outcome = record(event.diagnostic).outcomeLabel;
+  if (snapshot.presentation.rewardPresentation === "binary") {
     return reward > 0
-      ? { kind: "relic", label: "Relic found", value: reward }
-      : { kind: "empty", label: "No relic", value: reward };
+      ? {
+          kind: "relic",
+          label: typeof outcome === "string" ? outcome : snapshot.presentation.positiveOutcomeLabel,
+          value: reward,
+        }
+      : {
+          kind: "empty",
+          label: typeof outcome === "string" ? outcome : snapshot.presentation.zeroOutcomeLabel,
+          value: reward,
+        };
   }
   const prefix = reward > 0 ? "+" : "";
-  return { kind: "numeric", label: `Reward ${prefix}${formatNumber(reward)}`, value: reward };
+  return {
+    kind: "numeric",
+    label:
+      typeof outcome === "string"
+        ? `${outcome}: ${prefix}${formatNumber(reward)}`
+        : `Reward ${prefix}${formatNumber(reward)}`,
+    value: reward,
+  };
 }
 
 function cueValue(cue: HistoryEvent["visibleCues"][number]): string {
@@ -99,6 +107,12 @@ function cueValue(cue: HistoryEvent["visibleCues"][number]): string {
 function cueSymbol(name: string): string {
   if (name === "light") return "◐";
   if (name === "echo") return "≋";
+  if (name === "visitor") return "◎";
+  if (name === "engagement") return "↗";
+  if (name === "visit") return "◫";
+  if (name === "risk") return "!";
+  if (name === "account") return "○";
+  if (name === "endpoint") return "⌁";
   return "≈";
 }
 
@@ -202,7 +216,7 @@ export function buildDecisionHistory(snapshot: LessonSnapshot): DecisionHistoryR
     const recommendation =
       typeof diagnostic.recommendation === "number" ? diagnostic.recommendation : null;
 
-    const cells = pathDetails.map((_, arm): DecisionHistoryCell => {
+    const cells = snapshot.presentation.arms.map((_, arm): DecisionHistoryCell => {
       const value = extracted.values?.[arm] ?? null;
       const secondaryValue = extracted.secondaryValues?.[arm] ?? null;
       const selected = event.selectedArm === arm;
@@ -226,7 +240,7 @@ export function buildDecisionHistory(snapshot: LessonSnapshot): DecisionHistoryR
             ? `${extracted.secondaryLabel} ${formatValue(extracted.secondaryLabel, secondaryValue)}`
             : null),
         state,
-        reward: selected ? rewardFor(snapshot, event.reward) : null,
+        reward: selected ? rewardFor(snapshot, event) : null,
       };
     });
 
