@@ -12,6 +12,14 @@ import { Slider } from "@/components/ui/slider";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { scenarioCatalog } from "@/catalog/scenarios";
 import type { LessonMode, ScenarioId } from "@/engine/protocol";
+import {
+  appendRecommendationCandidate,
+  candidateNameErrors,
+  recommendationCandidateKinds,
+  validRecommendationCandidates,
+  type RecommendationCandidate,
+  type RecommendationCandidateKind,
+} from "@/state/scenarioCandidates";
 
 export interface ScenarioConfiguration {
   scenarioId: ScenarioId;
@@ -19,6 +27,8 @@ export interface ScenarioConfiguration {
   seed: number;
   parameters: Record<string, number>;
   environment: Record<string, unknown> | null;
+  candidates: RecommendationCandidate[] | null;
+  nextCandidateOrdinal: number;
 }
 
 const modes: LessonMode[] = ["guided", "challenge", "freePlay"];
@@ -46,6 +56,9 @@ export function ScenarioSetupPanel({
   onApply: () => void;
 }) {
   const definition = scenarioCatalog[configuration.scenarioId];
+  const candidatesValid =
+    configuration.scenarioId !== "recommendations" ||
+    (configuration.candidates !== null && validRecommendationCandidates(configuration.candidates));
   const setParameter = (key: string, value: number) =>
     onChange({
       ...configuration,
@@ -70,6 +83,7 @@ export function ScenarioSetupPanel({
         </div>
         <span className="scenario-setup-summary">
           <span>{modeLabel[configuration.mode]}</span>
+          {configuration.candidates && <span>{configuration.candidates.length} candidates</span>}
           {definition.parameterDefinitions.map((parameter) => (
             <span key={parameter.key}>
               {parameter.label} {configuration.parameters[parameter.key]}
@@ -132,6 +146,13 @@ export function ScenarioSetupPanel({
                 <p className="mode-target">Keep cumulative expected regret below the target.</p>
               )}
             </div>
+            {configuration.scenarioId === "recommendations" && configuration.candidates && (
+              <RecommendationCandidateEditor
+                configuration={configuration}
+                pending={pending}
+                onChange={onChange}
+              />
+            )}
             <div className="parameter-section">
               <div className="parameter-section-heading">
                 <div>
@@ -220,7 +241,7 @@ export function ScenarioSetupPanel({
             </p>
             <Button
               className="primary-button"
-              disabled={pending || !Number.isSafeInteger(configuration.seed)}
+              disabled={pending || !Number.isSafeInteger(configuration.seed) || !candidatesValid}
               onClick={onApply}
             >
               Start configured run
@@ -228,6 +249,156 @@ export function ScenarioSetupPanel({
           </div>
         </div>
       )}
+    </section>
+  );
+}
+
+function RecommendationCandidateEditor({
+  configuration,
+  pending,
+  onChange,
+}: {
+  configuration: ScenarioConfiguration;
+  pending: boolean;
+  onChange: (configuration: ScenarioConfiguration) => void;
+}) {
+  const candidates = configuration.candidates ?? [];
+  const nameErrors = candidateNameErrors(candidates);
+  const updateCandidate = (id: string, update: Partial<RecommendationCandidate>) =>
+    onChange({
+      ...configuration,
+      candidates: candidates.map((candidate) =>
+        candidate.id === id ? { ...candidate, ...update } : candidate,
+      ),
+    });
+  const moveCandidate = (index: number, offset: -1 | 1) => {
+    const destination = index + offset;
+    if (destination < 0 || destination >= candidates.length) return;
+    const next = [...candidates];
+    [next[index], next[destination]] = [next[destination]!, next[index]!];
+    onChange({ ...configuration, candidates: next });
+  };
+  const addCandidate = (kind: RecommendationCandidateKind) => {
+    onChange({
+      ...configuration,
+      candidates: appendRecommendationCandidate(
+        candidates,
+        kind,
+        configuration.seed,
+        configuration.nextCandidateOrdinal,
+      ),
+      nextCandidateOrdinal: configuration.nextCandidateOrdinal + 1,
+    });
+  };
+
+  return (
+    <section className="candidate-editor" aria-labelledby="candidate-editor-title">
+      <div className="candidate-editor-heading">
+        <div>
+          <h3 id="candidate-editor-title">Candidates</h3>
+          <p>Choose two to eight items for the recommendation slot.</p>
+        </div>
+        <span>{candidates.length} of 8</span>
+      </div>
+      <div className="candidate-list">
+        {candidates.map((candidate, index) => (
+          <div className="candidate-row" key={candidate.id}>
+            <div className="candidate-name-field">
+              <Label htmlFor={`candidate-name-${candidate.id}`}>Candidate {index + 1}</Label>
+              <Input
+                id={`candidate-name-${candidate.id}`}
+                value={candidate.name}
+                maxLength={32}
+                disabled={pending}
+                aria-invalid={Boolean(nameErrors[candidate.id])}
+                aria-describedby={
+                  nameErrors[candidate.id] ? `candidate-error-${candidate.id}` : undefined
+                }
+                onChange={(event) => updateCandidate(candidate.id, { name: event.target.value })}
+              />
+              {nameErrors[candidate.id] && (
+                <p className="field-error" id={`candidate-error-${candidate.id}`}>
+                  {nameErrors[candidate.id]}
+                </p>
+              )}
+            </div>
+            <div className="candidate-type-field">
+              <Label htmlFor={`candidate-type-${candidate.id}`}>Visual type</Label>
+              <Select
+                value={candidate.symbolKind}
+                disabled={pending}
+                onValueChange={(value) =>
+                  updateCandidate(candidate.id, {
+                    symbolKind: value as RecommendationCandidateKind,
+                  })
+                }
+              >
+                <SelectTrigger id={`candidate-type-${candidate.id}`}>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {recommendationCandidateKinds.map((kind) => (
+                    <SelectItem key={kind} value={kind}>
+                      {kind[0]!.toUpperCase() + kind.slice(1)}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="candidate-row-actions" aria-label={`Reorder ${candidate.name}`}>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                disabled={pending || index === 0}
+                aria-label={`Move ${candidate.name} up`}
+                onClick={() => moveCandidate(index, -1)}
+              >
+                ↑
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                disabled={pending || index === candidates.length - 1}
+                aria-label={`Move ${candidate.name} down`}
+                onClick={() => moveCandidate(index, 1)}
+              >
+                ↓
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                disabled={pending || candidates.length <= 2}
+                aria-label={`Remove ${candidate.name}`}
+                onClick={() =>
+                  onChange({
+                    ...configuration,
+                    candidates: candidates.filter((item) => item.id !== candidate.id),
+                  })
+                }
+              >
+                Remove
+              </Button>
+            </div>
+          </div>
+        ))}
+      </div>
+      <div className="candidate-add-actions" aria-label="Add candidate">
+        {recommendationCandidateKinds.map((kind) => (
+          <Button
+            key={kind}
+            type="button"
+            variant="outline"
+            size="sm"
+            disabled={pending || candidates.length >= 8}
+            onClick={() => addCandidate(kind)}
+          >
+            Add {kind}
+          </Button>
+        ))}
+      </div>
     </section>
   );
 }
@@ -243,12 +414,7 @@ function ScenarioEnvironmentEditor({
 }) {
   const environment = configuration.environment ?? {};
   if (configuration.scenarioId === "recommendations") {
-    const theta = (environment.theta as number[][] | undefined) ?? [
-      [0.1, -0.65, 0.2, 0.35],
-      [-0.35, 0.85, 0.7, -0.15],
-      [0.05, -0.75, -0.55, 0.45],
-    ];
-    const names = ["Article", "Product", "Tutorial"];
+    const candidates = configuration.candidates ?? [];
     const features = ["Base", "Returning", "Engagement", "Weekend"];
     return (
       <details className="advanced-parameters scenario-environment">
@@ -258,22 +424,29 @@ function ScenarioEnvironmentEditor({
           it.
         </p>
         <div className="scenario-matrix-editor">
-          {theta.map((row, rowIndex) =>
-            row.map((value, columnIndex) => (
-              <div key={`${rowIndex}-${columnIndex}`}>
-                <Label htmlFor={`theta-${rowIndex}-${columnIndex}`}>
-                  {names[rowIndex]} · {features[columnIndex]}
+          {candidates.map((candidate) =>
+            candidate.coefficients.map((value, columnIndex) => (
+              <div key={`${candidate.id}-${columnIndex}`}>
+                <Label htmlFor={`theta-${candidate.id}-${columnIndex}`}>
+                  {candidate.name} · {features[columnIndex]}
                 </Label>
                 <Input
-                  id={`theta-${rowIndex}-${columnIndex}`}
+                  id={`theta-${candidate.id}-${columnIndex}`}
                   type="number"
                   step="0.05"
                   value={value}
                   disabled={pending}
                   onChange={(event) => {
-                    const next = theta.map((item) => [...item]);
-                    next[rowIndex]![columnIndex] = Number(event.target.value);
-                    onChange({ ...configuration, environment: { theta: next } });
+                    const coefficients = [
+                      ...candidate.coefficients,
+                    ] as RecommendationCandidate["coefficients"];
+                    coefficients[columnIndex] = Number(event.target.value);
+                    onChange({
+                      ...configuration,
+                      candidates: candidates.map((item) =>
+                        item.id === candidate.id ? { ...item, coefficients } : item,
+                      ),
+                    });
                   }}
                 />
               </div>

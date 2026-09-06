@@ -55,6 +55,7 @@ const cueSchema = z.object({
   label: z.string(),
 });
 const armPresentationSchema = z.object({
+  id: z.string().min(1).optional(),
   name: z.string(),
   shortName: z.string(),
   symbolKind: z.enum([
@@ -72,13 +73,13 @@ const armPresentationSchema = z.object({
 const presentationSchema = z.object({
   experienceKind: z.enum(["policy", "scenario"]),
   experienceId: z.string(),
-  arms: z.array(armPresentationSchema).length(3),
+  arms: z.array(armPresentationSchema).min(2).max(8),
   rewardPresentation: z.enum(["binary", "numeric", "utility"]),
   positiveOutcomeLabel: z.string(),
   zeroOutcomeLabel: z.string(),
 });
 const historyEventSchema = z.object({
-  selectedArm: z.number().int().min(0).max(2),
+  selectedArm: z.number().int().min(0).max(7),
   reward: z.number(),
   instantaneousExpectedRegret: z.number().nonnegative(),
   visibleCues: z.array(cueSchema),
@@ -87,7 +88,7 @@ const historyEventSchema = z.object({
   diagnostic: z.record(z.string(), z.unknown()),
 });
 
-export const lessonSnapshotSchema = z.object({
+const lessonSnapshotBaseSchema = z.object({
   policyId: policyIdSchema,
   scenarioId: scenarioIdSchema.nullable(),
   family: policyFamilySchema,
@@ -101,9 +102,9 @@ export const lessonSnapshotSchema = z.object({
   horizon: z.number().int().positive(),
   parameters: z.record(z.string(), parameterValueSchema),
   environment: environmentSchema.nullable(),
-  gateIds: z.array(z.string()).length(3),
+  gateIds: z.array(z.string()).min(2).max(8),
   presentation: presentationSchema,
-  selectedArm: z.number().int().min(0).max(2).nullable(),
+  selectedArm: z.number().int().min(0).max(7).nullable(),
   reward: z.number().nullable(),
   totalReward: z.number(),
   instantaneousExpectedRegret: z.number().nonnegative().nullable(),
@@ -114,10 +115,42 @@ export const lessonSnapshotSchema = z.object({
   publicContext: z.array(z.array(z.number())).nullable(),
   explanationKey: z.string(),
   diagnostic: z.record(z.string(), z.unknown()).nullable(),
-  recommendation: z.number().int().min(0).max(2).nullable(),
+  recommendation: z.number().int().min(0).max(7).nullable(),
   history: z.array(historyEventSchema),
   hiddenTruth: z.record(z.string(), z.unknown()).nullable(),
   generatedCode: z.string(),
+});
+
+export const lessonSnapshotSchema = lessonSnapshotBaseSchema.superRefine((snapshot, context) => {
+  const armCount = snapshot.presentation.arms.length;
+  if (snapshot.gateIds.length !== armCount) {
+    context.addIssue({
+      code: "custom",
+      path: ["gateIds"],
+      message: "gateIds must match the presentation arm count",
+    });
+  }
+  for (const [path, selected] of [
+    [["selectedArm"], snapshot.selectedArm],
+    [["recommendation"], snapshot.recommendation],
+  ] as const) {
+    if (selected !== null && selected >= armCount) {
+      context.addIssue({
+        code: "custom",
+        path: [...path],
+        message: "arm index is outside the presentation arm count",
+      });
+    }
+  }
+  snapshot.history.forEach((event, index) => {
+    if (event.selectedArm >= armCount) {
+      context.addIssue({
+        code: "custom",
+        path: ["history", index, "selectedArm"],
+        message: "arm index is outside the presentation arm count",
+      });
+    }
+  });
 });
 
 const responseBase = z.object({ requestId: z.string() });

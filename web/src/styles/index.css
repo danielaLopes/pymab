@@ -729,6 +729,71 @@ main {
   padding-top: 1.1rem;
   border-top: 1px solid var(--line);
 }
+.candidate-editor {
+  grid-column: 1 / -1;
+  padding-top: 1.1rem;
+  border-top: 1px solid var(--line);
+}
+.candidate-editor-heading {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.8rem;
+}
+.candidate-editor-heading h3 {
+  margin: 0;
+  font: 700 0.82rem inherit;
+}
+.candidate-editor-heading p {
+  margin: 0.25rem 0 0;
+  color: var(--muted);
+  font-size: 0.68rem;
+}
+.candidate-editor-heading > span {
+  color: var(--mint);
+  font:
+    0.66rem ui-monospace,
+    monospace;
+}
+.candidate-list {
+  display: grid;
+  gap: 0.65rem;
+}
+.candidate-row {
+  display: grid;
+  grid-template-columns: minmax(12rem, 1fr) minmax(9rem, 12rem) auto;
+  align-items: end;
+  gap: 0.75rem;
+  padding: 0.75rem;
+  border: 1px solid var(--line);
+  border-radius: 0.7rem;
+  background: rgba(3, 17, 21, 0.38);
+}
+.candidate-name-field,
+.candidate-type-field {
+  min-width: 0;
+}
+.candidate-name-field > label,
+.candidate-type-field > label {
+  display: block;
+  margin-bottom: 0.45rem;
+}
+.candidate-row-actions,
+.candidate-add-actions {
+  display: flex;
+  gap: 0.4rem;
+}
+.candidate-row-actions [data-slot="button"] {
+  min-width: 2.2rem;
+}
+.candidate-add-actions {
+  margin-top: 0.75rem;
+  flex-wrap: wrap;
+}
+.candidate-add-actions [data-slot="button"] {
+  color: var(--mint);
+}
 .parameter-section-heading,
 .environment-heading {
   display: flex;
@@ -1193,7 +1258,7 @@ main {
 .history-column-headers,
 .decision-history-row {
   display: grid;
-  grid-template-columns: var(--history-rail) repeat(3, minmax(10rem, 1fr));
+  grid-template-columns: var(--history-rail) repeat(var(--history-arms, 3), minmax(10rem, 1fr));
 }
 .history-column-headers {
   position: sticky;
@@ -1214,6 +1279,9 @@ main {
   color: var(--gold);
 }
 .history-column-headers > div:first-child {
+  position: sticky;
+  left: 0;
+  z-index: 6;
   justify-content: flex-start;
   border-left: 0;
   color: var(--muted);
@@ -1291,7 +1359,8 @@ main {
   box-shadow: inset 0 0 0 2px var(--mint);
 }
 .history-round-rail {
-  position: relative;
+  position: sticky;
+  left: 0;
   z-index: 2;
   min-width: 0;
   padding: 0.65rem 0.75rem;
@@ -2085,8 +2154,16 @@ pre {
     grid-template-columns: 1fr;
   }
   .parameter-section-heading,
-  .environment-heading {
+  .environment-heading,
+  .candidate-editor-heading {
     flex-direction: column;
+  }
+  .candidate-row {
+    grid-template-columns: 1fr;
+    align-items: stretch;
+  }
+  .candidate-row-actions [data-slot="button"]:last-child {
+    margin-left: auto;
   }
   .portal-probabilities-heading,
   .probability-source {

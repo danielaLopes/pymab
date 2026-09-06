@@ -12,6 +12,10 @@ import type {
 import { WorkerClient } from "@/engine/WorkerClient";
 import { initialLessonState, lessonReducer } from "@/state/lessonReducer";
 import {
+  cloneRecommendationCandidates,
+  defaultRecommendationCandidates,
+} from "@/state/scenarioCandidates";
+import {
   Debrief,
   ErrorRecovery,
   InspectPanel,
@@ -51,15 +55,24 @@ const scenarioExplanations: Record<string, string> = {
 };
 
 function environmentFor(scenarioId: ScenarioId): Record<string, unknown> {
-  return scenarioId === "recommendations"
-    ? {
-        theta: [
-          [0.1, -0.65, 0.2, 0.35],
-          [-0.35, 0.85, 0.7, -0.15],
-          [0.05, -0.75, -0.55, 0.45],
-        ],
-      }
-    : { baseRisk: 0.32, riskWeight: 0.16, newAccountWeight: 0.07, sensitiveWeight: 0.06 };
+  return scenarioId === "defensive-verification"
+    ? { baseRisk: 0.32, riskWeight: 0.16, newAccountWeight: 0.07, sensitiveWeight: 0.06 }
+    : {};
+}
+
+function environmentFromScenarioConfiguration(
+  configuration: ScenarioConfiguration,
+): Record<string, unknown> | null {
+  if (configuration.scenarioId !== "recommendations") return configuration.environment;
+  const candidates = configuration.candidates ?? cloneRecommendationCandidates();
+  return {
+    candidates: candidates.map(({ id, name, symbolKind }) => ({
+      id,
+      name: name.trim(),
+      symbolKind,
+    })),
+    theta: candidates.map((candidate) => [...candidate.coefficients]),
+  };
 }
 
 function defaultScenarioConfiguration(
@@ -71,7 +84,15 @@ function defaultScenarioConfiguration(
     mode,
     seed: scenarioSeed(scenarioId, mode),
     parameters: { ...scenarioCatalog[scenarioId].parameters },
-    environment: mode === "freePlay" ? environmentFor(scenarioId) : null,
+    environment:
+      scenarioId === "defensive-verification" && mode === "freePlay"
+        ? environmentFor(scenarioId)
+        : null,
+    candidates:
+      scenarioId === "recommendations"
+        ? cloneRecommendationCandidates(defaultRecommendationCandidates)
+        : null,
+    nextCandidateOrdinal: 4,
   };
 }
 
@@ -121,6 +142,7 @@ function ScenarioExperience({ scenarioId }: { scenarioId: ScenarioId }) {
           });
         }
         const sessionId = WorkerClient.requestId();
+        const environment = environmentFromScenarioConfiguration(next);
         const request: LessonRequest = {
           type: "startScenario",
           requestId: WorkerClient.requestId(),
@@ -129,7 +151,7 @@ function ScenarioExperience({ scenarioId }: { scenarioId: ScenarioId }) {
           mode: next.mode,
           seed: next.seed,
           parameters: next.parameters,
-          ...(next.environment ? { environment: next.environment } : {}),
+          ...(environment ? { environment } : {}),
         };
         const snapshot = snapshotFrom(await client.send(request));
         sessionRef.current = sessionId;
@@ -239,7 +261,9 @@ function ScenarioExperience({ scenarioId }: { scenarioId: ScenarioId }) {
         setConfiguration({
           ...next,
           environment:
-            next.mode === "freePlay" ? (next.environment ?? environmentFor(next.scenarioId)) : null,
+            next.scenarioId === "defensive-verification" && next.mode === "freePlay"
+              ? (next.environment ?? environmentFor(next.scenarioId))
+              : next.environment,
         })
       }
       onScenarioChange={(next) => void navigate(`/scenario/${next}`)}

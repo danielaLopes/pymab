@@ -35,6 +35,23 @@ test("applied contextual scenarios", async ({ page }) => {
   }
 });
 
+test("eight recommendation candidates", async ({ page }) => {
+  await page.goto("./#/scenario/recommendations");
+  await expect(page.getByRole("button", { name: "Advance one round" })).toBeEnabled({
+    timeout: 30_000,
+  });
+  await page.getByRole("button", { name: /Run settings/ }).click();
+  for (let index = 0; index < 5; index += 1) {
+    await page.getByRole("button", { name: "Add tutorial" }).click();
+  }
+  await page.getByRole("button", { name: "Start configured run" }).click();
+  await page.getByRole("button", { name: "Advance one round" }).click();
+  await expect(page.getByRole("region", { name: "Decision history" })).toHaveScreenshot(
+    "recommendations-eight-candidates.png",
+    screenshotOptions,
+  );
+});
+
 test("run setup panels", async ({ page }) => {
   for (const lesson of ["epsilon-greedy", "linucb"] as const) {
     await page.goto(`./#/lesson/${lesson}`);

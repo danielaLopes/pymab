@@ -365,6 +365,67 @@ test("scenario selection and free-play controls remain on the chosen route", asy
   await expect(page).toHaveURL(/#\/scenario\/defensive-verification$/);
 });
 
+test("recommendation candidates can be added, named, reordered and configured", async ({
+  page,
+}) => {
+  await page.goto("./#/scenario/recommendations");
+  await expect(page.getByRole("button", { name: "Advance one round" })).toBeEnabled({
+    timeout: 30_000,
+  });
+  await page.getByRole("button", { name: /Run settings/ }).click();
+  await page.getByRole("button", { name: "Add tutorial" }).click();
+
+  const candidateRows = page.locator(".candidate-row");
+  await expect(candidateRows).toHaveCount(4);
+  const added = candidateRows.last();
+  const candidateName = added.getByLabel("Candidate 4");
+  await expect(candidateName).toHaveValue("Tutorial 2");
+  await candidateName.fill("Deep dive");
+  await added.getByRole("combobox", { name: "Visual type" }).click();
+  await page.getByRole("option", { name: "Product" }).click();
+  await added.getByRole("button", { name: "Move Deep dive up" }).click();
+  await page.getByRole("button", { name: "Add article" }).click();
+  await page.getByRole("button", { name: "Remove Article 2" }).click();
+  await expect(candidateRows).toHaveCount(4);
+
+  await page.getByRole("radio", { name: "Free play" }).click();
+  await page.getByText("Simulation coefficients", { exact: true }).click();
+  await page.getByLabel("Deep dive · Base").fill("0.3");
+  await page.getByRole("button", { name: "Start configured run" }).click();
+
+  const headers = page.getByRole("columnheader");
+  await expect(headers).toHaveCount(5);
+  await expect(headers.nth(3)).toContainText("Deep dive");
+  await page.getByRole("button", { name: "Advance one round" }).click();
+  await expect(page.getByRole("row", { name: /Round 1\./ })).toBeVisible();
+  await page.getByRole("button", { name: /Inspect PyMAB/ }).click();
+  await expect(page.locator(".metadata code").first()).toContainText("n_arms=4");
+});
+
+test("recommendation scenario supports eight candidates without page overflow", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 320, height: 760 });
+  await page.goto("./#/scenario/recommendations");
+  await expect(page.getByRole("button", { name: "Advance one round" })).toBeEnabled({
+    timeout: 30_000,
+  });
+  await page.getByRole("button", { name: /Run settings/ }).click();
+  for (let index = 0; index < 5; index += 1) {
+    await page.getByRole("button", { name: "Add product" }).click();
+  }
+  await expect(page.locator(".candidate-row")).toHaveCount(8);
+  await expect(page.getByRole("button", { name: "Add product" })).toBeDisabled();
+  await page.getByRole("button", { name: "Start configured run" }).click();
+  await expect(page.getByRole("columnheader")).toHaveCount(9);
+  await page.getByRole("button", { name: "Advance one round" }).click();
+  expect(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth > document.documentElement.clientWidth,
+    ),
+  ).toBe(false);
+});
+
 test("scenario home and lesson avoid page-level overflow at 320 pixels", async ({ page }) => {
   await page.setViewportSize({ width: 320, height: 760 });
   for (const route of ["./#/", "./#/scenario/recommendations"] as const) {

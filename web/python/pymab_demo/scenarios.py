@@ -21,6 +21,25 @@ SCENARIO_IDS: tuple[ScenarioId, ...] = (
     "defensive-verification",
 )
 
+RECOMMENDATION_SYMBOL_KINDS = {"article", "product", "tutorial"}
+DEFAULT_RECOMMENDATION_CANDIDATES: tuple[dict[str, str], ...] = (
+    {
+        "id": "candidate-1",
+        "name": "Article",
+        "symbolKind": "article",
+    },
+    {
+        "id": "candidate-2",
+        "name": "Product",
+        "symbolKind": "product",
+    },
+    {
+        "id": "candidate-3",
+        "name": "Tutorial",
+        "symbolKind": "tutorial",
+    },
+)
+
 
 def _as_float(value: object, *, name: str) -> float:
     if isinstance(value, bool) or not isinstance(
@@ -40,6 +59,51 @@ def _number(
     if not np.isfinite(value) or value < minimum:
         raise ValueError(f"{key} must be at least {minimum}")
     return value
+
+
+def _recommendation_candidates(value: object) -> list[dict[str, str]]:
+    if value is None:
+        return [dict(candidate) for candidate in DEFAULT_RECOMMENDATION_CANDIDATES]
+    if not isinstance(value, list) or not 2 <= len(value) <= 8:
+        raise ValueError("candidates must contain between 2 and 8 items")
+    candidates: list[dict[str, str]] = []
+    ids: set[str] = set()
+    names: set[str] = set()
+    for raw in value:
+        if not isinstance(raw, dict):
+            raise ValueError("each candidate must be an object")
+        candidate_id = raw.get("id")
+        name = raw.get("name")
+        symbol_kind = raw.get("symbolKind")
+        if not isinstance(candidate_id, str) or not candidate_id.strip():
+            raise ValueError("each candidate needs a non-empty id")
+        if not isinstance(name, str) or not name.strip():
+            raise ValueError("each candidate needs a non-empty name")
+        normalized_name = name.strip()
+        if len(normalized_name) > 32:
+            raise ValueError("candidate names must be at most 32 characters")
+        if (
+            not isinstance(symbol_kind, str)
+            or symbol_kind not in RECOMMENDATION_SYMBOL_KINDS
+        ):
+            raise ValueError(
+                "candidate symbolKind must be article, product, or tutorial"
+            )
+        if candidate_id in ids:
+            raise ValueError("candidate ids must be unique")
+        folded_name = normalized_name.casefold()
+        if folded_name in names:
+            raise ValueError("candidate names must be unique")
+        ids.add(candidate_id)
+        names.add(folded_name)
+        candidates.append(
+            {
+                "id": candidate_id,
+                "name": normalized_name,
+                "symbolKind": str(symbol_kind),
+            }
+        )
+    return candidates
 
 
 class ScenarioSession(ABC):
@@ -142,7 +206,8 @@ class ScenarioSession(ABC):
             "parameters": self.parameters,
             "environment": self.environment if self.mode == "freePlay" else None,
             "gateIds": [
-                arm["shortName"].lower() for arm in self.presentation()["arms"]
+                arm.get("id", arm["shortName"].lower())
+                for arm in self.presentation()["arms"]
             ],
             "presentation": self.presentation(),
             "selectedArm": None if last is None else last["selectedArm"],
@@ -192,8 +257,10 @@ class RecommendationScenarioSession(ScenarioSession):
         }
 
     def _initialize(self) -> None:
+        self.candidates = _recommendation_candidates(self.environment.get("candidates"))
+        n_arms = len(self.candidates)
         self.policy = LogisticContextualBanditPolicy(
-            n_arms=3,
+            n_arms=n_arms,
             n_features=4,
             epsilon=_as_float(self.parameters["epsilon"], name="epsilon"),
             learning_rate=_as_float(
@@ -207,14 +274,18 @@ class RecommendationScenarioSession(ScenarioSession):
         self.theta = np.asarray(
             self.environment.get("theta", self.default_theta), dtype=float
         )
-        if self.theta.shape != (3, 4) or not np.all(np.isfinite(self.theta)):
-            raise ValueError("theta must be a finite 3 by 4 matrix")
+        if self.theta.shape != (n_arms, 4) or not np.all(np.isfinite(self.theta)):
+            raise ValueError(f"theta must be a finite {n_arms} by 4 matrix")
+        self.environment = {
+            "candidates": [dict(candidate) for candidate in self.candidates],
+            "theta": self.theta.copy(),
+        }
         self.truth_history: list[dict[str, Any]] = []
 
     def _perform_step(self) -> dict[str, Any]:
         values = self.context_rng.choice(np.asarray([-1.0, 1.0]), size=3)
         feature = np.concatenate((np.ones(1), values))
-        context = np.repeat(feature[np.newaxis, :], 3, axis=0)
+        context = np.repeat(feature[np.newaxis, :], len(self.candidates), axis=0)
         probabilities = 1.0 / (1.0 + np.exp(-(self.theta @ feature)))
         predictions = self.policy.predicted_probabilities(context).copy()
         probe_rng = deepcopy(self.action_rng)
@@ -275,9 +346,13 @@ class RecommendationScenarioSession(ScenarioSession):
             "experienceKind": "scenario",
             "experienceId": self.scenario_id,
             "arms": [
-                {"name": "Article", "shortName": "Article", "symbolKind": "article"},
-                {"name": "Product", "shortName": "Product", "symbolKind": "product"},
-                {"name": "Tutorial", "shortName": "Tutorial", "symbolKind": "tutorial"},
+                {
+                    "id": candidate["id"],
+                    "name": candidate["name"],
+                    "shortName": candidate["name"],
+                    "symbolKind": candidate["symbolKind"],
+                }
+                for candidate in self.candidates
             ],
             "rewardPresentation": "binary",
             "positiveOutcomeLabel": "Click",
@@ -288,10 +363,12 @@ class RecommendationScenarioSession(ScenarioSession):
         return {"theta": self.theta, "rounds": self.truth_history}
 
     def generated_code(self) -> str:
+        names = [candidate["name"] for candidate in self.candidates]
         return f"""from pymab.policies import LogisticContextualBanditPolicy
 
+candidates = {names!r}
 policy = LogisticContextualBanditPolicy(
-    n_arms=3,
+    n_arms={len(self.candidates)},
     n_features=4,
     epsilon={self.parameters["epsilon"]!r},
     learning_rate={self.parameters["learning_rate"]!r},

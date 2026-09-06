@@ -139,4 +139,53 @@ describe("decision history presentation", () => {
     expect(publicPathDetail(freePlay, 2)).toBe("80% reward chance");
     expect(publicPathDetail({ ...freePlay, mode: "guided" }, 2)).toBeNull();
   });
+
+  it("builds one decision cell for every configured recommendation candidate", () => {
+    const arms = [
+      { id: "one", name: "Article", shortName: "Article", symbolKind: "article" as const },
+      { id: "two", name: "Product", shortName: "Product", symbolKind: "product" as const },
+      { id: "three", name: "Tutorial", shortName: "Tutorial", symbolKind: "tutorial" as const },
+      {
+        id: "four",
+        name: "Deep dive",
+        shortName: "Deep dive",
+        symbolKind: "tutorial" as const,
+      },
+    ];
+    const context = arms.map(() => [1, -1, 1, -1]);
+    const snapshot: LessonSnapshot = {
+      ...baseSnapshot,
+      policyId: "logistic-contextual-bandit",
+      scenarioId: "recommendations",
+      family: "contextual",
+      presentation: { ...baseSnapshot.presentation, experienceKind: "scenario", arms },
+      gateIds: arms.map((arm) => arm.id),
+      step: 1,
+      selectedArm: 3,
+      reward: 0,
+      publicContext: context,
+      history: [
+        {
+          selectedArm: 3,
+          reward: 0,
+          instantaneousExpectedRegret: 0.12,
+          visibleCues: [],
+          publicContext: context,
+          explanationKey: "recommendations.1",
+          diagnostic: {
+            decision: {
+              label: "Predicted click probability",
+              values: [0.2, 0.4, 0.6, 0.8],
+              selectionBranch: "exploit",
+            },
+          },
+        },
+      ],
+    };
+
+    const [row] = buildDecisionHistory(snapshot);
+    expect(row?.cells).toHaveLength(4);
+    expect(row?.cells.map((cell) => cell.primary)).toEqual(["20%", "40%", "60%", "80%"]);
+    expect(row?.cells[3]).toMatchObject({ selected: true });
+  });
 });

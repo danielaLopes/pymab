@@ -652,7 +652,7 @@ export function InspectPanel({
                   <dd>
                     <code>
                       {`${policyCatalog[snapshot.policyId].className}(${Object.entries({
-                        n_arms: 3,
+                        n_arms: snapshot.presentation.arms.length,
                         ...(snapshot.family === "contextual" ? { n_features: 4 } : {}),
                         ...(snapshot.policyId === "moss" ? { horizon: snapshot.horizon } : {}),
                         ...snapshot.parameters,

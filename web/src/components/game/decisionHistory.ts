@@ -47,13 +47,13 @@ function record(value: unknown): UnknownRecord {
     : {};
 }
 
-function numberTriple(value: unknown): Array<number | null> | null {
-  if (!Array.isArray(value) || value.length !== 3) return null;
+function numberVector(value: unknown): Array<number | null> | null {
+  if (!Array.isArray(value) || value.length < 1) return null;
   return value.map((item) => (typeof item === "number" && Number.isFinite(item) ? item : null));
 }
 
-function booleanTriple(value: unknown): boolean[] | null {
-  if (!Array.isArray(value) || value.length !== 3) return null;
+function booleanVector(value: unknown): boolean[] | null {
+  if (!Array.isArray(value) || value.length < 1) return null;
   return value.map(Boolean);
 }
 
@@ -135,7 +135,7 @@ function extractDecision(event: HistoryEvent): ExtractedDecision {
   if (diagnostic.kind === "epsilon") {
     return {
       label: "Estimate",
-      values: numberTriple(diagnostic.estimatesBefore),
+      values: numberVector(diagnostic.estimatesBefore),
       secondaryLabel: null,
       secondaryValues: null,
       secondaryCombined: null,
@@ -151,8 +151,8 @@ function extractDecision(event: HistoryEvent): ExtractedDecision {
   }
 
   if (diagnostic.kind === "linucb") {
-    const predictions = numberTriple(diagnostic.predictedMeans);
-    const bonuses = numberTriple(diagnostic.bonuses);
+    const predictions = numberVector(diagnostic.predictedMeans);
+    const bonuses = numberVector(diagnostic.bonuses);
     const combined =
       predictions && bonuses
         ? predictions.map((prediction, index) => {
@@ -164,7 +164,7 @@ function extractDecision(event: HistoryEvent): ExtractedDecision {
         : null;
     return {
       label: "UCB score",
-      values: numberTriple(diagnostic.ucbScores),
+      values: numberVector(diagnostic.ucbScores),
       secondaryLabel: "Prediction and bonus",
       secondaryValues: null,
       secondaryCombined: combined,
@@ -179,15 +179,15 @@ function extractDecision(event: HistoryEvent): ExtractedDecision {
     typeof decision.secondaryLabel === "string" ? decision.secondaryLabel : null;
   const branch = decision.selectionBranch;
   const fallbackValues =
-    numberTriple(before.actionProbabilities) ??
-    numberTriple(before.indices) ??
-    numberTriple(before.means) ??
-    numberTriple(before.estimates);
+    numberVector(before.actionProbabilities) ??
+    numberVector(before.indices) ??
+    numberVector(before.means) ??
+    numberVector(before.estimates);
   return {
     label: label ?? (fallbackValues ? "Decision value" : null),
-    values: numberTriple(decision.values) ?? fallbackValues,
+    values: numberVector(decision.values) ?? fallbackValues,
     secondaryLabel,
-    secondaryValues: numberTriple(decision.secondaryValues),
+    secondaryValues: numberVector(decision.secondaryValues),
     secondaryCombined: null,
     reason: branch === "explore" ? "Explore" : branch === "exploit" ? "Exploit" : null,
     phase: typeof decision.environmentPhase === "number" ? decision.environmentPhase : null,
@@ -198,8 +198,8 @@ function extractDecision(event: HistoryEvent): ExtractedDecision {
 function detectedChange(diagnostic: UnknownRecord): boolean {
   const before = record(diagnostic.before);
   const after = record(diagnostic.after);
-  const beforeCounts = numberTriple(before.change_counts);
-  const afterCounts = numberTriple(after.change_counts);
+  const beforeCounts = numberVector(before.change_counts);
+  const afterCounts = numberVector(after.change_counts);
   if (!beforeCounts || !afterCounts) return false;
   return afterCounts.some((value, index) => {
     const prior = beforeCounts[index];
@@ -212,7 +212,7 @@ export function buildDecisionHistory(snapshot: LessonSnapshot): DecisionHistoryR
     const extracted = extractDecision(event);
     const diagnostic = record(event.diagnostic);
     const after = record(diagnostic.after);
-    const active = booleanTriple(after.active);
+    const active = booleanVector(after.active);
     const recommendation =
       typeof diagnostic.recommendation === "number" ? diagnostic.recommendation : null;
 

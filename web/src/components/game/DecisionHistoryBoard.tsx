@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
@@ -224,7 +224,15 @@ function AwaitingRow({ arms }: { arms: Arm[] }) {
   );
 }
 
-function ChoiceTrail({ rows, spacious }: { rows: DecisionHistoryRow[]; spacious: boolean }) {
+function ChoiceTrail({
+  rows,
+  spacious,
+  armCount,
+}: {
+  rows: DecisionHistoryRow[];
+  spacious: boolean;
+  armCount: number;
+}) {
   if (rows.length < 2) return null;
   const rowHeight = spacious ? rowHeights.spacious : rowHeights.regular;
   const height = (rows.length - 1) * rowHeight.past + rowHeight.current;
@@ -240,7 +248,7 @@ function ChoiceTrail({ rows, spacious }: { rows: DecisionHistoryRow[]; spacious:
   return (
     <svg
       className="choice-trail"
-      viewBox={`0 0 300 ${height}`}
+      viewBox={`0 0 ${armCount * 100} ${height}`}
       preserveAspectRatio="none"
       aria-hidden="true"
     >
@@ -282,6 +290,10 @@ export function DecisionHistoryBoard({
     const container = scrollRef.current;
     if (container) container.scrollTop = container.scrollHeight;
   };
+  const historyGridStyle = {
+    "--history-arms": arms.length,
+    ...(spacious && arms.length > 4 ? { minWidth: `${15 + arms.length * 13}rem` } : {}),
+  } as CSSProperties;
 
   return (
     <TooltipProvider>
@@ -310,9 +322,10 @@ export function DecisionHistoryBoard({
         >
           <div
             className="history-grid"
+            style={historyGridStyle}
             role="table"
             aria-rowcount={Math.max(rows.length, 1) + 1}
-            aria-colcount={4}
+            aria-colcount={arms.length + 1}
           >
             <div className="history-column-headers" role="row">
               <div role="columnheader">Round</div>
@@ -329,7 +342,7 @@ export function DecisionHistoryBoard({
               ))}
             </div>
             <div className="history-rows">
-              <ChoiceTrail rows={rows} spacious={spacious} />
+              <ChoiceTrail rows={rows} spacious={spacious} armCount={arms.length} />
               {rows.length ? (
                 rows.map((row, index) => (
                   <HistoryRow
