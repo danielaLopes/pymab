@@ -377,6 +377,13 @@ main {
   fill: currentColor;
   filter: drop-shadow(0 0 6px currentColor);
 }
+.arm-symbol {
+  display: inline-grid;
+  width: 1em;
+  height: 1em;
+  place-items: center;
+  line-height: 1;
+}
 .campaign-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));

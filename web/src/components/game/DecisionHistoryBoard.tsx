@@ -3,6 +3,7 @@ import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 import type { LessonSnapshot } from "../../engine/protocol";
+import { ArmSymbol } from "./ArmSymbol";
 import {
   buildDecisionHistory,
   publicPathDetail,
@@ -29,28 +30,6 @@ const cueHelp: Record<string, string> = {
 };
 
 type Arm = LessonSnapshot["presentation"]["arms"][number];
-
-const glyphs: Partial<Record<Arm["symbolKind"], string>> = {
-  moon: "☾",
-  sun: "☼",
-  article: "▤",
-  product: "▣",
-  tutorial: "▶",
-  allow: "✓",
-  "light-check": "◒",
-  "strong-verification": "⬡",
-};
-
-function ArmSymbol({ arm }: { arm: Arm }) {
-  if (arm.symbolKind === "star") {
-    return (
-      <svg className="slender-star" viewBox="0 0 100 100" aria-hidden="true">
-        <polygon points="50,2 56,42 78,22 60,46 98,50 60,54 78,78 56,58 50,98 44,58 22,78 40,54 2,50 40,46 22,22 44,42" />
-      </svg>
-    );
-  }
-  return <>{glyphs[arm.symbolKind] ?? "•"}</>;
-}
 
 function RewardMark({ cell }: { cell: DecisionHistoryCell }) {
   if (!cell.selected) {

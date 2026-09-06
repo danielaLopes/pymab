@@ -1,11 +1,5 @@
 import type { LessonSnapshot } from "../../engine/protocol";
 
-export const pathDetails = [
-  { name: "Moon Path", symbol: "☾", shortName: "Moon" },
-  { name: "Sun Path", symbol: "☼", shortName: "Sun" },
-  { name: "Star Path", symbol: "✧", shortName: "Star" },
-] as const;
-
 export interface HistoryCue {
   name: string;
   value: string;

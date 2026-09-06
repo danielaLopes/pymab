@@ -12,7 +12,7 @@ import {
 
 import type { LessonId, LessonSnapshot, RuntimeProgress } from "../../engine/protocol";
 import { loadPersistence, savePersistence } from "../../state/persistence";
-import { pathDetails } from "./decisionHistory";
+import { ArmSymbol } from "./ArmSymbol";
 
 export function AppShell({ children }: { children: ReactNode }) {
   const [motionOverride, setMotionOverride] = useState<boolean | null>(
@@ -519,7 +519,9 @@ export function PolicyBars({ snapshot }: { snapshot: LessonSnapshot }) {
           ["Estimate", diagnostic.estimatesAfter ?? after.estimates ?? before.estimates],
           ["Effective count", after.discounted_counts ?? before.discounted_counts],
         ];
-  const selected = candidates.find(([, value]) => Array.isArray(value) && value.length === 3);
+  const selected = candidates.find(
+    ([, value]) => Array.isArray(value) && value.length === snapshot.presentation.arms.length,
+  );
   if (!selected)
     return (
       <p className="field-help">
@@ -569,7 +571,7 @@ export function PolicyBars({ snapshot }: { snapshot: LessonSnapshot }) {
       <small className="policy-bars-label">{label}</small>
       {numeric.map((value, index) => (
         <div key={index}>
-          <span>{pathDetails[index]?.symbol}</span>
+          <ArmSymbol arm={snapshot.presentation.arms[index]!} />
           <i
             style={{ "--bar": `${Math.max(3, (Math.abs(value) / scale) * 100)}%` } as CSSProperties}
           />
