@@ -323,24 +323,33 @@ main {
 .scenario-card > b {
   color: var(--mint);
 }
-.scenario-fit-note {
+.scenario-boundary {
   margin: -1rem 0 1.2rem;
-  padding: 0.9rem 1.1rem;
   display: grid;
-  grid-template-columns: auto 1fr;
-  gap: 1rem;
-  align-items: baseline;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   border: 1px solid rgba(128, 226, 187, 0.28);
   border-radius: 0.8rem;
   background: rgba(8, 34, 39, 0.72);
+  overflow: hidden;
 }
-.scenario-fit-note strong {
+.scenario-boundary > div {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: baseline;
+  gap: 0.8rem;
+  padding: 0.85rem 1rem;
+}
+.scenario-boundary > div + div {
+  border-left: 1px solid var(--line);
+}
+.scenario-boundary strong {
   color: var(--mint);
   font-size: 0.72rem;
   text-transform: uppercase;
   letter-spacing: 0.08em;
+  white-space: nowrap;
 }
-.scenario-fit-note p {
+.scenario-boundary p {
   margin: 0;
   color: var(--muted);
   font-size: 0.72rem;
@@ -616,6 +625,72 @@ main {
     linear-gradient(135deg, rgba(128, 226, 187, 0.055), transparent 45%), rgba(8, 32, 37, 0.94);
   box-shadow: 0 18px 50px rgba(0, 0, 0, 0.18);
   overflow: hidden;
+}
+.scenario-run-setup.collapsed {
+  box-shadow: none;
+}
+.scenario-setup-toggle {
+  width: 100%;
+  min-height: 4.4rem;
+  padding: 0.85rem 1.1rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  border: 0;
+  border-radius: 0;
+  color: var(--ink);
+  background: transparent;
+  text-align: left;
+}
+.scenario-setup-toggle:hover {
+  border-color: transparent;
+  background: rgba(128, 226, 187, 0.05);
+}
+.scenario-setup-toggle .eyebrow {
+  margin: 0 0 0.2rem;
+}
+.scenario-setup-toggle h2 {
+  margin: 0;
+  font-family: inherit;
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+.scenario-setup-summary {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.55rem;
+  color: var(--muted);
+  font-size: 0.65rem;
+}
+.scenario-setup-summary > span {
+  padding: 0.28rem 0.5rem;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  font-family: ui-monospace, monospace;
+}
+.scenario-setup-summary strong {
+  margin-left: 0.25rem;
+  color: var(--mint);
+  font-size: 0.7rem;
+}
+.scenario-setup-summary b {
+  min-width: 1rem;
+  color: var(--mint);
+  font-size: 1.05rem;
+  text-align: center;
+}
+.scenario-setup-intro {
+  padding: 0.7rem 1.4rem;
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  background: rgba(3, 17, 21, 0.24);
+}
+.scenario-setup-intro p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.7rem;
 }
 .run-setup-heading {
   display: flex;
@@ -988,6 +1063,22 @@ main {
 .game-column {
   min-width: 0;
 }
+.scenario-run-stack {
+  display: grid;
+  gap: 1rem;
+}
+.scenario-run-stack .history-scroll {
+  max-height: 52rem;
+}
+.scenario-run-stack .history-grid {
+  min-width: 58rem;
+}
+.scenario-developer-view .inspector {
+  position: static;
+}
+.scenario-developer-view .inspector-body {
+  max-height: none;
+}
 .progress-trail {
   border: 1px solid var(--line);
   border-bottom: 0;
@@ -1061,6 +1152,9 @@ main {
   background:
     radial-gradient(ellipse at 50% 0%, rgba(43, 104, 93, 0.32), transparent 55%),
     linear-gradient(180deg, #0b2d32 0%, #071d24 100%);
+}
+.decision-history-board.spacious {
+  --history-rail: 15rem;
 }
 .history-board-heading {
   min-height: 4.5rem;
@@ -1156,6 +1250,41 @@ main {
   height: 96px;
   background: rgba(128, 226, 187, 0.045);
   box-shadow: inset 0 0 0 1px rgba(128, 226, 187, 0.35);
+}
+.spacious .decision-history-row {
+  height: 104px;
+}
+.spacious .decision-history-row.current {
+  height: 120px;
+}
+.spacious .history-round-rail {
+  padding: 0.8rem 0.9rem;
+}
+.spacious .history-round-rail > strong {
+  font-size: 0.86rem;
+}
+.spacious .current .history-round-rail > strong {
+  font-size: 1rem;
+}
+.spacious .history-cues small {
+  font-size: 0.5rem;
+}
+.spacious .history-cues b {
+  font-size: 0.66rem;
+}
+.spacious .history-cell-values {
+  left: 2.2rem;
+  bottom: 0.65rem;
+}
+.spacious .history-cell-values strong {
+  font-size: 0.86rem;
+}
+.spacious .history-cell-values strong small {
+  max-width: 8.5rem;
+  font-size: 0.5rem;
+}
+.spacious .history-cell-values > small {
+  font-size: 0.56rem;
 }
 .decision-history-row:focus-visible {
   z-index: 3;
@@ -1894,12 +2023,31 @@ pre {
   .how-it-works {
     grid-template-columns: 1fr;
   }
-  .scenario-fit-note {
+  .scenario-boundary {
     grid-template-columns: 1fr;
-    gap: 0.35rem;
+  }
+  .scenario-boundary > div {
+    grid-template-columns: 7rem 1fr;
+  }
+  .scenario-boundary > div + div {
+    border-top: 1px solid var(--line);
+    border-left: 0;
+  }
+  .scenario-setup-toggle {
+    align-items: flex-start;
+  }
+  .scenario-setup-summary > span {
+    display: none;
   }
   .scenario-matrix-editor {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .scenario-boundary > div {
+    grid-template-columns: 1fr;
+    gap: 0.3rem;
+  }
+  .scenario-setup-summary strong {
+    display: none;
   }
   .policy-search {
     grid-template-columns: 1fr auto;

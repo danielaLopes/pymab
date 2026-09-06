@@ -10,8 +10,10 @@ import {
   type DecisionHistoryRow,
 } from "./decisionHistory";
 
-const PAST_ROW_HEIGHT = 84;
-const CURRENT_ROW_HEIGHT = 96;
+const rowHeights = {
+  regular: { past: 84, current: 96 },
+  spacious: { past: 104, current: 120 },
+};
 
 const cueHelp: Record<string, string> = {
   light:
@@ -222,15 +224,16 @@ function AwaitingRow({ arms }: { arms: Arm[] }) {
   );
 }
 
-function ChoiceTrail({ rows }: { rows: DecisionHistoryRow[] }) {
+function ChoiceTrail({ rows, spacious }: { rows: DecisionHistoryRow[]; spacious: boolean }) {
   if (rows.length < 2) return null;
-  const height = (rows.length - 1) * PAST_ROW_HEIGHT + CURRENT_ROW_HEIGHT;
+  const rowHeight = spacious ? rowHeights.spacious : rowHeights.regular;
+  const height = (rows.length - 1) * rowHeight.past + rowHeight.current;
   const points = rows
     .map((row, index) => {
       const rowCenter =
         index === rows.length - 1
-          ? index * PAST_ROW_HEIGHT + CURRENT_ROW_HEIGHT / 2
-          : index * PAST_ROW_HEIGHT + PAST_ROW_HEIGHT / 2;
+          ? index * rowHeight.past + rowHeight.current / 2
+          : index * rowHeight.past + rowHeight.past / 2;
       return `${(row.selectedArm + 0.5) * 100},${rowCenter}`;
     })
     .join(" ");
@@ -249,9 +252,15 @@ function ChoiceTrail({ rows }: { rows: DecisionHistoryRow[] }) {
 export function DecisionHistoryBoard({
   snapshot,
   pending = false,
+  eyebrow = "Choice trail",
+  title = "Every round, every observed outcome",
+  spacious = false,
 }: {
   snapshot: LessonSnapshot | null;
   pending?: boolean;
+  eyebrow?: string;
+  title?: string;
+  spacious?: boolean;
 }) {
   const rows = useMemo(() => (snapshot ? buildDecisionHistory(snapshot) : []), [snapshot]);
   const arms = snapshot?.presentation.arms ?? [
@@ -277,13 +286,13 @@ export function DecisionHistoryBoard({
   return (
     <TooltipProvider>
       <section
-        className={`decision-history-board world-${snapshot?.family ?? "foundations"} ${pending ? "deciding" : ""}`}
+        className={`decision-history-board world-${snapshot?.family ?? "foundations"} ${pending ? "deciding" : ""} ${spacious ? "spacious" : ""}`}
         aria-label="Decision history"
       >
         <div className="history-board-heading">
           <div>
-            <p className="eyebrow">Choice trail</p>
-            <h2>Every round, every observed outcome</h2>
+            <p className="eyebrow">{eyebrow}</p>
+            <h2>{title}</h2>
           </div>
           {!following && (
             <button type="button" className="jump-current" onClick={jumpToCurrent}>
@@ -320,7 +329,7 @@ export function DecisionHistoryBoard({
               ))}
             </div>
             <div className="history-rows">
-              <ChoiceTrail rows={rows} />
+              <ChoiceTrail rows={rows} spacious={spacious} />
               {rows.length ? (
                 rows.map((row, index) => (
                   <HistoryRow

@@ -100,6 +100,7 @@ function ScenarioExperience({ scenarioId }: { scenarioId: ScenarioId }) {
     null,
   );
   const [autoRunning, setAutoRunning] = useState(false);
+  const [setupOpen, setSetupOpen] = useState(false);
   const [inspectorOpen, setInspectorOpen] = useState(false);
   const autoRef = useRef(false);
   const sessionRef = useRef("");
@@ -133,6 +134,7 @@ function ScenarioExperience({ scenarioId }: { scenarioId: ScenarioId }) {
         const snapshot = snapshotFrom(await client.send(request));
         sessionRef.current = sessionId;
         setActiveConfiguration(next);
+        setSetupOpen(false);
         dispatch({ type: "started", mode: next.mode, snapshot });
         return snapshot;
       } catch (error) {
@@ -232,6 +234,7 @@ function ScenarioExperience({ scenarioId }: { scenarioId: ScenarioId }) {
     <ScenarioSetupPanel
       configuration={configuration}
       pending={state.pending || autoRunning}
+      expanded={setupOpen}
       onChange={(next) =>
         setConfiguration({
           ...next,
@@ -240,6 +243,7 @@ function ScenarioExperience({ scenarioId }: { scenarioId: ScenarioId }) {
         })
       }
       onScenarioChange={(next) => void navigate(`/scenario/${next}`)}
+      onExpandedChange={setSetupOpen}
       onApply={() => void start(configuration)}
     />
   );
@@ -280,19 +284,35 @@ function ScenarioExperience({ scenarioId }: { scenarioId: ScenarioId }) {
   return (
     <main className="lesson-page">
       {header}
-      <section className="scenario-fit-note" aria-label="Scenario boundary">
-        <strong>{scenarioId === "recommendations" ? "Why this fits" : "Safety boundary"}</strong>
-        <p>
-          {scenarioId === "recommendations"
-            ? "One decision, a small action set and immediate click feedback form a natural contextual-bandit loop. Ranking and delayed purchases need different methods."
-            : "The bandit chooses only among approved, reversible checks for uncertain requests. It never replaces hard security rules or the risk model."}
-        </p>
+      <section className="scenario-boundary" aria-label="Scenario boundary">
+        <div>
+          <strong>{scenarioId === "recommendations" ? "Good fit" : "Bandit scope"}</strong>
+          <p>
+            {scenarioId === "recommendations"
+              ? "Choose one item and learn from an immediate click or no-click result."
+              : "Choose among approved, reversible checks for requests in the review band."}
+          </p>
+        </div>
+        <div>
+          <strong>{scenarioId === "recommendations" ? "Not covered" : "Fixed rules"}</strong>
+          <p>
+            {scenarioId === "recommendations"
+              ? "Ranking, delayed purchases and long-term satisfaction need different methods."
+              : "Clear allows and hard blocks stay outside the policy, as does the upstream risk model."}
+          </p>
+        </div>
       </section>
       {setup}
-      <div className="lesson-layout">
+      <div className="scenario-run-stack">
         <div className="game-column">
           <ProgressTrail snapshot={state.snapshot} />
-          <DecisionHistoryBoard snapshot={state.snapshot} pending={state.pending} />
+          <DecisionHistoryBoard
+            snapshot={state.snapshot}
+            pending={state.pending}
+            eyebrow="Decision history"
+            title="Context, scores and observed outcomes by round"
+            spacious
+          />
           <OutcomeReveal snapshot={state.snapshot} explanation={explanation} />
           {!state.snapshot?.completed && (
             <RunControls
@@ -326,16 +346,18 @@ function ScenarioExperience({ scenarioId }: { scenarioId: ScenarioId }) {
             />
           )}
         </div>
-        <InspectPanel
-          snapshot={state.snapshot}
-          open={inspectorOpen}
-          onToggle={() => setInspectorOpen((open) => !open)}
-          onOpenLab={() =>
-            void navigate("/lab", {
-              state: { code: state.snapshot?.generatedCode, lessonId: definition.policyId },
-            })
-          }
-        />
+        <div className="scenario-developer-view">
+          <InspectPanel
+            snapshot={state.snapshot}
+            open={inspectorOpen}
+            onToggle={() => setInspectorOpen((open) => !open)}
+            onOpenLab={() =>
+              void navigate("/lab", {
+                state: { code: state.snapshot?.generatedCode, lessonId: definition.policyId },
+              })
+            }
+          />
+        </div>
       </div>
     </main>
   );

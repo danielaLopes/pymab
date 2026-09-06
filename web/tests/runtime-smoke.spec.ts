@@ -335,7 +335,7 @@ test("defensive verification exposes utility and keeps its safety boundary visib
   await page.goto("./#/scenario/defensive-verification");
   const advance = page.getByRole("button", { name: "Advance one round" });
   await expect(advance).toBeEnabled({ timeout: 30_000 });
-  await expect(page.getByText("Safety boundary", { exact: true })).toBeVisible();
+  await expect(page.getByText("Bandit scope", { exact: true })).toBeVisible();
   await expect(page.getByRole("columnheader", { name: /Strong verification/ })).toBeVisible();
   await advance.click();
   await expect(page.getByRole("row", { name: /Round 1.*Signals: risk/ })).toBeVisible();
@@ -346,15 +346,21 @@ test("defensive verification exposes utility and keeps its safety boundary visib
 
 test("scenario selection and free-play controls remain on the chosen route", async ({ page }) => {
   await page.goto("./#/scenario/recommendations");
+  await page.getByRole("button", { name: /Run settings/ }).click();
   await expect(page.getByRole("combobox", { name: "Scenario" })).toBeEnabled({ timeout: 30_000 });
   await page.getByRole("combobox", { name: "Scenario" }).click();
   await page.getByRole("option", { name: "Defensive verification" }).click();
   await expect(page).toHaveURL(/#\/scenario\/defensive-verification$/);
   await expect(page.getByRole("button", { name: "Advance one round" })).toBeEnabled();
+  await page.getByRole("button", { name: /Run settings/ }).click();
   await page.getByRole("radio", { name: "Free play" }).click();
   await expect(page.getByLabel("Random seed")).toBeEditable();
   await page.getByLabel("Random seed").fill("808");
   await page.getByRole("button", { name: "Start configured run" }).click();
+  await expect(page.getByRole("button", { name: /Run settings/ })).toHaveAttribute(
+    "aria-expanded",
+    "false",
+  );
   await page.getByRole("button", { name: "Advance one round" }).click();
   await expect(page).toHaveURL(/#\/scenario\/defensive-verification$/);
 });

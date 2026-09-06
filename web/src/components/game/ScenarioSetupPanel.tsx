@@ -31,14 +31,18 @@ const modeLabel: Record<LessonMode, string> = {
 export function ScenarioSetupPanel({
   configuration,
   pending,
+  expanded,
   onChange,
   onScenarioChange,
+  onExpandedChange,
   onApply,
 }: {
   configuration: ScenarioConfiguration;
   pending: boolean;
+  expanded: boolean;
   onChange: (configuration: ScenarioConfiguration) => void;
   onScenarioChange: (scenarioId: ScenarioId) => void;
+  onExpandedChange: (expanded: boolean) => void;
   onApply: () => void;
 }) {
   const definition = scenarioCatalog[configuration.scenarioId];
@@ -49,149 +53,181 @@ export function ScenarioSetupPanel({
     });
 
   return (
-    <section className="run-setup" aria-labelledby="scenario-setup-title">
-      <div className="run-setup-heading">
+    <section
+      className={`run-setup scenario-run-setup ${expanded ? "expanded" : "collapsed"}`}
+      aria-labelledby="scenario-setup-title"
+    >
+      <button
+        className="scenario-setup-toggle"
+        type="button"
+        aria-expanded={expanded}
+        aria-controls="scenario-setup-controls"
+        onClick={() => onExpandedChange(!expanded)}
+      >
         <div>
-          <p className="eyebrow">Run setup</p>
-          <h2 id="scenario-setup-title">Configure this scenario</h2>
+          <p className="eyebrow">Run settings</p>
+          <h2 id="scenario-setup-title">{definition.title}</h2>
         </div>
-        <p>Changes apply when you start the configured run.</p>
-      </div>
-      <div className="run-setup-grid">
-        <div className="run-setup-field run-setup-policy">
-          <Label htmlFor="scenario-select">Scenario</Label>
-          <Select
-            value={configuration.scenarioId}
-            disabled={pending}
-            onValueChange={(value) => onScenarioChange(value as ScenarioId)}
-          >
-            <SelectTrigger id="scenario-select">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {Object.values(scenarioCatalog).map((item) => (
-                <SelectItem key={item.id} value={item.id}>
-                  {item.title}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <p className="field-help">{definition.className}</p>
-        </div>
-        <div className="run-setup-field run-setup-selector">
-          <span className="run-setup-label" id="scenario-mode-label">
-            Run mode
-          </span>
-          <ToggleGroup
-            type="single"
-            value={configuration.mode}
-            disabled={pending}
-            aria-labelledby="scenario-mode-label"
-            onValueChange={(value) => {
-              if (!value) return;
-              const mode = value as LessonMode;
-              const seed = mode === "challenge" ? definition.challengeSeed : definition.guidedSeed;
-              onChange({ ...configuration, mode, seed });
-            }}
-          >
-            {modes.map((mode) => (
-              <ToggleGroupItem key={mode} value={mode}>
-                {modeLabel[mode]}
-              </ToggleGroupItem>
-            ))}
-          </ToggleGroup>
-          {configuration.mode === "challenge" && (
-            <p className="mode-target">Keep cumulative expected regret below the target.</p>
-          )}
-        </div>
-        <div className="parameter-section">
-          <div className="parameter-section-heading">
-            <div>
-              <h3>Policy parameters</h3>
-              <p>These values go to the public PyMAB constructor.</p>
+        <span className="scenario-setup-summary">
+          <span>{modeLabel[configuration.mode]}</span>
+          {definition.parameterDefinitions.map((parameter) => (
+            <span key={parameter.key}>
+              {parameter.label} {configuration.parameters[parameter.key]}
+            </span>
+          ))}
+          <strong>{expanded ? "Close settings" : "Edit settings"}</strong>
+          <b aria-hidden="true">{expanded ? "−" : "+"}</b>
+        </span>
+      </button>
+      {expanded && (
+        <div id="scenario-setup-controls">
+          <div className="scenario-setup-intro">
+            <p>Changes apply when you start the configured run.</p>
+          </div>
+          <div className="run-setup-grid">
+            <div className="run-setup-field run-setup-policy">
+              <Label htmlFor="scenario-select">Scenario</Label>
+              <Select
+                value={configuration.scenarioId}
+                disabled={pending}
+                onValueChange={(value) => onScenarioChange(value as ScenarioId)}
+              >
+                <SelectTrigger id="scenario-select">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {Object.values(scenarioCatalog).map((item) => (
+                    <SelectItem key={item.id} value={item.id}>
+                      {item.title}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="field-help">{definition.className}</p>
             </div>
+            <div className="run-setup-field run-setup-selector">
+              <span className="run-setup-label" id="scenario-mode-label">
+                Run mode
+              </span>
+              <ToggleGroup
+                type="single"
+                value={configuration.mode}
+                disabled={pending}
+                aria-labelledby="scenario-mode-label"
+                onValueChange={(value) => {
+                  if (!value) return;
+                  const mode = value as LessonMode;
+                  const seed =
+                    mode === "challenge" ? definition.challengeSeed : definition.guidedSeed;
+                  onChange({ ...configuration, mode, seed });
+                }}
+              >
+                {modes.map((mode) => (
+                  <ToggleGroupItem key={mode} value={mode}>
+                    {modeLabel[mode]}
+                  </ToggleGroupItem>
+                ))}
+              </ToggleGroup>
+              {configuration.mode === "challenge" && (
+                <p className="mode-target">Keep cumulative expected regret below the target.</p>
+              )}
+            </div>
+            <div className="parameter-section">
+              <div className="parameter-section-heading">
+                <div>
+                  <h3>Policy parameters</h3>
+                  <p>These values go to the public PyMAB constructor.</p>
+                </div>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() =>
+                    onChange({ ...configuration, parameters: { ...definition.parameters } })
+                  }
+                >
+                  Restore defaults
+                </Button>
+              </div>
+              <div className="dynamic-parameter-grid">
+                {definition.parameterDefinitions.map((parameter) => {
+                  const value = configuration.parameters[parameter.key] ?? parameter.minimum;
+                  return (
+                    <div className="run-setup-field parameter-card" key={parameter.key}>
+                      <Label htmlFor={`scenario-${parameter.key}`}>{parameter.label}</Label>
+                      <div className="parameter-inputs">
+                        <Slider
+                          aria-label={`${parameter.label} slider`}
+                          min={parameter.minimum}
+                          max={parameter.maximum}
+                          step={parameter.step}
+                          value={[value]}
+                          disabled={pending}
+                          onValueChange={(values) =>
+                            setParameter(parameter.key, values[0] ?? value)
+                          }
+                        />
+                        <Input
+                          id={`scenario-${parameter.key}`}
+                          className="parameter-number"
+                          type="number"
+                          min={parameter.minimum}
+                          max={parameter.maximum}
+                          step={parameter.step}
+                          value={value}
+                          disabled={pending}
+                          onChange={(event) =>
+                            setParameter(parameter.key, Number(event.target.value))
+                          }
+                        />
+                      </div>
+                      <p className="field-help">{parameter.help}</p>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+            <div className="run-setup-field run-setup-seed">
+              <Label htmlFor="scenario-seed">Random seed</Label>
+              <Input
+                id="scenario-seed"
+                type="number"
+                step={1}
+                value={configuration.seed}
+                readOnly={configuration.mode !== "freePlay"}
+                disabled={pending}
+                onChange={(event) =>
+                  onChange({ ...configuration, seed: Number(event.target.value) })
+                }
+              />
+              <p className="field-help">
+                {configuration.mode === "freePlay"
+                  ? "Use any safe whole number."
+                  : "This mode uses a repeatable seed."}
+              </p>
+            </div>
+            {configuration.mode === "freePlay" && (
+              <ScenarioEnvironmentEditor
+                configuration={configuration}
+                pending={pending}
+                onChange={onChange}
+              />
+            )}
+          </div>
+          <div className="run-setup-footer">
+            <p className="field-help">
+              The active run keeps its current values until you apply these changes.
+            </p>
             <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() =>
-                onChange({ ...configuration, parameters: { ...definition.parameters } })
-              }
+              className="primary-button"
+              disabled={pending || !Number.isSafeInteger(configuration.seed)}
+              onClick={onApply}
             >
-              Restore defaults
+              Start configured run
             </Button>
           </div>
-          <div className="dynamic-parameter-grid">
-            {definition.parameterDefinitions.map((parameter) => {
-              const value = configuration.parameters[parameter.key] ?? parameter.minimum;
-              return (
-                <div className="run-setup-field parameter-card" key={parameter.key}>
-                  <Label htmlFor={`scenario-${parameter.key}`}>{parameter.label}</Label>
-                  <div className="parameter-inputs">
-                    <Slider
-                      aria-label={`${parameter.label} slider`}
-                      min={parameter.minimum}
-                      max={parameter.maximum}
-                      step={parameter.step}
-                      value={[value]}
-                      disabled={pending}
-                      onValueChange={(values) => setParameter(parameter.key, values[0] ?? value)}
-                    />
-                    <Input
-                      id={`scenario-${parameter.key}`}
-                      className="parameter-number"
-                      type="number"
-                      min={parameter.minimum}
-                      max={parameter.maximum}
-                      step={parameter.step}
-                      value={value}
-                      disabled={pending}
-                      onChange={(event) => setParameter(parameter.key, Number(event.target.value))}
-                    />
-                  </div>
-                  <p className="field-help">{parameter.help}</p>
-                </div>
-              );
-            })}
-          </div>
         </div>
-        <div className="run-setup-field run-setup-seed">
-          <Label htmlFor="scenario-seed">Random seed</Label>
-          <Input
-            id="scenario-seed"
-            type="number"
-            step={1}
-            value={configuration.seed}
-            readOnly={configuration.mode !== "freePlay"}
-            disabled={pending}
-            onChange={(event) => onChange({ ...configuration, seed: Number(event.target.value) })}
-          />
-          <p className="field-help">
-            {configuration.mode === "freePlay"
-              ? "Use any safe whole number."
-              : "This mode uses a repeatable seed."}
-          </p>
-        </div>
-        {configuration.mode === "freePlay" && (
-          <ScenarioEnvironmentEditor
-            configuration={configuration}
-            pending={pending}
-            onChange={onChange}
-          />
-        )}
-      </div>
-      <div className="run-setup-footer">
-        <p className="field-help">
-          The active run keeps its current values until you apply these changes.
-        </p>
-        <Button
-          className="primary-button"
-          disabled={pending || !Number.isSafeInteger(configuration.seed)}
-          onClick={onApply}
-        >
-          Start configured run
-        </Button>
-      </div>
+      )}
     </section>
   );
 }
