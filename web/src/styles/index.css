@@ -360,9 +360,14 @@ main {
 }
 .scenario-matrix-editor {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(var(--scenario-features, 4), minmax(9rem, 1fr));
   gap: 0.7rem;
   margin-top: 1rem;
+}
+.scenario-matrix-scroll {
+  max-width: 100%;
+  overflow-x: auto;
+  overscroll-behavior-inline: contain;
 }
 .scenario-matrix-editor label {
   display: block;
@@ -736,7 +741,8 @@ main {
   padding-top: 1.1rem;
   border-top: 1px solid var(--line);
 }
-.candidate-editor {
+.candidate-editor,
+.feature-editor {
   grid-column: 1 / -1;
   padding-top: 1.1rem;
   border-top: 1px solid var(--line);
@@ -799,6 +805,56 @@ main {
   flex-wrap: wrap;
 }
 .candidate-add-actions [data-slot="button"] {
+  color: var(--mint);
+}
+.candidate-symbol-option {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.feature-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.55rem;
+}
+.feature-row {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 0.65rem;
+  align-items: center;
+  padding: 0.7rem;
+  border: 1px solid var(--line);
+  border-radius: 0.7rem;
+  background: rgba(3, 17, 21, 0.38);
+}
+.feature-row strong,
+.feature-row small {
+  display: block;
+}
+.feature-row strong {
+  font-size: 0.72rem;
+}
+.feature-row small {
+  margin-top: 0.2rem;
+  color: var(--muted);
+  font-size: 0.62rem;
+  line-height: 1.4;
+}
+.feature-type {
+  padding: 0.2rem 0.35rem;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  color: var(--mint);
+  font-size: 0.56rem;
+  text-transform: uppercase;
+}
+.feature-add-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-top: 0.75rem;
+}
+.feature-add-actions [data-slot="button"] {
   color: var(--mint);
 }
 .parameter-section-heading,
@@ -2158,6 +2214,9 @@ pre {
   }
   .dynamic-parameter-grid,
   .environment-number-grid {
+    grid-template-columns: 1fr;
+  }
+  .feature-list {
     grid-template-columns: 1fr;
   }
   .parameter-section-heading,

@@ -1,3 +1,5 @@
+import type { CSSProperties } from "react";
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -13,13 +15,22 @@ import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { scenarioCatalog } from "@/catalog/scenarios";
 import type { LessonMode, ScenarioId } from "@/engine/protocol";
 import {
+  addRecommendationFeature,
   appendRecommendationCandidate,
   candidateNameErrors,
+  defaultRecommendationFeatureIds,
   recommendationCandidateKinds,
+  recommendationCandidateKindLabels,
+  recommendationFeatureCatalog,
+  recommendationFeatureIds,
   validRecommendationCandidates,
+  validRecommendationFeatureIds,
   type RecommendationCandidate,
   type RecommendationCandidateKind,
+  type RecommendationFeatureId,
+  type RecommendationModelFeatureId,
 } from "@/state/scenarioCandidates";
+import { ArmSymbol } from "./ArmSymbol";
 
 export interface ScenarioConfiguration {
   scenarioId: ScenarioId;
@@ -28,6 +39,7 @@ export interface ScenarioConfiguration {
   parameters: Record<string, number>;
   environment: Record<string, unknown> | null;
   candidates: RecommendationCandidate[] | null;
+  featureIds: RecommendationFeatureId[] | null;
   nextCandidateOrdinal: number;
 }
 
@@ -56,9 +68,12 @@ export function ScenarioSetupPanel({
   onApply: () => void;
 }) {
   const definition = scenarioCatalog[configuration.scenarioId];
+  const featureIds = configuration.featureIds ?? defaultRecommendationFeatureIds;
   const candidatesValid =
     configuration.scenarioId !== "recommendations" ||
-    (configuration.candidates !== null && validRecommendationCandidates(configuration.candidates));
+    (configuration.candidates !== null &&
+      validRecommendationFeatureIds(featureIds) &&
+      validRecommendationCandidates(configuration.candidates, featureIds));
   const setParameter = (key: string, value: number) =>
     onChange({
       ...configuration,
@@ -84,6 +99,7 @@ export function ScenarioSetupPanel({
         <span className="scenario-setup-summary">
           <span>{modeLabel[configuration.mode]}</span>
           {configuration.candidates && <span>{configuration.candidates.length} candidates</span>}
+          {configuration.featureIds && <span>{configuration.featureIds.length} signals</span>}
           {definition.parameterDefinitions.map((parameter) => (
             <span key={parameter.key}>
               {parameter.label} {configuration.parameters[parameter.key]}
@@ -147,11 +163,18 @@ export function ScenarioSetupPanel({
               )}
             </div>
             {configuration.scenarioId === "recommendations" && configuration.candidates && (
-              <RecommendationCandidateEditor
-                configuration={configuration}
-                pending={pending}
-                onChange={onChange}
-              />
+              <>
+                <RecommendationCandidateEditor
+                  configuration={configuration}
+                  pending={pending}
+                  onChange={onChange}
+                />
+                <RecommendationFeatureEditor
+                  configuration={configuration}
+                  pending={pending}
+                  onChange={onChange}
+                />
+              </>
             )}
             <div className="parameter-section">
               <div className="parameter-section-heading">
@@ -286,6 +309,7 @@ function RecommendationCandidateEditor({
         kind,
         configuration.seed,
         configuration.nextCandidateOrdinal,
+        configuration.featureIds ?? defaultRecommendationFeatureIds,
       ),
       nextCandidateOrdinal: configuration.nextCandidateOrdinal + 1,
     });
@@ -339,7 +363,16 @@ function RecommendationCandidateEditor({
                 <SelectContent>
                   {recommendationCandidateKinds.map((kind) => (
                     <SelectItem key={kind} value={kind}>
-                      {kind[0]!.toUpperCase() + kind.slice(1)}
+                      <span className="candidate-symbol-option">
+                        <ArmSymbol
+                          arm={{
+                            name: recommendationCandidateKindLabels[kind],
+                            shortName: recommendationCandidateKindLabels[kind],
+                            symbolKind: kind,
+                          }}
+                        />
+                        {recommendationCandidateKindLabels[kind]}
+                      </span>
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -386,18 +419,97 @@ function RecommendationCandidateEditor({
         ))}
       </div>
       <div className="candidate-add-actions" aria-label="Add candidate">
-        {recommendationCandidateKinds.map((kind) => (
-          <Button
-            key={kind}
-            type="button"
-            variant="outline"
-            size="sm"
-            disabled={pending || candidates.length >= 8}
-            onClick={() => addCandidate(kind)}
-          >
-            Add {kind}
-          </Button>
-        ))}
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          disabled={pending || candidates.length >= 8}
+          onClick={() => addCandidate("article")}
+        >
+          Add candidate
+        </Button>
+      </div>
+    </section>
+  );
+}
+
+function RecommendationFeatureEditor({
+  configuration,
+  pending,
+  onChange,
+}: {
+  configuration: ScenarioConfiguration;
+  pending: boolean;
+  onChange: (configuration: ScenarioConfiguration) => void;
+}) {
+  const candidates = configuration.candidates ?? [];
+  const active = configuration.featureIds ?? [...defaultRecommendationFeatureIds];
+  const inactive = recommendationFeatureIds.filter((featureId) => !active.includes(featureId));
+  const removeFeature = (featureId: RecommendationFeatureId) =>
+    onChange({
+      ...configuration,
+      featureIds: active.filter((item) => item !== featureId),
+    });
+  const addFeature = (featureId: RecommendationFeatureId) =>
+    onChange({
+      ...configuration,
+      featureIds: [...active, featureId],
+      candidates: addRecommendationFeature(candidates, featureId, configuration.seed),
+    });
+
+  return (
+    <section className="feature-editor" aria-labelledby="feature-editor-title">
+      <div className="candidate-editor-heading">
+        <div>
+          <h3 id="feature-editor-title">Context signals</h3>
+          <p>The base feature is always included. Add up to eight signals.</p>
+        </div>
+        <span>{active.length} of 8 signals</span>
+      </div>
+      {active.length ? (
+        <div className="feature-list">
+          {active.map((featureId) => {
+            const feature = recommendationFeatureCatalog[featureId];
+            return (
+              <div className="feature-row" key={feature.id}>
+                <span className="feature-type">{feature.type}</span>
+                <span>
+                  <strong>{feature.label}</strong>
+                  <small>{feature.help}</small>
+                </span>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  disabled={pending}
+                  aria-label={`Remove ${feature.label}`}
+                  onClick={() => removeFeature(featureId)}
+                >
+                  Remove
+                </Button>
+              </div>
+            );
+          })}
+        </div>
+      ) : (
+        <p className="field-help">Only the automatic base feature will be used.</p>
+      )}
+      <div className="feature-add-actions" aria-label="Add context signal">
+        {inactive.map((featureId) => {
+          const feature = recommendationFeatureCatalog[featureId];
+          return (
+            <Button
+              key={feature.id}
+              type="button"
+              variant="outline"
+              size="sm"
+              disabled={pending || active.length >= 8}
+              onClick={() => addFeature(feature.id)}
+            >
+              Add {feature.label}
+            </Button>
+          );
+        })}
       </div>
     </section>
   );
@@ -415,7 +527,14 @@ function ScenarioEnvironmentEditor({
   const environment = configuration.environment ?? {};
   if (configuration.scenarioId === "recommendations") {
     const candidates = configuration.candidates ?? [];
-    const features = ["Base", "Returning", "Engagement", "Weekend"];
+    const activeFeatureIds = configuration.featureIds ?? defaultRecommendationFeatureIds;
+    const features: Array<{ id: RecommendationModelFeatureId; label: string }> = [
+      { id: "base", label: "Base" },
+      ...activeFeatureIds.map((featureId) => ({
+        id: featureId,
+        label: recommendationFeatureCatalog[featureId].label,
+      })),
+    ];
     return (
       <details className="advanced-parameters scenario-environment">
         <summary>Simulation coefficients</summary>
@@ -423,35 +542,48 @@ function ScenarioEnvironmentEditor({
           Positive values raise click probability when a signal is positive. Negative values lower
           it.
         </p>
-        <div className="scenario-matrix-editor">
-          {candidates.map((candidate) =>
-            candidate.coefficients.map((value, columnIndex) => (
-              <div key={`${candidate.id}-${columnIndex}`}>
-                <Label htmlFor={`theta-${candidate.id}-${columnIndex}`}>
-                  {candidate.name} · {features[columnIndex]}
-                </Label>
-                <Input
-                  id={`theta-${candidate.id}-${columnIndex}`}
-                  type="number"
-                  step="0.05"
-                  value={value}
-                  disabled={pending}
-                  onChange={(event) => {
-                    const coefficients = [
-                      ...candidate.coefficients,
-                    ] as RecommendationCandidate["coefficients"];
-                    coefficients[columnIndex] = Number(event.target.value);
-                    onChange({
-                      ...configuration,
-                      candidates: candidates.map((item) =>
-                        item.id === candidate.id ? { ...item, coefficients } : item,
-                      ),
-                    });
-                  }}
-                />
-              </div>
-            )),
-          )}
+        <div className="scenario-matrix-scroll">
+          <div
+            className="scenario-matrix-editor"
+            style={
+              {
+                "--scenario-features": features.length,
+                minWidth: `${Math.max(4, features.length) * 10}rem`,
+              } as CSSProperties
+            }
+          >
+            {candidates.map((candidate) =>
+              features.map((feature) => {
+                const value = candidate.coefficients[feature.id] ?? 0;
+                return (
+                  <div key={`${candidate.id}-${feature.id}`}>
+                    <Label htmlFor={`theta-${candidate.id}-${feature.id}`}>
+                      {candidate.name} · {feature.label}
+                    </Label>
+                    <Input
+                      id={`theta-${candidate.id}-${feature.id}`}
+                      type="number"
+                      step="0.05"
+                      value={value}
+                      disabled={pending}
+                      onChange={(event) => {
+                        const coefficients = {
+                          ...candidate.coefficients,
+                          [feature.id]: Number(event.target.value),
+                        };
+                        onChange({
+                          ...configuration,
+                          candidates: candidates.map((item) =>
+                            item.id === candidate.id ? { ...item, coefficients } : item,
+                          ),
+                        });
+                      }}
+                    />
+                  </div>
+                );
+              }),
+            )}
+          </div>
         </div>
       </details>
     );

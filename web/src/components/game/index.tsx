@@ -377,6 +377,7 @@ export function Debrief({
               label={`Hidden environment coefficients by ${snapshot.scenarioId ? "action" : "path"}`}
               value={snapshot.hiddenTruth?.theta}
               rows={snapshot.presentation.arms.map((arm) => arm.name)}
+              columns={snapshot.presentation.contextFeatures?.map((feature) => feature.name)}
             />
           </>
         )}
@@ -582,12 +583,34 @@ export function PolicyBars({ snapshot }: { snapshot: LessonSnapshot }) {
   );
 }
 
-function MatrixTable({ label, value, rows }: { label: string; value: unknown; rows?: string[] }) {
+function MatrixTable({
+  label,
+  value,
+  rows,
+  columns,
+}: {
+  label: string;
+  value: unknown;
+  rows?: string[];
+  columns?: string[] | undefined;
+}) {
   if (!Array.isArray(value) || !value.every((row) => Array.isArray(row))) return null;
   const matrix = value as unknown[][];
   return (
     <table className="matrix-table">
       <caption>{label}</caption>
+      {columns && (
+        <thead>
+          <tr>
+            <th scope="col">Action</th>
+            {columns.map((column) => (
+              <th scope="col" key={column}>
+                {column}
+              </th>
+            ))}
+          </tr>
+        </thead>
+      )}
       <tbody>
         {matrix.map((row, rowIndex) => (
           <tr key={rowIndex}>
@@ -655,7 +678,14 @@ export function InspectPanel({
                     <code>
                       {`${policyCatalog[snapshot.policyId].className}(${Object.entries({
                         n_arms: snapshot.presentation.arms.length,
-                        ...(snapshot.family === "contextual" ? { n_features: 4 } : {}),
+                        ...(snapshot.family === "contextual"
+                          ? {
+                              n_features:
+                                snapshot.presentation.contextFeatures?.length ??
+                                snapshot.publicContext?.[0]?.length ??
+                                4,
+                            }
+                          : {}),
                         ...(snapshot.policyId === "moss" ? { horizon: snapshot.horizon } : {}),
                         ...snapshot.parameters,
                       })
@@ -679,6 +709,7 @@ export function InspectPanel({
                     label="Current context matrix"
                     value={snapshot.diagnostic.contextMatrix}
                     rows={snapshot.presentation.arms.map((arm) => arm.name)}
+                    columns={snapshot.presentation.contextFeatures?.map((feature) => feature.name)}
                   />
                   <MatrixTable
                     label="Learned coefficient estimates"
@@ -687,6 +718,7 @@ export function InspectPanel({
                       (snapshot.diagnostic.after as Record<string, unknown> | undefined)?.theta
                     }
                     rows={snapshot.presentation.arms.map((arm) => arm.name)}
+                    columns={snapshot.presentation.contextFeatures?.map((feature) => feature.name)}
                   />
                 </>
               )}

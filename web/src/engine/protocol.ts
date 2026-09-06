@@ -65,6 +65,15 @@ const armPresentationSchema = z.object({
     "article",
     "product",
     "tutorial",
+    "video",
+    "podcast",
+    "newsletter",
+    "course",
+    "event",
+    "tool",
+    "message",
+    "offer",
+    "download",
     "allow",
     "light-check",
     "strong-verification",
@@ -77,6 +86,16 @@ const presentationSchema = z.object({
   rewardPresentation: z.enum(["binary", "numeric", "utility"]),
   positiveOutcomeLabel: z.string(),
   zeroOutcomeLabel: z.string(),
+  contextFeatures: z
+    .array(
+      z.object({
+        id: z.string(),
+        name: z.string(),
+        type: z.enum(["base", "binary", "numeric"]),
+      }),
+    )
+    .max(9)
+    .optional(),
 });
 const historyEventSchema = z.object({
   selectedArm: z.number().int().min(0).max(7),

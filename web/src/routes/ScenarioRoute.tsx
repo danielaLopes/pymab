@@ -14,6 +14,8 @@ import { initialLessonState, lessonReducer } from "@/state/lessonReducer";
 import {
   cloneRecommendationCandidates,
   defaultRecommendationCandidates,
+  defaultRecommendationFeatureIds,
+  type RecommendationModelFeatureId,
 } from "@/state/scenarioCandidates";
 import {
   Debrief,
@@ -65,13 +67,18 @@ function environmentFromScenarioConfiguration(
 ): Record<string, unknown> | null {
   if (configuration.scenarioId !== "recommendations") return configuration.environment;
   const candidates = configuration.candidates ?? cloneRecommendationCandidates();
+  const featureIds = configuration.featureIds ?? [...defaultRecommendationFeatureIds];
   return {
     candidates: candidates.map(({ id, name, symbolKind }) => ({
       id,
       name: name.trim(),
       symbolKind,
     })),
-    theta: candidates.map((candidate) => [...candidate.coefficients]),
+    features: featureIds,
+    theta: candidates.map((candidate) => {
+      const modelFeatureIds: RecommendationModelFeatureId[] = ["base", ...featureIds];
+      return modelFeatureIds.map((featureId) => candidate.coefficients[featureId]);
+    }),
   };
 }
 
@@ -92,6 +99,7 @@ function defaultScenarioConfiguration(
       scenarioId === "recommendations"
         ? cloneRecommendationCandidates(defaultRecommendationCandidates)
         : null,
+    featureIds: scenarioId === "recommendations" ? [...defaultRecommendationFeatureIds] : null,
     nextCandidateOrdinal: 4,
   };
 }

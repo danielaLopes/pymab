@@ -7,6 +7,9 @@ describe("ArmSymbol", () => {
     ["article", "▤"],
     ["product", "▣"],
     ["tutorial", "▶"],
+    ["video", "◉"],
+    ["newsletter", "✉"],
+    ["download", "⇩"],
   ] as const)("uses the %s symbol selected by a recommendation candidate", (symbolKind, glyph) => {
     const { container } = render(
       <ArmSymbol arm={{ name: symbolKind, shortName: symbolKind, symbolKind }} />,

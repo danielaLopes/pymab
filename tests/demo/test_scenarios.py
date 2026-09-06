@@ -10,8 +10,11 @@ from pymab_demo.scenarios import create_scenario_session
 from pymab.policies import LinUCBPolicy, LogisticContextualBanditPolicy
 
 
-def recommendation_environment(count: int) -> dict[str, object]:
+def recommendation_environment(
+    count: int, features: list[str] | None = None
+) -> dict[str, object]:
     kinds = ("article", "product", "tutorial")
+    feature_ids = ["visitor", "engagement", "visit"] if features is None else features
     return {
         "candidates": [
             {
@@ -21,8 +24,10 @@ def recommendation_environment(count: int) -> dict[str, object]:
             }
             for index in range(count)
         ],
+        "features": feature_ids,
         "theta": [
-            [0.05 * index, -0.6 + 0.1 * index, 0.2, -0.1] for index in range(count)
+            [0.05 * index, *[0.1 * (column + 1) for column in range(len(feature_ids))]]
+            for index in range(count)
         ],
     }
 
@@ -175,7 +180,7 @@ def test_recommendation_preserves_custom_candidate_order_and_identity() -> None:
             {
                 "candidates": [
                     {"id": "one", "name": "One", "symbolKind": "article"},
-                    {"id": "two", "name": "Two", "symbolKind": "video"},
+                    {"id": "two", "name": "Two", "symbolKind": "avatar"},
                 ],
                 "theta": [[0.0] * 4, [0.0] * 4],
             },
@@ -205,6 +210,108 @@ def test_recommendation_rejects_invalid_candidate_configuration(
             parameters={},
             source_commit="test",
             environment=environment,
+        )
+
+
+@pytest.mark.parametrize(
+    "symbol_kind",
+    [
+        "article",
+        "product",
+        "tutorial",
+        "video",
+        "podcast",
+        "newsletter",
+        "course",
+        "event",
+        "tool",
+        "message",
+        "offer",
+        "download",
+    ],
+)
+def test_recommendation_accepts_visual_types(symbol_kind: str) -> None:
+    environment = recommendation_environment(2)
+    candidates = environment["candidates"]
+    assert isinstance(candidates, list)
+    candidates[0]["symbolKind"] = symbol_kind
+
+    session = create_scenario_session(
+        session_id=f"recommendation-{symbol_kind}",
+        scenario_id="recommendations",
+        mode="guided",
+        seed=58,
+        parameters={},
+        source_commit="test",
+        environment=environment,
+    )
+
+    assert session.presentation()["arms"][0]["symbolKind"] == symbol_kind
+
+
+@pytest.mark.parametrize(
+    "features",
+    [
+        [],
+        ["device"],
+        [
+            "visitor",
+            "engagement",
+            "visit",
+            "device",
+            "account_age",
+            "recent_activity",
+            "price_sensitivity",
+            "session_depth",
+        ],
+    ],
+)
+def test_recommendation_derives_features_and_context(features: list[str]) -> None:
+    session = create_scenario_session(
+        session_id=f"recommendation-features-{len(features)}",
+        scenario_id="recommendations",
+        mode="freePlay",
+        seed=59,
+        parameters={},
+        source_commit="test",
+        environment=recommendation_environment(3, features),
+    )
+
+    snapshot = session.step()
+    event = snapshot["history"][0]
+    assert session.policy.n_features == 1 + len(features)
+    assert len(event["visibleCues"]) == len(features)
+    assert all(len(row) == 1 + len(features) for row in event["publicContext"])
+    assert all(-1 <= value <= 1 for value in event["publicContext"][0])
+    assert [
+        feature["id"] for feature in snapshot["presentation"]["contextFeatures"]
+    ] == [
+        "base",
+        *features,
+    ]
+    assert f"n_features={1 + len(features)}" in snapshot["generatedCode"]
+
+
+@pytest.mark.parametrize(
+    ("features", "message"),
+    [
+        (["device", "device"], "feature ids must be unique"),
+        (["unknown"], "feature id is not supported"),
+        (["visitor"] * 9, "between 0 and 8"),
+    ],
+)
+def test_recommendation_rejects_invalid_features(
+    features: list[str], message: str
+) -> None:
+    with pytest.raises(ValueError, match=message):
+        create_scenario_session(
+            session_id="recommendation-invalid-features",
+            scenario_id="recommendations",
+            mode="freePlay",
+            seed=60,
+            parameters={},
+            source_commit="test",
+            environment=recommendation_environment(3, features),
         )
 
 

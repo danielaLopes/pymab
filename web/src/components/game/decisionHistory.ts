@@ -104,6 +104,12 @@ function cueSymbol(name: string): string {
   if (name === "visitor") return "◎";
   if (name === "engagement") return "↗";
   if (name === "visit") return "◫";
+  if (name === "device") return "▱";
+  if (name === "account age") return "◷";
+  if (name === "recent activity") return "↻";
+  if (name === "price sensitivity") return "%";
+  if (name === "session depth") return "≡";
+  if (name === "traffic source") return "↗";
   if (name === "risk") return "!";
   if (name === "account") return "○";
   if (name === "endpoint") return "⌁";

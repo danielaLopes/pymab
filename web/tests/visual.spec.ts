@@ -42,7 +42,7 @@ test("eight recommendation candidates", async ({ page }) => {
   });
   await page.getByRole("button", { name: /Run settings/ }).click();
   for (let index = 0; index < 5; index += 1) {
-    await page.getByRole("button", { name: "Add tutorial" }).click();
+    await page.getByRole("button", { name: "Add candidate" }).click();
   }
   await page.getByRole("button", { name: "Start configured run" }).click();
   await page.getByRole("button", { name: "Advance one round" }).click();

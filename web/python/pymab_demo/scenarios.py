@@ -21,7 +21,91 @@ SCENARIO_IDS: tuple[ScenarioId, ...] = (
     "defensive-verification",
 )
 
-RECOMMENDATION_SYMBOL_KINDS = {"article", "product", "tutorial"}
+RECOMMENDATION_SYMBOL_KINDS = {
+    "article",
+    "product",
+    "tutorial",
+    "video",
+    "podcast",
+    "newsletter",
+    "course",
+    "event",
+    "tool",
+    "message",
+    "offer",
+    "download",
+}
+RECOMMENDATION_FEATURES: dict[str, dict[str, object]] = {
+    "visitor": {
+        "name": "Visitor type",
+        "cueName": "visitor",
+        "type": "binary",
+        "negativeLabel": "new",
+        "positiveLabel": "returning",
+    },
+    "engagement": {
+        "name": "Engagement",
+        "cueName": "engagement",
+        "type": "numeric",
+        "minimum": 0,
+        "maximum": 100,
+        "unit": "/100",
+    },
+    "visit": {
+        "name": "Visit timing",
+        "cueName": "visit",
+        "type": "binary",
+        "negativeLabel": "weekday",
+        "positiveLabel": "weekend",
+    },
+    "device": {
+        "name": "Device",
+        "cueName": "device",
+        "type": "binary",
+        "negativeLabel": "desktop",
+        "positiveLabel": "mobile",
+    },
+    "account_age": {
+        "name": "Account age",
+        "cueName": "account age",
+        "type": "numeric",
+        "minimum": 0,
+        "maximum": 3650,
+        "unit": "days",
+    },
+    "recent_activity": {
+        "name": "Recent activity",
+        "cueName": "recent activity",
+        "type": "numeric",
+        "minimum": 0,
+        "maximum": 20,
+        "unit": "interactions",
+    },
+    "price_sensitivity": {
+        "name": "Price sensitivity",
+        "cueName": "price sensitivity",
+        "type": "numeric",
+        "minimum": 0,
+        "maximum": 100,
+        "unit": "/100",
+    },
+    "session_depth": {
+        "name": "Session depth",
+        "cueName": "session depth",
+        "type": "numeric",
+        "minimum": 1,
+        "maximum": 12,
+        "unit": "pages",
+    },
+    "traffic_source": {
+        "name": "Traffic source",
+        "cueName": "traffic source",
+        "type": "binary",
+        "negativeLabel": "organic",
+        "positiveLabel": "paid",
+    },
+}
+DEFAULT_RECOMMENDATION_FEATURES = ("visitor", "engagement", "visit")
 DEFAULT_RECOMMENDATION_CANDIDATES: tuple[dict[str, str], ...] = (
     {
         "id": "candidate-1",
@@ -86,9 +170,7 @@ def _recommendation_candidates(value: object) -> list[dict[str, str]]:
             not isinstance(symbol_kind, str)
             or symbol_kind not in RECOMMENDATION_SYMBOL_KINDS
         ):
-            raise ValueError(
-                "candidate symbolKind must be article, product, or tutorial"
-            )
+            raise ValueError("candidate symbolKind is not supported")
         if candidate_id in ids:
             raise ValueError("candidate ids must be unique")
         folded_name = normalized_name.casefold()
@@ -104,6 +186,21 @@ def _recommendation_candidates(value: object) -> list[dict[str, str]]:
             }
         )
     return candidates
+
+
+def _recommendation_features(value: object) -> list[str]:
+    if value is None:
+        return list(DEFAULT_RECOMMENDATION_FEATURES)
+    if not isinstance(value, list) or len(value) > 8:
+        raise ValueError("features must contain between 0 and 8 items")
+    features: list[str] = []
+    for raw in value:
+        if not isinstance(raw, str) or raw not in RECOMMENDATION_FEATURES:
+            raise ValueError("feature id is not supported")
+        if raw in features:
+            raise ValueError("feature ids must be unique")
+        features.append(raw)
+    return features
 
 
 class ScenarioSession(ABC):
@@ -258,33 +355,81 @@ class RecommendationScenarioSession(ScenarioSession):
 
     def _initialize(self) -> None:
         self.candidates = _recommendation_candidates(self.environment.get("candidates"))
+        self.feature_ids = _recommendation_features(self.environment.get("features"))
         n_arms = len(self.candidates)
+        n_features = 1 + len(self.feature_ids)
         self.policy = LogisticContextualBanditPolicy(
             n_arms=n_arms,
-            n_features=4,
+            n_features=n_features,
             epsilon=_as_float(self.parameters["epsilon"], name="epsilon"),
             learning_rate=_as_float(
                 self.parameters["learning_rate"], name="learning_rate"
             ),
             l2=_as_float(self.parameters["l2"], name="l2"),
         )
-        self.context_rng = generator(self.seed, self.scenario_id, "context")
+        self.context_rngs = {
+            feature_id: generator(self.seed, self.scenario_id, "context", feature_id)
+            for feature_id in self.feature_ids
+        }
         self.action_rng = generator(self.seed, self.scenario_id, "action")
         self.reward_rng = generator(self.seed, self.scenario_id, "reward")
-        self.theta = np.asarray(
-            self.environment.get("theta", self.default_theta), dtype=float
+        default_theta = (
+            self.default_theta
+            if n_arms == 3
+            and tuple(self.feature_ids) == DEFAULT_RECOMMENDATION_FEATURES
+            else np.zeros((n_arms, n_features), dtype=float)
         )
-        if self.theta.shape != (n_arms, 4) or not np.all(np.isfinite(self.theta)):
-            raise ValueError(f"theta must be a finite {n_arms} by 4 matrix")
+        self.theta = np.asarray(
+            self.environment.get("theta", default_theta), dtype=float
+        )
+        if self.theta.shape != (n_arms, n_features) or not np.all(
+            np.isfinite(self.theta)
+        ):
+            raise ValueError(f"theta must be a finite {n_arms} by {n_features} matrix")
         self.environment = {
             "candidates": [dict(candidate) for candidate in self.candidates],
+            "features": list(self.feature_ids),
             "theta": self.theta.copy(),
         }
         self.truth_history: list[dict[str, Any]] = []
 
     def _perform_step(self) -> dict[str, Any]:
-        values = self.context_rng.choice(np.asarray([-1.0, 1.0]), size=3)
-        feature = np.concatenate((np.ones(1), values))
+        values: list[float] = []
+        cues: list[dict[str, object]] = []
+        for feature_id in self.feature_ids:
+            definition = RECOMMENDATION_FEATURES[feature_id]
+            rng = self.context_rngs[feature_id]
+            if definition["type"] == "binary":
+                positive = bool(rng.integers(2))
+                normalized = 1.0 if positive else -1.0
+                label_key = "positiveLabel" if positive else "negativeLabel"
+                label = str(definition[label_key])
+                raw_value: object = label
+            else:
+                minimum = int(
+                    _as_float(definition["minimum"], name=f"{feature_id} minimum")
+                )
+                maximum = int(
+                    _as_float(definition["maximum"], name=f"{feature_id} maximum")
+                )
+                raw_number = int(rng.integers(minimum, maximum + 1))
+                normalized = 2.0 * (raw_number - minimum) / (maximum - minimum) - 1.0
+                unit = str(definition["unit"])
+                label = (
+                    f"{raw_number}{unit}"
+                    if unit.startswith("/")
+                    else f"{raw_number} {unit}"
+                )
+                raw_value = raw_number
+            values.append(normalized)
+            cues.append(
+                {
+                    "name": str(definition["cueName"]),
+                    "value": raw_value,
+                    "label": label,
+                }
+            )
+        feature = np.asarray([1.0, *values], dtype=float)
         context = np.repeat(feature[np.newaxis, :], len(self.candidates), axis=0)
         probabilities = 1.0 / (1.0 + np.exp(-(self.theta @ feature)))
         predictions = self.policy.predicted_probabilities(context).copy()
@@ -306,19 +451,6 @@ class RecommendationScenarioSession(ScenarioSession):
         self.truth_history.append(
             {"probabilities": probabilities.copy(), "optimalArm": optimal}
         )
-        labels = {
-            "visitor": ("new", "returning"),
-            "engagement": ("low", "high"),
-            "visit": ("weekday", "weekend"),
-        }
-        cues = [
-            {
-                "name": name,
-                "value": labels[name][int(value > 0)],
-                "label": labels[name][int(value > 0)],
-            }
-            for name, value in zip(labels, values, strict=True)
-        ]
         return {
             "selectedArm": action,
             "reward": reward,
@@ -328,6 +460,7 @@ class RecommendationScenarioSession(ScenarioSession):
             "explanationKey": f"recommendations.{min(len(self.history) + 1, 4)}",
             "diagnostic": {
                 "kind": "scenario-logistic",
+                "contextMatrix": context.copy(),
                 "decision": {
                     "label": "Predicted click probability",
                     "values": predictions,
@@ -357,19 +490,36 @@ class RecommendationScenarioSession(ScenarioSession):
             "rewardPresentation": "binary",
             "positiveOutcomeLabel": "Click",
             "zeroOutcomeLabel": "No click",
+            "contextFeatures": [
+                {"id": "base", "name": "Base", "type": "base"},
+                *[
+                    {
+                        "id": feature_id,
+                        "name": str(RECOMMENDATION_FEATURES[feature_id]["name"]),
+                        "type": str(RECOMMENDATION_FEATURES[feature_id]["type"]),
+                    }
+                    for feature_id in self.feature_ids
+                ],
+            ],
         }
 
     def _hidden_truth(self) -> dict[str, Any]:
-        return {"theta": self.theta, "rounds": self.truth_history}
+        return {
+            "features": ["base", *self.feature_ids],
+            "theta": self.theta,
+            "rounds": self.truth_history,
+        }
 
     def generated_code(self) -> str:
         names = [candidate["name"] for candidate in self.candidates]
+        features = ["base", *self.feature_ids]
         return f"""from pymab.policies import LogisticContextualBanditPolicy
 
 candidates = {names!r}
+features = {features!r}
 policy = LogisticContextualBanditPolicy(
     n_arms={len(self.candidates)},
-    n_features=4,
+    n_features={1 + len(self.feature_ids)},
     epsilon={self.parameters["epsilon"]!r},
     learning_rate={self.parameters["learning_rate"]!r},
     l2={self.parameters["l2"]!r},
