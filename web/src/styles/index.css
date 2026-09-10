@@ -2049,9 +2049,118 @@ summary {
   cursor: pointer;
   color: var(--muted);
 }
+.validated-snapshot-details {
+  margin-top: 0.8rem;
+  padding: 0;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 0.65rem;
+  background: #041318;
+}
 .validated-snapshot-summary {
+  padding: 0.75rem 0.9rem;
+  background: rgba(128, 226, 187, 0.035);
   font-family: "DM Mono", ui-monospace, monospace;
   font-weight: 500;
+}
+.validated-snapshot-summary::marker {
+  color: var(--mint);
+}
+.validated-snapshot-details[open] > .validated-snapshot-summary {
+  border-bottom: 1px solid var(--line);
+}
+.snapshot-code-viewer {
+  min-width: 0;
+}
+.snapshot-code-toolbar {
+  display: flex;
+  min-height: 2.35rem;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.3rem 0.5rem 0.3rem 0.85rem;
+  border-bottom: 1px solid rgba(128, 226, 187, 0.14);
+  background: rgba(8, 32, 37, 0.92);
+  color: rgba(180, 200, 198, 0.66);
+  font:
+    500 0.58rem "DM Mono",
+    ui-monospace,
+    monospace;
+  letter-spacing: 0.08em;
+}
+.snapshot-copy-button {
+  min-height: 1.7rem;
+  padding: 0 0.55rem;
+  color: var(--mint);
+  font-family: ui-sans-serif, system-ui, sans-serif;
+  font-size: 0.62rem;
+  letter-spacing: 0;
+}
+.snapshot-code-scroll {
+  max-height: 24rem;
+  overflow: auto;
+  background: #041318;
+  scrollbar-color: rgba(128, 226, 187, 0.3) transparent;
+  scrollbar-width: thin;
+}
+.snapshot-code-scroll:focus-visible {
+  outline: 2px solid var(--mint);
+  outline-offset: -2px;
+}
+.snapshot-code-lines {
+  width: max-content;
+  min-width: 100%;
+  margin: 0;
+  padding: 0.7rem 0;
+  counter-reset: snapshot-line;
+  list-style: none;
+}
+.snapshot-code-line {
+  display: grid;
+  grid-template-columns: 2.8rem minmax(max-content, 1fr);
+  min-height: 1.15rem;
+  counter-increment: snapshot-line;
+  color: #c7ddd5;
+  font:
+    0.66rem/1.55 "DM Mono",
+    ui-monospace,
+    monospace;
+}
+.snapshot-code-line::before {
+  content: counter(snapshot-line);
+  position: sticky;
+  left: 0;
+  z-index: 1;
+  padding-right: 0.65rem;
+  border-right: 1px solid rgba(128, 226, 187, 0.1);
+  background: #041318;
+  color: rgba(180, 200, 198, 0.34);
+  text-align: right;
+  user-select: none;
+}
+.snapshot-code-line code {
+  padding: 0 0.9rem;
+  font: inherit;
+  white-space: pre;
+}
+.snapshot-token-key {
+  color: #8bd6bc;
+}
+.snapshot-token-string {
+  color: #e8c77d;
+}
+.snapshot-token-number {
+  color: #8ec7ea;
+}
+.snapshot-token-literal {
+  color: #d39be8;
+}
+.snapshot-copy-status {
+  min-height: 1.6rem;
+  margin: 0;
+  padding: 0.3rem 0.85rem;
+  border-top: 1px solid rgba(128, 226, 187, 0.1);
+  color: var(--mint);
+  font-size: 0.6rem;
 }
 pre {
   white-space: pre-wrap;

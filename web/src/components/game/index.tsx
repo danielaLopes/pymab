@@ -15,6 +15,7 @@ import { recommendationContextFeatureHelp } from "@/state/scenarioCandidates";
 import type { LessonId, LessonSnapshot, RuntimeProgress } from "../../engine/protocol";
 import { loadPersistence, savePersistence } from "../../state/persistence";
 import { ArmSymbol } from "./ArmSymbol";
+import { JsonSnapshotViewer } from "./JsonSnapshotViewer";
 
 export function AppShell({ children }: { children: ReactNode }) {
   const [motionOverride, setMotionOverride] = useState<boolean | null>(
@@ -777,10 +778,7 @@ export function InspectPanel({
                   {snapshot.presentation.arms[Number(snapshot.diagnostic?.recommendation)]?.name}
                 </p>
               )}
-              <details>
-                <summary className="validated-snapshot-summary">Full validated snapshot</summary>
-                <pre>{JSON.stringify(snapshot.diagnostic, null, 2)}</pre>
-              </details>
+              <JsonSnapshotViewer value={snapshot.diagnostic} />
               {snapshot.hiddenTruth && (
                 <details>
                   <summary>Environment values used by this run</summary>
