@@ -1,0 +1,32 @@
+{
+  "schema_version": 1,
+  "policies": [
+    {"python_name": "BernoulliBayesianUCBPolicy", "rust_kind": "bernoulli_bayesian_ucb"},
+    {"python_name": "BernoulliThompsonSamplingPolicy", "rust_kind": "bernoulli_thompson_sampling"},
+    {"python_name": "ChangePointUCBPolicy", "rust_kind": "change_point_ucb"},
+    {"python_name": "CUSUMUCBPolicy", "rust_kind": "cusum_ucb"},
+    {"python_name": "DecayingEpsilonGreedyPolicy", "rust_kind": "decaying_epsilon_greedy"},
+    {"python_name": "DiscountedBernoulliThompsonSamplingPolicy", "rust_kind": "discounted_bernoulli_thompson_sampling"},
+    {"python_name": "DiscountedUCBPolicy", "rust_kind": "discounted_ucb"},
+    {"python_name": "EpsilonGreedyPolicy", "rust_kind": "epsilon_greedy"},
+    {"python_name": "EXP3Policy", "rust_kind": "exp3"},
+    {"python_name": "GaussianBayesianUCBPolicy", "rust_kind": "gaussian_bayesian_ucb"},
+    {"python_name": "GaussianThompsonSamplingPolicy", "rust_kind": "gaussian_thompson_sampling"},
+    {"python_name": "GradientBanditPolicy", "rust_kind": "gradient_bandit"},
+    {"python_name": "GreedyPolicy", "rust_kind": "greedy"},
+    {"python_name": "KLUCBPolicy", "rust_kind": "kl_ucb"},
+    {"python_name": "LinUCBPolicy", "rust_kind": "lin_ucb"},
+    {"python_name": "LinearEpsilonGreedyPolicy", "rust_kind": "linear_epsilon_greedy"},
+    {"python_name": "LinearThompsonSamplingPolicy", "rust_kind": "linear_thompson_sampling"},
+    {"python_name": "LogisticContextualBanditPolicy", "rust_kind": "logistic_contextual_bandit"},
+    {"python_name": "MedianEliminationPolicy", "rust_kind": "median_elimination"},
+    {"python_name": "MOSSPolicy", "rust_kind": "moss"},
+    {"python_name": "PageHinkleyUCBPolicy", "rust_kind": "page_hinkley_ucb"},
+    {"python_name": "RandomPolicy", "rust_kind": "random"},
+    {"python_name": "SlidingWindowBernoulliThompsonSamplingPolicy", "rust_kind": "sliding_window_bernoulli_thompson_sampling"},
+    {"python_name": "SlidingWindowUCBPolicy", "rust_kind": "sliding_window_ucb"},
+    {"python_name": "SoftmaxPolicy", "rust_kind": "softmax"},
+    {"python_name": "SuccessiveEliminationPolicy", "rust_kind": "successive_elimination"},
+    {"python_name": "UCBPolicy", "rust_kind": "ucb"}
+  ]
+}

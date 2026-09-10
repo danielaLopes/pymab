@@ -11,7 +11,7 @@ import numpy as np
 
 import pymab
 from pymab._random import generator
-from pymab.policies import EpsilonGreedyPolicy, LinUCBPolicy
+from pymab._reference.policies import EpsilonGreedyPolicy, LinUCBPolicy
 from pymab.policies.policy import ContextualPolicy, Policy
 from pymab_demo.catalog import POLICY_CATALOG
 from pymab_demo.diagnostics import epsilon_decision, linucb_decision

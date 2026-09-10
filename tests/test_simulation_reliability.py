@@ -440,6 +440,29 @@ def test_schema_two_payload_has_explicit_unknown_provenance() -> None:
     migrated = SimulationResult.from_dict(payload)
     assert migrated.schema_version == 3
     assert migrated.provenance.python_version == "unknown"
+    assert migrated.provenance.backend == "unknown"
+    assert migrated.provenance.rng_scheme == "unknown"
+
+
+def test_current_provenance_identifies_the_python_backend() -> None:
+    provenance = _experiment({"fixed": FixedPolicy(3)}).provenance
+
+    assert provenance.backend == "python"
+    assert provenance.rng_scheme.startswith("pymab-v2-")
+    assert provenance.to_dict()["backend"] == "python"
+
+
+def test_schema_three_reads_provenance_written_before_backend_fields() -> None:
+    payload = _experiment({"fixed": FixedPolicy(3)}).to_dict()
+    provenance = dict(payload["provenance"])
+    provenance.pop("backend")
+    provenance.pop("rng_scheme")
+    payload["provenance"] = provenance
+
+    migrated = SimulationResult.from_dict(payload)
+
+    assert migrated.provenance.backend == "unknown"
+    assert migrated.provenance.rng_scheme == "unknown"
 
 
 def test_result_rejects_unknown_schema() -> None:
@@ -516,12 +539,23 @@ def test_result_schema_rejects_invalid_field_types(field, value, message) -> Non
         SimulationResult.from_dict(payload)
 
 
-def test_result_schema_rejects_invalid_provenance_string() -> None:
+@pytest.mark.parametrize("field", ["backend", "rng_scheme"])
+def test_result_schema_rejects_invalid_provenance_string(field: str) -> None:
     payload = _experiment({"fixed": FixedPolicy(3)}).to_dict()
     provenance = dict(payload["provenance"])
-    provenance["rng_scheme"] = ""
+    provenance[field] = ""
     payload["provenance"] = provenance
-    with pytest.raises(SerializationError, match="provenance.rng_scheme"):
+    with pytest.raises(SerializationError, match=rf"provenance.{field}"):
+        SimulationResult.from_dict(payload)
+
+
+def test_result_schema_rejects_unknown_backend_name() -> None:
+    payload = _experiment({"fixed": FixedPolicy(3)}).to_dict()
+    provenance = dict(payload["provenance"])
+    provenance["backend"] = "other"
+    payload["provenance"] = provenance
+
+    with pytest.raises(SerializationError, match="provenance.backend"):
         SimulationResult.from_dict(payload)
 
 

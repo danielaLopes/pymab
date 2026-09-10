@@ -1,74 +1,71 @@
 # Releasing PyMAB
 
-Release Please maintains the version and changelog in a release pull request.
-Merging that pull request creates a `vX.Y.Z` tag and a GitHub Release. The
-[`release.yml`](../.github/workflows/release.yml) workflow then builds, tests,
-and publishes that release with PyPI Trusted Publishing.
+Release Please chooses the release version and updates the single Cargo
+workspace version, lock files, changelog, and release manifest. Do not choose or
+hard-code a future version in the workflows. A matching release publishes the
+public `pymab` Rust crate and the Python package from one tag.
 
 ## One-time repository setup
 
-1. Create a GitHub App installed only on this repository with read/write
-   access to contents, issues, and pull requests.
-2. Add the App ID as the Actions repository variable
-   `RELEASE_PLEASE_APP_ID`.
-3. Add the complete GitHub App private key as the Actions repository secret
-   `RELEASE_PLEASE_PRIVATE_KEY`.
-4. In the GitHub repository settings, create an environment named `pypi`.
-   Configure a required reviewer so every production publication needs
-   explicit approval.
-5. In the PyPI `pymab` project, add a GitHub Trusted Publisher with:
-   - Owner: `danielaLopes`
-   - Repository: `pymab`
-   - Workflow: `release.yml`
-   - Environment: `pypi`
-6. Protect tags matching `v*` while allowing the Release Please GitHub App to
-   create release tags.
-7. After Trusted Publishing succeeds, remove the repository's
-   `PYPI_API_TOKEN` secret and revoke the old token on PyPI.
+1. Configure the Release Please GitHub App credentials described in
+   `.github/workflows/release-please.yml`.
+2. Create protected GitHub environments named `crates-io` and `pypi`, each with
+   a required reviewer.
+3. Configure the existing PyPI `pymab` project as a trusted publisher for
+   repository `danielaLopes/pymab`, workflow `release.yml`, environment `pypi`.
+4. The first crates.io publication must allocate the crate name. Create a scoped
+   crates.io token that can publish only `pymab`, store it as the environment
+   secret `CRATES_IO_TOKEN`, and leave the repository variable
+   `CRATES_IO_TRUSTED_PUBLISHING` unset.
+5. After that first crate exists, add a crates.io trusted-publishing rule for
+   repository `danielaLopes/pymab`, workflow `release.yml`, environment
+   `crates-io`. Set `CRATES_IO_TRUSTED_PUBLISHING=true`, remove the GitHub secret,
+   and revoke the bootstrap token on crates.io. Later runs obtain a short-lived
+   token through `rust-lang/crates-io-auth-action`.
+6. Protect release tags matching `v*` and allow the Release Please App to create
+   them.
 
-## Prepare changes for a release
+## Prepare a release
 
-Use a Conventional Commit title for each squash-merged pull request:
+Use Conventional Commit titles. `fix:` requests a patch, `feat:` a minor, and a
+breaking-change marker a major release. Release Please opens the version-change
+pull request; review the version it proposes rather than editing manifests by
+hand.
 
-- `fix: ...` requests a patch release.
-- `feat: ...` requests a minor release.
-- `feat!: ...` or a `BREAKING CHANGE:` footer requests a major release.
+Before merging that pull request, require all CI checks. They validate Rust 1.83,
+all Python versions, the complete native policy registry, package versions,
+native wheels, strict documentation, security audits, crates.io dry-run
+publication, and benchmark compilation. The scheduled performance workflow
+retains raw same-machine timing and RSS evidence.
 
-After a releasable change reaches `main`, Release Please opens or updates one
-release pull request. It updates `CHANGELOG.md`, `.release-please-manifest.json`,
-`pyproject.toml` and `uv.lock`. The package and documentation read that metadata
-at runtime, so no duplicate version declarations need updating.
-Do not edit those versions manually.
+## Publication transaction
 
-## Publish a version
+Merging the release pull request creates the tag and GitHub Release. The release
+workflow then:
 
-1. Review the open Release Please pull request.
-2. Wait for every required CI check to pass.
-   The documentation matrix performs clean HTML and doctest builds on the
-   minimum and latest supported Python versions, enforces API documentation
-   coverage, executes README snippets, and uploads the rendered site. External
-   link checking runs separately as a non-blocking signal because remote sites
-   can fail transiently.
-3. Merge the release pull request when the accumulated changes are ready.
-4. Release Please creates the matching tag and GitHub Release.
-5. Open the `Publish to PyPI` workflow run and approve its `pypi` environment
-   deployment.
-6. Verify the new version on PyPI.
+1. Builds one `.crate`, one Python sdist, and CPython 3.11--3.14 wheels for Linux
+   x86-64/aarch64, macOS x86-64/arm64, and Windows x86-64.
+2. Tests every wheel on a runner with the matching operating system and CPU,
+   including a forced Rust-backend experiment.
+3. Inspects every archive, checks versions and matrix completeness, builds the
+   packaged crate, and validates Python distribution metadata.
+4. Queries both registries. It skips a publication only when that exact version
+   already exists, allowing safe retry after a partial release.
+5. Publishes crates.io first and waits until the version is visible. PyPI cannot
+   start before that job succeeds.
+6. Attaches verified artifacts and the benchmark evidence to the GitHub Release.
 
-The release workflow rejects a tag whose version does not match
-`pyproject.toml`. It builds the wheel and source distribution once, validates
-their metadata, installs and imports the wheel on every supported Python
-version, and publishes those same artifacts to PyPI.
+All artifact-verification jobs complete before either registry receives a
+request. Approval of both protected environments is still required.
 
-Published PyPI files are immutable. If a release fails after any file reaches
-PyPI, increment the version and publish a new release rather than reusing the
-same tag or version.
+## Recovery and rollback
 
-## Version 2 release
+Registry artifacts are immutable and must never be overwritten. If only
+crates.io succeeded, rerun the same workflow: the exact crate version is skipped
+and the verified Python artifacts proceed. The inverse ordering is prevented by
+the workflow dependency graph.
 
-The v2 migration is intentionally breaking. Review the migration guide and use
-a breaking Conventional Commit so Release Please preserves major-version
-semantics for subsequent releases.
-
-For an exceptional manual override, run the `Release Please` workflow from the
-Actions tab and provide an exact semantic version in the `release_as` input.
+For a defective release, yank the affected crate version with `cargo yank` and
+yank the PyPI release through its project administration page. Publish a new
+version containing the fix; do not delete files, reuse a tag, or attempt to
+replace an existing version.

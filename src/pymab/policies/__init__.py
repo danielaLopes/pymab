@@ -45,6 +45,21 @@ from pymab.policies.ucb import (
     UCBPolicy,
 )
 
+# Dynamic native wrappers directly inherit their private reference counterpart.
+# Register the public descendants to preserve the original public hierarchy for
+# callers that use ``isinstance`` or ``issubclass``.
+GreedyPolicy.register(EpsilonGreedyPolicy)
+GreedyPolicy.register(DecayingEpsilonGreedyPolicy)
+UCBPolicy.register(KLUCBPolicy)
+UCBPolicy.register(MOSSPolicy)
+UCBPolicy.register(SlidingWindowUCBPolicy)
+UCBPolicy.register(DiscountedUCBPolicy)
+UCBPolicy.register(ChangePointUCBPolicy)
+UCBPolicy.register(CUSUMUCBPolicy)
+UCBPolicy.register(PageHinkleyUCBPolicy)
+BernoulliThompsonSamplingPolicy.register(SlidingWindowBernoulliThompsonSamplingPolicy)
+BernoulliThompsonSamplingPolicy.register(DiscountedBernoulliThompsonSamplingPolicy)
+
 __all__ = [
     "ActionValuePolicy",
     "BernoulliBayesianUCBPolicy",

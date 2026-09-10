@@ -1,23 +1,8 @@
-"""Uniform random bandit policy."""
+"""Compatibility import for the Python reference random policy."""
 
-from __future__ import annotations
+from pymab._reference.policies.random import RandomPolicy as _RandomPolicy
+from pymab.policies._native_mixin import native_policy_class
 
-import numpy as np
-
-from pymab.policies.policy import ActionValuePolicy
-
-
-class RandomPolicy(ActionValuePolicy):
-    """Select each action uniformly at random."""
-
-    def __init__(self, *, n_arms: int) -> None:
-        super().__init__(n_arms=n_arms, initial_value=0.0)
-
-    def select_action(self, *, rng: np.random.Generator) -> int:
-        return int(rng.integers(self.n_arms))
-
-    def __repr__(self) -> str:
-        return "RandomPolicy()"
-
+RandomPolicy = native_policy_class("random", _RandomPolicy, module=__name__)
 
 __all__ = ["RandomPolicy"]

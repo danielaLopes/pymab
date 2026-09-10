@@ -32,7 +32,11 @@ await cp(brandMarkSource, safeJoin(publicRoot, "pymab-mark.svg"));
 await rm(wheelBuildRoot, { recursive: true, force: true });
 await mkdir(wheelBuildRoot, { recursive: true });
 
-await execute("uv", ["build", "--wheel", "--out-dir", wheelBuildRoot], { cwd: repositoryRoot });
+await execute("python3", [
+  path.join(scriptDirectory, "package_pure_python_wheel.py"),
+  repositoryRoot,
+  wheelBuildRoot,
+]);
 const wheels = (await readdir(wheelBuildRoot)).filter((file) =>
   /^pymab-.*-py3-none-any\.whl$/.test(file),
 );

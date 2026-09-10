@@ -6,7 +6,7 @@ import numpy as np
 import pytest
 from pymab_demo.diagnostics import epsilon_decision, linucb_decision
 
-from pymab.policies import EpsilonGreedyPolicy, LinUCBPolicy
+from pymab._reference.policies import EpsilonGreedyPolicy, LinUCBPolicy
 
 
 def test_epsilon_peek_matches_policy_without_mutating_original_stream() -> None:

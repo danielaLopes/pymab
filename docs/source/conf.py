@@ -112,6 +112,12 @@ nitpick_ignore = [
     # its public intersphinx inventory under Python 3.14.
     ("py:class", "numpy._typing._array_like.NDArray"),
 ]
+nitpick_ignore_regex = [
+    # Native wrappers intentionally inherit private implementation classes;
+    # those backend-only classes are not part of the documented public API.
+    ("py:class", r"pymab\._reference\.policies\..*"),
+    ("py:class", r"pymab\.policies\._native_mixin\.NativePolicyMixin"),
+]
 
 coverage_show_missing_items = True
 

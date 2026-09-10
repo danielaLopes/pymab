@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "policy_kind": "gaussian_thompson_sampling",
+  "config": {"n_arms": 2, "prior_mean": 0.0, "prior_precision": 1.0, "reward_precision": 1.0},
+  "updates": [{"action": 0, "reward": 2.0}, {"action": 1, "reward": -1.0}],
+  "checkpoints": [{
+    "after_update": 2,
+    "state": {"step": 2, "total_reward": 1.0, "counts": [1, 1], "estimates": [1.0, -0.5], "means": [1.0, -0.5], "precisions": [2.0, 2.0]},
+    "scores": {}
+  }],
+  "recommendation": 0,
+  "reset_state": {"step": 0, "total_reward": 0.0, "counts": [0, 0], "estimates": [0.0, 0.0], "means": [0.0, 0.0], "precisions": [1.0, 1.0]},
+  "expected_error": null
+}

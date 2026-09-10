@@ -122,6 +122,7 @@ class RunProvenance:
     rng_scheme: str
     environment: Mapping[str, JSONValue]
     policies: Mapping[str, JSONValue]
+    backend: str = "python"
 
     @classmethod
     def unknown(cls, *, pymab_version: str) -> RunProvenance:
@@ -136,6 +137,7 @@ class RunProvenance:
                 Mapping[str, JSONValue], freeze_json({"class": "unknown"})
             ),
             policies=cast(Mapping[str, JSONValue], freeze_json({})),
+            backend="unknown",
         )
 
     @classmethod
@@ -145,6 +147,8 @@ class RunProvenance:
         pymab_version: str,
         environment: object,
         policies: Mapping[str, object],
+        backend: str = "python",
+        rng_scheme: str = RNG_SCHEME_VERSION,
     ) -> RunProvenance:
         """Capture immutable runtime and component configuration."""
 
@@ -152,7 +156,7 @@ class RunProvenance:
             pymab_version=pymab_version,
             python_version=platform.python_version(),
             numpy_version=np.__version__,
-            rng_scheme=RNG_SCHEME_VERSION,
+            rng_scheme=rng_scheme,
             environment=component_snapshot(environment),
             policies=cast(
                 Mapping[str, JSONValue],
@@ -164,9 +168,14 @@ class RunProvenance:
                     name="policies",
                 ),
             ),
+            backend=backend,
         )
 
     def __post_init__(self) -> None:
+        if self.backend not in {"python", "rust", "unknown"}:
+            raise ValidationError("backend must be 'python', 'rust', or 'unknown'")
+        if not self.rng_scheme:
+            raise ValidationError("rng_scheme must be a non-empty string")
         object.__setattr__(
             self,
             "environment",
@@ -188,6 +197,7 @@ class RunProvenance:
             "pymab_version": self.pymab_version,
             "python_version": self.python_version,
             "numpy_version": self.numpy_version,
+            "backend": self.backend,
             "rng_scheme": self.rng_scheme,
             "environment": thaw_json(self.environment),
             "policies": thaw_json(self.policies),

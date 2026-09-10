@@ -7,7 +7,7 @@ from pymab_demo.entrypoint import clear_sessions, dispatch
 from pymab_demo.protocol import json_safe
 from pymab_demo.scenarios import create_scenario_session
 
-from pymab.policies import LinUCBPolicy, LogisticContextualBanditPolicy
+from pymab._reference.policies import LinUCBPolicy, LogisticContextualBanditPolicy
 
 
 def recommendation_environment(

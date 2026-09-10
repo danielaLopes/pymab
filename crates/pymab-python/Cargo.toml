@@ -1,0 +1,29 @@
+[package]
+name = "pymab-python"
+version.workspace = true
+authors.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+homepage.workspace = true
+description = "Private PyO3 bindings for the PyMAB Python package."
+publish = false
+
+[lib]
+name = "_pymab"
+path = "src/lib.rs"
+crate-type = ["cdylib", "rlib"]
+doctest = false
+test = false
+
+[features]
+default = []
+extension-module = ["pyo3/extension-module"]
+
+[dependencies]
+numpy.workspace = true
+pymab = { path = "../pymab-core" }
+pyo3.workspace = true
+serde.workspace = true
+serde_json.workspace = true

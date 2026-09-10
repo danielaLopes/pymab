@@ -10,7 +10,7 @@ import numpy as np
 
 import pymab
 from pymab._random import generator
-from pymab.policies import LinUCBPolicy, LogisticContextualBanditPolicy
+from pymab._reference.policies import LinUCBPolicy, LogisticContextualBanditPolicy
 from pymab_demo.diagnostics import linucb_decision
 
 ScenarioId = Literal["recommendations", "defensive-verification"]

@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "policy_kind": "gradient_bandit",
+  "config": {"n_arms": 2, "learning_rate": 0.1, "use_baseline": true},
+  "updates": [{"action": 0, "reward": 1.0}, {"action": 1, "reward": 0.0}],
+  "checkpoints": [{
+    "after_update": 2,
+    "state": {"step": 2, "average_reward": 0.5, "preferences": [0.1, -0.1], "probabilities": [0.5, 0.5]},
+    "scores": {}
+  }],
+  "recommendation": 0,
+  "reset_state": {"step": 0, "average_reward": 0.0, "preferences": [0.0, 0.0], "probabilities": [0.5, 0.5]},
+  "expected_error": null
+}

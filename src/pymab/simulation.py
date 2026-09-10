@@ -7,7 +7,18 @@ from dataclasses import asdict, dataclass
 from numbers import Integral
 from typing import TYPE_CHECKING, cast
 
+import numpy as np
+
+from pymab import _native
+from pymab._backend import (
+    BackendCompatibilityReport,
+    BackendMode,
+    compatibility_report,
+    reference_policies,
+    run_native_experiment,
+)
 from pymab._experiment import _ExperimentRunner, _RunRequest
+from pymab._experiment_storage import _ExperimentStorage
 from pymab._random import stable_seed
 from pymab._version import __version__
 from pymab.environments import ContextualEnvironment, Environment
@@ -29,6 +40,7 @@ class ExperimentConfig:
     seed: int
     reward_coupling: str = "common"
     record_contexts: bool = False
+    backend: BackendMode = "auto"
 
     def __post_init__(self) -> None:
         object.__setattr__(
@@ -46,6 +58,8 @@ class ExperimentConfig:
             raise ValidationError("reward_coupling must be 'common' or 'independent'")
         if not isinstance(self.record_contexts, bool):
             raise TypeError("record_contexts must be a boolean")
+        if self.backend not in {"auto", "rust", "python"}:
+            raise ValidationError("backend must be 'auto', 'rust', or 'python'")
 
 
 class Experiment:
@@ -68,23 +82,65 @@ class Experiment:
     def run(self) -> SimulationResult:
         """Execute every independent replicate and return an immutable result."""
 
-        output = _ExperimentRunner(
-            environment=self.environment,
-            policies=self.policies,
-            request=_RunRequest(
+        report = self.backend_compatibility()
+        if self.config.backend == "rust" and not report.compatible:
+            raise CompatibilityError(report.message())
+        use_rust = self.config.backend == "rust" or (
+            self.config.backend == "auto" and report.compatible
+        )
+        if use_rust:
+            native_output = run_native_experiment(
+                environment=self.environment,
+                policies=self.policies,
                 horizon=self.config.horizon,
                 n_replicates=self.config.n_replicates,
                 seed=self.config.seed,
                 reward_coupling=self.config.reward_coupling,
                 record_contexts=self.config.record_contexts,
-            ),
-        ).run()
-        storage = output.storage
+            )
+            storage = _ExperimentStorage(
+                rewards=np.asarray(native_output.rewards, dtype=float),
+                actions=np.asarray(native_output.actions, dtype=np.int64),
+                expected_rewards=np.asarray(
+                    native_output.expected_rewards, dtype=float
+                ),
+                arm_means=np.asarray(native_output.arm_means, dtype=float),
+                optimal_mask=np.asarray(native_output.optimal_mask, dtype=bool),
+                recommendations=np.asarray(
+                    native_output.recommendations, dtype=np.int64
+                ),
+                contexts=(
+                    None
+                    if native_output.contexts is None
+                    else np.asarray(native_output.contexts, dtype=float)
+                ),
+            )
+            context_digest = cast(str | None, native_output.context_digest)
+            actual_backend = "rust"
+            rng_scheme = _native.rng_scheme_version() or "unknown"
+        else:
+            output = _ExperimentRunner(
+                environment=self.environment,
+                policies=reference_policies(self.policies),
+                request=_RunRequest(
+                    horizon=self.config.horizon,
+                    n_replicates=self.config.n_replicates,
+                    seed=self.config.seed,
+                    reward_coupling=self.config.reward_coupling,
+                    record_contexts=self.config.record_contexts,
+                ),
+            ).run()
+            storage = output.storage
+            context_digest = output.context_digest
+            actual_backend = "python"
+            rng_scheme = "pymab-v2-blake2b-seedsequence-v1"
         policy_ids = tuple(self.policies)
         provenance = RunProvenance.capture(
             pymab_version=__version__,
             environment=self.environment,
             policies=self.policies,
+            backend=actual_backend,
+            rng_scheme=rng_scheme,
         )
         from pymab.results import SimulationResult
 
@@ -96,7 +152,7 @@ class Experiment:
             optimal_mask=storage.optimal_mask,
             recommendations=storage.recommendations,
             contexts=storage.contexts,
-            context_digest=output.context_digest,
+            context_digest=context_digest,
             policy_ids=policy_ids,
             replicate_seeds=tuple(
                 stable_seed(self.config.seed, replicate, "replicate")
@@ -106,6 +162,15 @@ class Experiment:
             metadata=self.metadata,
             provenance=provenance,
             library_version=__version__,
+        )
+
+    def backend_compatibility(self) -> BackendCompatibilityReport:
+        """Return every reason this experiment cannot use native execution."""
+
+        return compatibility_report(
+            environment=self.environment,
+            policies=self.policies,
+            seed=self.config.seed,
         )
 
     def _validate_compatibility(self) -> None:
@@ -149,4 +214,9 @@ def _validate_policies(
     return result
 
 
-__all__ = ["Experiment", "ExperimentConfig"]
+__all__ = [
+    "BackendCompatibilityReport",
+    "BackendMode",
+    "Experiment",
+    "ExperimentConfig",
+]

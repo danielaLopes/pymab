@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "policy_kind": "discounted_ucb",
+  "config": {"n_arms": 2, "initial_value": 0.25, "c": 2.0, "reward_scale": 1.5, "discount_factor": 0.5},
+  "updates": [
+    {"action": 0, "reward": 1.0},
+    {"action": 1, "reward": 0.0},
+    {"action": 0, "reward": 3.0},
+    {"action": 1, "reward": 2.0}
+  ],
+  "checkpoints": [{
+    "after_update": 4,
+    "state": {"step": 4, "total_reward": 6.0, "counts": [2, 2], "estimates": [2.6, 1.6], "discounted_counts": [0.625, 1.25], "discounted_sums": [1.625, 2.0]},
+    "scores": {"bonuses": [2.2339784466354202, 1.5796613086404956]}
+  }],
+  "recommendation": 0,
+  "reset_state": {"step": 0, "total_reward": 0.0, "counts": [0, 0], "estimates": [0.25, 0.25], "discounted_counts": [0.0, 0.0], "discounted_sums": [0.0, 0.0]},
+  "expected_error": null
+}

@@ -5,7 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any, Literal, cast
 
-from pymab.policies import (
+from pymab._reference.policies import (
     BernoulliBayesianUCBPolicy,
     BernoulliThompsonSamplingPolicy,
     ChangePointUCBPolicy,
@@ -118,7 +118,7 @@ class PolicySpec:
     def create(
         self, parameters: dict[str, object], *, horizon: int
     ) -> Policy | ContextualPolicy:
-        """Construct the checked-out public policy class."""
+        """Construct the deterministic Python reference policy."""
 
         factory = cast(Any, self.policy_class)
         return cast(

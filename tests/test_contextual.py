@@ -7,6 +7,8 @@ from pymab.distributions import BernoulliReward, GaussianReward
 from pymab.environments import (
     BanditEnvironment,
     ContextProvider,
+    FixedContextProvider,
+    GaussianContextProvider,
     LinearContextualEnvironment,
     LogisticContextualEnvironment,
 )
@@ -40,6 +42,27 @@ def test_context_shape_forms_and_validation() -> None:
     )
     with pytest.raises(ValueError, match="finite"):
         nonfinite.context(np.random.default_rng(1))
+
+
+def test_native_compatible_context_providers_are_cloneable_and_validated() -> None:
+    fixed = FixedContextProvider(np.array([1.0, 2.0]))
+    np.testing.assert_array_equal(
+        fixed.sample(np.random.default_rng(1)),
+        [1.0, 2.0],
+    )
+    clone = fixed.clone()
+    clone.value[0] = 99.0
+    assert fixed.value[0] == 1.0
+
+    gaussian = GaussianContextProvider(n_arms=2, n_features=3, mean=1.0, std=0.0)
+    np.testing.assert_array_equal(
+        gaussian.sample(np.random.default_rng(1)),
+        np.ones((2, 3)),
+    )
+    with pytest.raises(ValueError, match="positive"):
+        GaussianContextProvider(n_arms=0, n_features=2)
+    with pytest.raises(ValueError, match="non-negative"):
+        GaussianContextProvider(n_arms=2, n_features=2, std=-1.0)
 
 
 def test_linear_environment_rejects_binary_model() -> None:

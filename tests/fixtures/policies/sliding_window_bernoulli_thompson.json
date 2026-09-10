@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "policy_kind": "sliding_window_bernoulli_thompson_sampling",
+  "config": {"n_arms": 2, "alpha_prior": 2.0, "beta_prior": 3.0, "window_size": 3},
+  "updates": [
+    {"action": 0, "reward": 1.0},
+    {"action": 1, "reward": 0.0},
+    {"action": 0, "reward": 0.0},
+    {"action": 1, "reward": 1.0}
+  ],
+  "checkpoints": [{
+    "after_update": 4,
+    "state": {"step": 4, "total_reward": 2.0, "counts": [1, 2], "estimates": [0.0, 0.5], "successes": [0, 1], "failures": [1, 1], "history_len": 3},
+    "scores": {}
+  }],
+  "recommendation": 1,
+  "reset_state": {"step": 0, "total_reward": 0.0, "counts": [0, 0], "estimates": [0.0, 0.0], "successes": [0, 0], "failures": [0, 0], "history_len": 0},
+  "expected_error": null
+}

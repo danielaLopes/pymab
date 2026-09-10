@@ -1,0 +1,18 @@
+{
+  "schema_version": 1,
+  "policy_kind": "lin_ucb",
+  "config": {"n_arms": 2, "n_features": 2, "alpha": 0.75, "l2": 1.0},
+  "updates": [
+    {"action": 0, "reward": 1.0, "context": [1.0, 2.0, 0.0, 1.0]},
+    {"action": 1, "reward": -1.0, "context": [2.0, 0.0, 1.0, -1.0]},
+    {"action": 0, "reward": 0.5, "context": [1.0, 0.0, 0.0, 2.0]}
+  ],
+  "checkpoints": [{
+    "after_update": 3,
+    "state": {"a": [3.0, 2.0, 2.0, 5.0, 2.0, -1.0, -1.0, 2.0], "b": [1.5, 2.0, -1.0, 1.0]},
+    "scores": {"context": [1.0, 0.5, -1.0, 2.0], "values": [0.8924511106363111, 2.0606601717798214]}
+  }],
+  "recommendation": {"context": [1.0, 0.5, -1.0, 2.0], "action": 1},
+  "reset_state": {"a": [1.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 1.0], "b": [0.0, 0.0, 0.0, 0.0]},
+  "expected_error": null
+}

@@ -3,15 +3,42 @@
 from __future__ import annotations
 
 from copy import deepcopy
-from typing import Any
+from typing import Any, Protocol
 
 import numpy as np
 
-from pymab.policies import EpsilonGreedyPolicy, LinUCBPolicy
+from pymab.types import FloatArray
+
+
+class EpsilonDiagnosticPolicy(Protocol):
+    """Policy state used to explain an epsilon-greedy decision."""
+
+    epsilon: float
+    estimates: FloatArray
+    counts: FloatArray
+    n_arms: int
+
+    def select_action(self, *, rng: np.random.Generator) -> int:
+        """Select an action from the supplied random stream."""
+
+
+class LinUCBDiagnosticPolicy(Protocol):
+    """Policy state used to explain a LinUCB decision."""
+
+    a: FloatArray
+    b: FloatArray
+    alpha: float
+    n_arms: int
+
+    def upper_confidence_bounds(self, context: FloatArray) -> FloatArray:
+        """Return one upper confidence bound per action."""
+
+    def select_action(self, *, context: FloatArray, rng: np.random.Generator) -> int:
+        """Select an action for the supplied context."""
 
 
 def epsilon_decision(
-    policy: EpsilonGreedyPolicy, rng: np.random.Generator
+    policy: EpsilonDiagnosticPolicy, rng: np.random.Generator
 ) -> tuple[int, dict[str, Any]]:
     """Peek at the branch without mutating the stream, then call the real policy."""
 
@@ -39,7 +66,7 @@ def epsilon_decision(
 
 
 def linucb_decision(
-    policy: LinUCBPolicy, context: np.ndarray, rng: np.random.Generator
+    policy: LinUCBDiagnosticPolicy, context: FloatArray, rng: np.random.Generator
 ) -> tuple[int, dict[str, Any]]:
     """Decompose public LinUCB scores before selecting with the real policy."""
 
