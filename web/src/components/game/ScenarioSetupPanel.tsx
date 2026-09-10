@@ -50,6 +50,19 @@ const modeLabel: Record<LessonMode, string> = {
   freePlay: "Free play",
 };
 
+const terminalModeValue: Record<LessonMode, string> = {
+  guided: "guided",
+  challenge: "challenge",
+  freePlay: "free_play",
+};
+
+const terminalParameterLabel: Record<string, string> = {
+  alpha: "exploration",
+  epsilon: "exploration",
+  learning_rate: "learning",
+  l2: "l2",
+};
+
 export function ScenarioSetupPanel({
   configuration,
   pending,
@@ -79,6 +92,43 @@ export function ScenarioSetupPanel({
       ...configuration,
       parameters: { ...configuration.parameters, [key]: value },
     });
+  const statusEntries = [
+    {
+      key: "mode",
+      label: "mode",
+      value: terminalModeValue[configuration.mode],
+      accessibleText: `Mode ${modeLabel[configuration.mode]}`,
+    },
+    ...(configuration.candidates
+      ? [
+          {
+            key: "candidates",
+            label: "candidates",
+            value: String(configuration.candidates.length),
+            accessibleText: `${configuration.candidates.length} candidates`,
+          },
+        ]
+      : []),
+    ...(configuration.featureIds
+      ? [
+          {
+            key: "signals",
+            label: "signals",
+            value: String(configuration.featureIds.length),
+            accessibleText: `${configuration.featureIds.length} signals`,
+          },
+        ]
+      : []),
+    ...definition.parameterDefinitions.map((parameter) => ({
+      key: parameter.key,
+      label: terminalParameterLabel[parameter.key] ?? parameter.key,
+      value: String(configuration.parameters[parameter.key]),
+      accessibleText: `${parameter.label} ${configuration.parameters[parameter.key]}`,
+    })),
+  ];
+  const statusLabel = `Current settings: ${statusEntries
+    .map((entry) => entry.accessibleText)
+    .join(", ")}`;
 
   return (
     <section
@@ -97,14 +147,17 @@ export function ScenarioSetupPanel({
           <h2 id="scenario-setup-title">{definition.title}</h2>
         </div>
         <span className="scenario-setup-summary">
-          <span>{modeLabel[configuration.mode]}</span>
-          {configuration.candidates && <span>{configuration.candidates.length} candidates</span>}
-          {configuration.featureIds && <span>{configuration.featureIds.length} signals</span>}
-          {definition.parameterDefinitions.map((parameter) => (
-            <span key={parameter.key}>
-              {parameter.label} {configuration.parameters[parameter.key]}
+          <span className="scenario-terminal" role="group" aria-label={statusLabel}>
+            <span className="scenario-terminal-prompt" aria-hidden="true">
+              &gt;_
             </span>
-          ))}
+            {statusEntries.map((entry) => (
+              <span className="scenario-terminal-entry" key={entry.key} aria-hidden="true">
+                <span className="scenario-terminal-key">{entry.label}:</span>{" "}
+                <span className="scenario-terminal-value">{entry.value}</span>
+              </span>
+            ))}
+          </span>
           <strong>{expanded ? "Close settings" : "Edit settings"}</strong>
           <b aria-hidden="true">{expanded ? "−" : "+"}</b>
         </span>

@@ -670,24 +670,59 @@ main {
 }
 .scenario-setup-summary {
   display: flex;
+  flex: 1 1 auto;
   align-items: center;
   justify-content: flex-end;
-  gap: 0.55rem;
+  gap: 0.7rem;
+  min-width: 0;
   color: var(--muted);
   font-size: 0.65rem;
 }
-.scenario-setup-summary > span {
-  padding: 0.28rem 0.5rem;
+.scenario-terminal {
+  display: flex;
+  min-width: 0;
+  max-width: 100%;
+  align-items: center;
+  overflow-x: auto;
+  padding: 0.5rem 0.65rem;
   border: 1px solid var(--line);
-  border-radius: 999px;
-  font-family: ui-monospace, monospace;
+  border-radius: 0.45rem;
+  background: rgba(3, 17, 21, 0.5);
+  font-family: "DM Mono", ui-monospace, monospace;
+  line-height: 1.35;
+  scrollbar-color: rgba(128, 226, 187, 0.34) transparent;
+  scrollbar-width: thin;
+  white-space: nowrap;
+}
+.scenario-terminal-prompt {
+  margin-right: 0.65rem;
+  color: var(--mint);
+  font-weight: 700;
+}
+.scenario-terminal-entry {
+  display: inline-flex;
+  align-items: baseline;
+}
+.scenario-terminal-entry:not(:last-child)::after {
+  content: "|";
+  margin: 0 0.65rem;
+  color: rgba(128, 226, 187, 0.3);
+}
+.scenario-terminal-key {
+  color: rgba(180, 200, 198, 0.68);
+}
+.scenario-terminal-value {
+  color: var(--ink);
+  font-weight: 600;
 }
 .scenario-setup-summary strong {
+  flex: 0 0 auto;
   margin-left: 0.25rem;
   color: var(--mint);
   font-size: 0.7rem;
 }
 .scenario-setup-summary b {
+  flex: 0 0 auto;
   min-width: 1rem;
   color: var(--mint);
   font-size: 1.05rem;
@@ -2210,7 +2245,7 @@ pre {
   .scenario-setup-toggle {
     align-items: flex-start;
   }
-  .scenario-setup-summary > span {
+  .scenario-terminal {
     display: none;
   }
   .scenario-matrix-editor {

@@ -35,6 +35,21 @@ function renderPanel(mode: ScenarioConfiguration["mode"]) {
 }
 
 describe("ScenarioSetupPanel", () => {
+  it("presents the current settings as a terminal status line", () => {
+    renderPanel("freePlay");
+
+    const status = screen.getByRole("group", {
+      name: /Current settings: Mode Free play, 3 candidates, 3 signals, Exploration rate 0.08/,
+    });
+
+    expect(status).toHaveTextContent(">_mode: free_play");
+    expect(status).toHaveTextContent("candidates: 3");
+    expect(status).toHaveTextContent("signals: 3");
+    expect(status).toHaveTextContent("exploration: 0.08");
+    expect(status).toHaveTextContent("learning: 0.18");
+    expect(status).toHaveTextContent("l2: 0.01");
+  });
+
   it("explains how Free Play applies its settings", () => {
     renderPanel("freePlay");
 
