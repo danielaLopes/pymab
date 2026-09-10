@@ -28,4 +28,3 @@ The recommendation scenario separates the decision that fits a contextual bandit
 ## Accessibility and responsive behavior
 
 The settings control exposes its expanded state and names the region it controls. Developer View remains collapsed by default. At narrow widths, summaries and boundary cards stack without creating page-level horizontal overflow; the history itself retains its internal horizontal scrolling.
-
