@@ -1,7 +1,11 @@
-# Validated Snapshot Heading Implementation Plan
+# Validated Snapshot Viewer Implementation Plan
 
-1. Add a dedicated class to the Full validated snapshot summary in `web/src/components/game/index.tsx`.
-2. Apply DM Mono and medium weight to that class in `web/src/styles/index.css`.
-3. Add focused regression coverage for the class if an existing inspector component test is available.
-4. Run tests, lint, type checking, formatting checks, and the production build.
-5. Refresh and inspect the combined local Pages preview.
+1. Add a focused `JsonSnapshotViewer` component under `web/src/components/game/`.
+2. Format primitive arrays compactly while preserving exact JSON values.
+3. Render safe React text nodes with syntax token classes and line numbers.
+4. Add a Copy JSON action with accessible success and failure feedback.
+5. Replace the raw snapshot `pre` element in `InspectPanel` with the new component.
+6. Add the code-viewer, scrolling, syntax, toolbar, and responsive styles to `web/src/styles/index.css`.
+7. Add unit tests for formatting, rendering, and copying.
+8. Run all unit tests, lint, type checking, formatting checks, and the production build.
+9. Refresh and visually inspect the combined local Pages preview.
