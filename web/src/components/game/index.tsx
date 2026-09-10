@@ -778,7 +778,7 @@ export function InspectPanel({
                 </p>
               )}
               <details>
-                <summary>Full validated snapshot</summary>
+                <summary className="validated-snapshot-summary">Full validated snapshot</summary>
                 <pre>{JSON.stringify(snapshot.diagnostic, null, 2)}</pre>
               </details>
               {snapshot.hiddenTruth && (

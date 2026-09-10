@@ -2049,6 +2049,10 @@ summary {
   cursor: pointer;
   color: var(--muted);
 }
+.validated-snapshot-summary {
+  font-family: "DM Mono", ui-monospace, monospace;
+  font-weight: 500;
+}
 pre {
   white-space: pre-wrap;
   overflow-wrap: anywhere;
