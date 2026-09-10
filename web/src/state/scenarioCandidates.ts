@@ -146,6 +146,26 @@ export const defaultRecommendationFeatureIds: RecommendationFeatureId[] = [
   "visit",
 ];
 
+export function recommendationContextFeatureHelp(featureId: string): string | undefined {
+  if (featureId === "base") {
+    return "Base is always 1. It gives each candidate a starting preference before the visitor signals are applied.";
+  }
+
+  if (!recommendationFeatureIds.includes(featureId as RecommendationFeatureId)) return undefined;
+  const recommendationFeatureId = featureId as RecommendationFeatureId;
+  const feature = recommendationFeatureCatalog[recommendationFeatureId];
+  if (feature.type === "binary") {
+    const negative = feature.negativeLabel ?? "Negative";
+    const positive = feature.positiveLabel ?? "Positive";
+    return `${negative.charAt(0).toUpperCase()}${negative.slice(1)} is stored as -1. ${positive.charAt(0).toUpperCase()}${positive.slice(1)} is stored as +1.`;
+  }
+
+  const unit = feature.unit && !feature.unit.startsWith("/") ? ` ${feature.unit}` : "";
+  const example =
+    recommendationFeatureId === "engagement" ? " For example, 70/100 is displayed as 0.4." : "";
+  return `The original ${feature.minimum} to ${feature.maximum}${unit} value is scaled to -1 through +1.${example}`;
+}
+
 export type RecommendationCoefficients = Partial<Record<RecommendationModelFeatureId, number>>;
 
 export interface RecommendationCandidate {

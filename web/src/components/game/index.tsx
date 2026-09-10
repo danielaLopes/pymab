@@ -9,6 +9,8 @@ import {
   policyCatalog,
   type PolicyId,
 } from "@/catalog/policies";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { recommendationContextFeatureHelp } from "@/state/scenarioCandidates";
 
 import type { LessonId, LessonSnapshot, RuntimeProgress } from "../../engine/protocol";
 import { loadPersistence, savePersistence } from "../../state/persistence";
@@ -588,40 +590,75 @@ function MatrixTable({
   value,
   rows,
   columns,
+  help,
+  columnHelp,
 }: {
   label: string;
   value: unknown;
   rows?: string[];
   columns?: string[] | undefined;
+  help?: string;
+  columnHelp?: Array<string | undefined>;
 }) {
   if (!Array.isArray(value) || !value.every((row) => Array.isArray(row))) return null;
   const matrix = value as unknown[][];
   return (
-    <table className="matrix-table">
-      <caption>{label}</caption>
-      {columns && (
-        <thead>
-          <tr>
-            <th scope="col">Action</th>
-            {columns.map((column) => (
-              <th scope="col" key={column}>
-                {column}
-              </th>
-            ))}
-          </tr>
-        </thead>
-      )}
-      <tbody>
-        {matrix.map((row, rowIndex) => (
-          <tr key={rowIndex}>
-            <th scope="row">{rows?.[rowIndex] ?? `Path ${rowIndex + 1}`}</th>
-            {row.map((cell, columnIndex) => (
-              <td key={columnIndex}>{Number(cell).toPrecision(4)}</td>
-            ))}
-          </tr>
-        ))}
-      </tbody>
-    </table>
+    <TooltipProvider>
+      <table className="matrix-table">
+        <caption>
+          <span>{label}</span>
+          {help && (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button className="matrix-help-trigger" type="button" aria-label={`About ${label}`}>
+                  i
+                </button>
+              </TooltipTrigger>
+              <TooltipContent className="matrix-help-content">{help}</TooltipContent>
+            </Tooltip>
+          )}
+        </caption>
+        {columns && (
+          <thead>
+            <tr>
+              <th scope="col">Action</th>
+              {columns.map((column, columnIndex) => (
+                <th scope="col" key={column}>
+                  {columnHelp?.[columnIndex] ? (
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <button
+                          className="matrix-column-help"
+                          type="button"
+                          aria-label={`About ${column} values`}
+                        >
+                          {column}
+                        </button>
+                      </TooltipTrigger>
+                      <TooltipContent className="matrix-help-content">
+                        {columnHelp[columnIndex]}
+                      </TooltipContent>
+                    </Tooltip>
+                  ) : (
+                    column
+                  )}
+                </th>
+              ))}
+            </tr>
+          </thead>
+        )}
+        <tbody>
+          {matrix.map((row, rowIndex) => (
+            <tr key={rowIndex}>
+              <th scope="row">{rows?.[rowIndex] ?? `Path ${rowIndex + 1}`}</th>
+              {row.map((cell, columnIndex) => (
+                <td key={columnIndex}>{Number(cell).toPrecision(4)}</td>
+              ))}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </TooltipProvider>
   );
 }
 
@@ -710,6 +747,18 @@ export function InspectPanel({
                     value={snapshot.diagnostic.contextMatrix}
                     rows={snapshot.presentation.arms.map((arm) => arm.name)}
                     columns={snapshot.presentation.contextFeatures?.map((feature) => feature.name)}
+                    {...(snapshot.scenarioId === "recommendations"
+                      ? {
+                          help: "One round is one visitor visit. Every candidate is evaluated for the same visitor, so the rows repeat. Binary signals use -1 and +1. Numeric signals are scaled between them. The next round generates a new visitor context.",
+                          ...(snapshot.presentation.contextFeatures
+                            ? {
+                                columnHelp: snapshot.presentation.contextFeatures.map((feature) =>
+                                  recommendationContextFeatureHelp(feature.id),
+                                ),
+                              }
+                            : {}),
+                        }
+                      : {})}
                   />
                   <MatrixTable
                     label="Learned coefficient estimates"

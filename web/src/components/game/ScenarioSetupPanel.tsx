@@ -161,6 +161,12 @@ export function ScenarioSetupPanel({
               {configuration.mode === "challenge" && (
                 <p className="mode-target">Keep cumulative expected regret below the target.</p>
               )}
+              {configuration.mode === "freePlay" && (
+                <p className="mode-target">
+                  Free play unlocks the random seed and simulation coefficients. The current run
+                  will not change until you start the configured run.
+                </p>
+              )}
             </div>
             {configuration.scenarioId === "recommendations" && configuration.candidates && (
               <>
@@ -267,7 +273,7 @@ export function ScenarioSetupPanel({
               disabled={pending || !Number.isSafeInteger(configuration.seed) || !candidatesValid}
               onClick={onApply}
             >
-              Start configured run
+              {configuration.mode === "freePlay" ? "Start free play run" : "Start configured run"}
             </Button>
           </div>
         </div>

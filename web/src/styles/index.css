@@ -1936,6 +1936,48 @@ main {
   color: var(--muted);
   padding: 0.4rem 0;
 }
+.matrix-table caption span {
+  vertical-align: middle;
+}
+.matrix-help-trigger,
+.matrix-column-help {
+  appearance: none;
+  border: 0;
+  color: inherit;
+  font: inherit;
+  cursor: help;
+}
+.matrix-help-trigger {
+  display: inline-grid;
+  place-items: center;
+  width: 1rem;
+  height: 1rem;
+  margin-left: 0.35rem;
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--mint);
+  font-family: ui-sans-serif, system-ui, sans-serif;
+  font-size: 0.58rem;
+  font-weight: 700;
+  vertical-align: middle;
+}
+.matrix-column-help {
+  padding: 0;
+  background: transparent;
+  border-bottom: 1px dotted currentColor;
+  text-align: inherit;
+}
+.matrix-help-trigger:focus-visible,
+.matrix-column-help:focus-visible {
+  outline: 2px solid var(--mint);
+  outline-offset: 3px;
+}
+.matrix-help-content {
+  max-width: min(22rem, calc(100vw - 2rem));
+  text-align: left;
+}
 .score-table th,
 .score-table td,
 .matrix-table th,

@@ -6,6 +6,7 @@ import {
   defaultRecommendationFeatureIds,
   generateCandidateCoefficients,
   recommendationCandidateKinds,
+  recommendationContextFeatureHelp,
   validRecommendationCandidates,
   validRecommendationFeatureIds,
 } from "./scenarioCandidates";
@@ -74,5 +75,13 @@ describe("recommendation candidates", () => {
     expect(validRecommendationFeatureIds([])).toBe(true);
     expect(validRecommendationFeatureIds(["device", "recent_activity"])).toBe(true);
     expect(validRecommendationFeatureIds(["device", "device"])).toBe(false);
+  });
+
+  it("explains binary and numeric feature encodings", () => {
+    expect(recommendationContextFeatureHelp("base")).toContain("always 1");
+    expect(recommendationContextFeatureHelp("visitor")).toBe(
+      "New is stored as -1. Returning is stored as +1.",
+    );
+    expect(recommendationContextFeatureHelp("engagement")).toContain("70/100 is displayed as 0.4");
   });
 });

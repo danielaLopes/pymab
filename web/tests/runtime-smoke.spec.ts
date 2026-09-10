@@ -354,9 +354,12 @@ test("scenario selection and free-play controls remain on the chosen route", asy
   await expect(page.getByRole("button", { name: "Advance one round" })).toBeEnabled();
   await page.getByRole("button", { name: /Run settings/ }).click();
   await page.getByRole("radio", { name: "Free play" }).click();
+  await expect(
+    page.getByText(/Free play unlocks the random seed and simulation coefficients/),
+  ).toBeVisible();
   await expect(page.getByLabel("Random seed")).toBeEditable();
   await page.getByLabel("Random seed").fill("808");
-  await page.getByRole("button", { name: "Start configured run" }).click();
+  await page.getByRole("button", { name: "Start free play run" }).click();
   await expect(page.getByRole("button", { name: /Run settings/ })).toHaveAttribute(
     "aria-expanded",
     "false",
@@ -391,7 +394,7 @@ test("recommendation candidates can be added, named, reordered and configured", 
   await page.getByRole("radio", { name: "Free play" }).click();
   await page.getByText("Simulation coefficients", { exact: true }).click();
   await page.getByLabel("Deep dive · Base").fill("0.3");
-  await page.getByRole("button", { name: "Start configured run" }).click();
+  await page.getByRole("button", { name: "Start free play run" }).click();
 
   const headers = page.getByRole("columnheader");
   await expect(headers).toHaveCount(5);
@@ -437,13 +440,23 @@ test("recommendation context signals change the policy feature count", async ({ 
   await page.getByRole("radio", { name: "Free play" }).click();
   await page.getByText("Simulation coefficients", { exact: true }).click();
   await expect(page.getByLabel("Product · Device")).toHaveValue(/-?\d/);
-  await page.getByRole("button", { name: "Start configured run" }).click();
+  await page.getByRole("button", { name: "Start free play run" }).click();
   await page.getByRole("button", { name: "Advance one round" }).click();
   await expect(page.getByRole("row", { name: /Signals:.*device.*recent activity/ })).toBeVisible();
   await page.getByRole("button", { name: /Inspect PyMAB/ }).click();
   await expect(page.locator(".metadata code").first()).toContainText("n_features=6");
   await expect(page.getByRole("columnheader", { name: "Device" }).first()).toBeVisible();
   await expect(page.getByRole("columnheader", { name: "Recent activity" }).first()).toBeVisible();
+  const matrixHelp = page.getByRole("button", { name: "About Current context matrix" });
+  await matrixHelp.hover();
+  await expect(page.getByRole("tooltip")).toContainText(
+    "Every candidate is evaluated for the same visitor, so the rows repeat",
+  );
+  await page.keyboard.press("Escape");
+  await page.getByRole("button", { name: "About Device values" }).focus();
+  await expect(page.getByRole("tooltip")).toContainText(
+    "Desktop is stored as -1. Mobile is stored as +1.",
+  );
 });
 
 test("scenario home and lesson avoid page-level overflow at 320 pixels", async ({ page }) => {
