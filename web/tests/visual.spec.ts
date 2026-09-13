@@ -57,17 +57,14 @@ test("run setup panels", async ({ page }) => {
     await page.goto(`./#/lesson/${lesson}`);
     const panel = page.getByRole("region", { name: "Configure this run" });
     await expect(panel).toBeVisible({ timeout: 30_000 });
-    await expect(panel).toHaveScreenshot(`${lesson}-run-setup.png`, screenshotOptions);
+    await expect(page).toHaveScreenshot(`${lesson}-run-setup.png`, screenshotOptions);
   }
 
   await page.goto("./#/lesson/epsilon-greedy");
   await expect(page.getByRole("radio", { name: "Free play" })).toBeEnabled({ timeout: 30_000 });
   await page.getByRole("radio", { name: "Free play" }).click();
   await expect(page.getByText("Portal reward chances")).toBeVisible();
-  await expect(page.getByRole("region", { name: "Configure this run" })).toHaveScreenshot(
-    "epsilon-free-play-run-setup.png",
-    screenshotOptions,
-  );
+  await expect(page).toHaveScreenshot("epsilon-free-play-run-setup.png", screenshotOptions);
 });
 
 test("epsilon round and inspector", async ({ page }) => {

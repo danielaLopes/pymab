@@ -125,3 +125,6 @@ linkcheck_anchors = True
 linkcheck_retries = 2
 linkcheck_timeout = 15
 linkcheck_workers = 5
+# The Arcade is assembled beside the docs by the Pages build. A standalone
+# Sphinx link check cannot resolve those sibling-site routes.
+linkcheck_ignore = [r"^\.\./demo/"]
