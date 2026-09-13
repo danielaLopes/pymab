@@ -74,15 +74,13 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v6
 
-      - name: Install uv
-        uses: astral-sh/setup-uv@11f9893b081a58869d3b5fccaea48c9e9e46f990 # v8.3.2
-        with:
-          enable-cache: true
-
       - name: Set up Python
         uses: actions/setup-python@v6
         with:
           python-version: "3.12"
+
+      - name: Install uv
+        run: python -m pip install --disable-pip-version-check "uv==0.12.13"
 
       - name: Install dependencies
         run: uv sync --frozen --dev --all-extras
@@ -97,15 +95,13 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v6
 
-      - name: Install uv
-        uses: astral-sh/setup-uv@11f9893b081a58869d3b5fccaea48c9e9e46f990 # v8.3.2
-        with:
-          enable-cache: true
-
       - name: Set up Python
         uses: actions/setup-python@v6
         with:
           python-version: "3.12"
+
+      - name: Install uv
+        run: python -m pip install --disable-pip-version-check "uv==0.12.13"
 
       - name: Install dependencies
         run: uv sync --frozen --dev --all-extras
@@ -120,15 +116,13 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v6
 
-      - name: Install uv
-        uses: astral-sh/setup-uv@11f9893b081a58869d3b5fccaea48c9e9e46f990 # v8.3.2
-        with:
-          enable-cache: true
-
       - name: Set up Python
         uses: actions/setup-python@v6
         with:
           python-version: "3.12"
+
+      - name: Install uv
+        run: python -m pip install --disable-pip-version-check "uv==0.12.13"
 
       - name: Install dependencies
         run: uv sync --frozen --dev --all-extras
@@ -145,15 +139,13 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v6
 
-      - name: Install uv
-        uses: astral-sh/setup-uv@11f9893b081a58869d3b5fccaea48c9e9e46f990 # v8.3.2
-        with:
-          enable-cache: true
-
       - name: Set up Python
         uses: actions/setup-python@v6
         with:
           python-version: "3.12"
+
+      - name: Install uv
+        run: python -m pip install --disable-pip-version-check "uv==0.12.13"
 
       - name: Install dependencies
         run: uv sync --frozen --dev --all-extras
@@ -176,16 +168,13 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v6
 
-      - name: Install uv
-        uses: astral-sh/setup-uv@11f9893b081a58869d3b5fccaea48c9e9e46f990 # v8.3.2
-        with:
-          enable-cache: true
-          cache-suffix: py${{ matrix.python-version }}
-
       - name: Set up Python
         uses: actions/setup-python@v6
         with:
           python-version: ${{ matrix.python-version }}
+
+      - name: Install uv
+        run: python -m pip install --disable-pip-version-check "uv==0.12.13"
 
       - name: Install Rust MSRV
         run: |
@@ -270,11 +259,11 @@ jobs:
         python-version: ["3.11", "3.14"]
     steps:
       - uses: actions/checkout@v6
-      - name: Install uv
-        uses: astral-sh/setup-uv@11f9893b081a58869d3b5fccaea48c9e9e46f990 # v8.3.2
       - uses: actions/setup-python@v6
         with:
           python-version: ${{ matrix.python-version }}
+      - name: Install uv
+        run: python -m pip install --disable-pip-version-check "uv==0.12.13"
       - name: Install documentation dependencies
         run: uv sync --frozen --python ${{ matrix.python-version }} --dev --extra docs
       - name: Run strict documentation gates
@@ -293,11 +282,11 @@ jobs:
     continue-on-error: true
     steps:
       - uses: actions/checkout@v6
-      - name: Install uv
-        uses: astral-sh/setup-uv@11f9893b081a58869d3b5fccaea48c9e9e46f990 # v8.3.2
       - uses: actions/setup-python@v6
         with:
           python-version: "3.12"
+      - name: Install uv
+        run: python -m pip install --disable-pip-version-check "uv==0.12.13"
       - name: Install documentation dependencies
         run: uv sync --frozen --python 3.12 --dev --extra docs
       - name: Check external links
@@ -308,11 +297,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
-      - name: Install uv
-        uses: astral-sh/setup-uv@11f9893b081a58869d3b5fccaea48c9e9e46f990 # v8.3.2
       - uses: actions/setup-python@v6
         with:
           python-version: "3.12"
+      - name: Install uv
+        run: python -m pip install --disable-pip-version-check "uv==0.12.13"
       - name: Install all optional dependencies
         run: uv sync --frozen --python 3.12 --dev --all-extras
       - name: Execute Python examples
@@ -332,15 +321,13 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Install uv
-        uses: astral-sh/setup-uv@11f9893b081a58869d3b5fccaea48c9e9e46f990 # v8.3.2
-        with:
-          enable-cache: true
-
       - name: Set up Python
         uses: actions/setup-python@v6
         with:
           python-version: "3.12"
+
+      - name: Install uv
+        run: python -m pip install --disable-pip-version-check "uv==0.12.13"
 
       - name: Install Rust MSRV
         run: |
@@ -456,10 +443,11 @@ jobs:
         working-directory: web
     steps:
       - uses: actions/checkout@v6
-      - uses: astral-sh/setup-uv@11f9893b081a58869d3b5fccaea48c9e9e46f990
       - uses: actions/setup-python@v6
         with:
           python-version: "3.12"
+      - name: Install uv
+        run: python -m pip install --disable-pip-version-check "uv==0.12.13"
       - uses: actions/setup-node@v6
         with:
           node-version: "24"
@@ -486,10 +474,11 @@ jobs:
         working-directory: web
     steps:
       - uses: actions/checkout@v6
-      - uses: astral-sh/setup-uv@11f9893b081a58869d3b5fccaea48c9e9e46f990
       - uses: actions/setup-python@v6
         with:
           python-version: "3.12"
+      - name: Install uv
+        run: python -m pip install --disable-pip-version-check "uv==0.12.13"
       - uses: actions/setup-node@v6
         with:
           node-version: "24"
@@ -508,10 +497,11 @@ jobs:
         working-directory: web
     steps:
       - uses: actions/checkout@v6
-      - uses: astral-sh/setup-uv@11f9893b081a58869d3b5fccaea48c9e9e46f990
       - uses: actions/setup-python@v6
         with:
           python-version: "3.12"
+      - name: Install uv
+        run: python -m pip install --disable-pip-version-check "uv==0.12.13"
       - uses: actions/setup-node@v6
         with:
           node-version: "24"
