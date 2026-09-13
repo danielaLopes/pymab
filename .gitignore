@@ -25,6 +25,8 @@ downloads/
 eggs/
 .eggs/
 lib/
+!web/src/lib/
+!web/src/lib/**
 lib64/
 parts/
 sdist/
@@ -170,6 +172,16 @@ dmypy.json
 
 # Cython debug symbols
 cython_debug/
+
+# PyMAB Arcade web application
+web/node_modules/
+web/dist/
+web/.generated/
+web/playwright-report/
+web/test-results/
+web/coverage/
+web/.playwright-cli/
+website/build/
 
 # PyCharm
 #  JetBrains specific template is maintained in a separate JetBrains.gitignore that can

@@ -8,6 +8,16 @@ use pymab::types::{ActionIndex, ContextShape};
 use rand::SeedableRng;
 use rand_chacha::ChaCha12Rng;
 
+#[test]
+fn extreme_uniform_interval_returns_an_error_without_panicking() {
+    let mut rng = ChaCha12Rng::seed_from_u64(1);
+    let model = UniformReward::new(1.701_336_556_918_862e308).unwrap();
+
+    let outcome = catch_unwind(AssertUnwindSafe(|| model.sample(&[0.0], &mut rng)));
+
+    assert!(matches!(outcome, Ok(Err(_))));
+}
+
 proptest! {
     #[test]
     fn malformed_public_inputs_return_errors_without_panicking(

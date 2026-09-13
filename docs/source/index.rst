@@ -5,6 +5,9 @@ PyMAB provides reliable, reproducible multi-armed bandit experiments for
 Python 3.11+. Version 2 uses stable named random streams, validated immutable
 results, paired replicate-level inference, and support-aware environments.
 
+**Learn interactively:** `Launch PyMAB Arcade <../demo/>`_ to explore all 27
+concrete policies through guided, reproducible missions.
+
 Quick start
 -----------
 
@@ -38,6 +41,7 @@ Quick start
    types
    statistics
    benchmarking
+   arcade
    decision_guide
    examples
    policy_assumptions

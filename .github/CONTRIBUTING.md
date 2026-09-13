@@ -39,6 +39,28 @@ twine check --strict dist/*
 for behavioral changes, document assumptions for statistical algorithms, and
 update the migration guide for public API changes.
 
+## Arcade development
+
+The interactive website is a separate Node.js 24 project under ``web/``. It is
+not included in the Python wheel and is deliberately absent from the Python
+``sync`` and release targets.
+
+```console
+make web-sync        # npm ci
+make web-format      # Prettier check
+make web-lint        # ESLint and TypeScript
+make web-test        # Vitest coverage
+make web-build       # local wheel + self-hosted Pyodide + Vite
+make web-e2e         # real browser/Pyodide tests
+make web-ci          # deterministic non-browser web gates
+```
+
+``npm run prepare:python -- --clean`` rebuilds the ignored runtime directory
+from scratch. If asset preparation fails, confirm that ``uv`` and Python 3 are
+on ``PATH``, run ``npm ci`` to restore the pinned Pyodide package, and delete no
+files outside ``web/.generated``. Hash mismatches are fatal by design; do not
+bypass them or commit downloaded wheels.
+
 ## Pull requests
 
 Create a focused branch from `main`, keep unrelated changes out of the commit,

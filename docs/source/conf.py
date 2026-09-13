@@ -90,9 +90,9 @@ html_theme_options = {
     "navigation_with_keys": True,
 }
 html_static_path = ["_static"]
-html_favicon = "_static/icon.png"
+html_favicon = "_static/pymab-mark.svg"
 
-html_logo = "_static/icon.png"
+html_logo = "_static/pymab-mark.svg"
 
 add_module_names = False
 python_use_unqualified_type_names = True
@@ -125,3 +125,6 @@ linkcheck_anchors = True
 linkcheck_retries = 2
 linkcheck_timeout = 15
 linkcheck_workers = 5
+# The Arcade is assembled beside the docs by the Pages build. A standalone
+# Sphinx link check cannot resolve those sibling-site routes.
+linkcheck_ignore = [r"^\.\./demo/"]

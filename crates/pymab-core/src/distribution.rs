@@ -165,6 +165,12 @@ impl RewardModel for UniformReward {
                         "mean plus or minus half_width must remain finite",
                     ));
                 }
+                if !(high - low).is_finite() {
+                    return Err(PyMabError::numerical(
+                        "uniform reward width",
+                        "the sampling interval must have a finite width",
+                    ));
+                }
                 if low >= high {
                     return Ok(mean);
                 }

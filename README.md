@@ -1,4 +1,12 @@
+<p align="center">
+  <img src="assets/pymab-lucky-lever.png" alt="PyMAB Lucky Lever slot machine" width="280">
+</p>
+
 # PyMAB
+
+[Website](https://danielalopes.github.io/pymab/) ·
+[Interactive Arcade](https://danielalopes.github.io/pymab/demo/) ·
+[Documentation](https://danielalopes.github.io/pymab/docs/)
 
 PyMAB is a typed Python library for reliable, reproducible multi-armed bandit
 experiments. Version 2 separates environment, policy, decision, and observation
@@ -109,8 +117,12 @@ assert estimate.estimate == 0.75
 ```
 
 Adaptive replay requires the logging design explicitly. Use
-``logging_scheme="uniform"`` only for uniformly randomized logs; non-uniform
+`logging_scheme="uniform"` only for uniformly randomized logs; non-uniform
 logs also require propensities and use rejection sampling.
+
+For a detailed treatment of single-slot recommendations and defensive
+verification, including fit checks, offline evaluation and rollout guardrails,
+see [Contextual bandit use cases](docs/contextual-bandit-use-cases.md).
 
 ## Probability environments
 
@@ -138,9 +150,11 @@ make test
 make docs
 make docs-linkcheck  # external network check; run separately
 make benchmark       # release-mode same-machine backend comparison
+make pages-build
+make pages-serve     # http://127.0.0.1:8080/pymab/
 ```
 
-``make docs`` performs a clean warnings-as-errors HTML build, executes Sphinx
+`make docs` performs a clean warnings-as-errors HTML build, executes Sphinx
 doctests, enforces 100% API docstring coverage, and runs every Python snippet
 in this README.
 

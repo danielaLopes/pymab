@@ -1,6 +1,7 @@
 .PHONY: audit benchmark benchmark-check benchmark-smoke check-policy-coverage check-versions ci docs docs-coverage docs-doctest docs-html docs-linkcheck \
-	docs-snippets format format-fix lint llm-security native rust-format \
-	rust-format-fix rust-lint rust-test security sync test test-ci
+	demo-test docs-snippets format format-fix lint llm-security native pages-build pages-serve \
+	rust-format rust-format-fix rust-lint rust-test security sync test test-ci text-check \
+	web-build web-ci web-e2e web-format web-lint web-sync web-test
 
 UV ?= uv
 CARGO ?= cargo
@@ -23,7 +24,7 @@ PYMAB_PREFER_VENV ?= 1
 endif
 export PYMAB_PREFER_VENV
 
-ci: rust-format rust-lint rust-test format lint security test-ci check-policy-coverage check-versions
+ci: rust-format rust-lint rust-test format lint text-check security test-ci check-policy-coverage check-versions
 
 sync:
 	@$(UV) sync --python $(PYTHON_VERSION) --dev --all-extras || { \
@@ -74,13 +75,17 @@ rust-test:
 
 lint:
 	$(RUN_TOOL) ruff check .
-	$(RUN_TOOL) mypy src/pymab
+	$(RUN_TOOL) mypy src/pymab web/python
 
 test:
 	$(RUN_TOOL) pytest --cov-fail-under=92
 
 test-ci:
 	$(RUN_TOOL) pytest --cov-fail-under=92
+
+demo-test:
+	$(RUN_TOOL) pytest -o addopts= tests/demo --cov=web/python/pymab_demo \
+		--cov-branch --cov-report=term-missing --cov-fail-under=95
 
 security:
 	$(RUN_TOOL) bandit -r src/pymab --severity-level low --confidence-level medium
@@ -98,6 +103,9 @@ audit:
 
 llm-security:
 	$(RUN_TOOL) python scripts/llm_security_review.py
+
+text-check:
+	$(RUN_TOOL) python scripts/check_published_text.py
 
 docs: docs-html docs-doctest docs-coverage docs-snippets
 
@@ -121,3 +129,29 @@ docs-snippets:
 docs-linkcheck:
 	$(RUN_TOOL) sphinx-build $(SPHINX_STRICT_FLAGS) -b linkcheck \
 		$(DOCS_SOURCE) $(DOCS_BUILD)/linkcheck
+
+web-sync:
+	cd web && npm ci
+
+web-format:
+	cd web && npm run format:check
+
+web-lint:
+	cd web && npm run lint && npm run typecheck
+
+web-test:
+	cd web && npm run test:coverage
+
+web-build:
+	cd web && npm run build
+
+web-e2e:
+	cd web && npm run e2e
+
+web-ci: web-format web-lint web-test web-build
+
+pages-build: text-check web-build docs-html
+	$(RUN_TOOL) python scripts/build_pages_site.py
+
+pages-serve: pages-build
+	$(RUN_TOOL) python scripts/serve_pages_site.py

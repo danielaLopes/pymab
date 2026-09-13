@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" role="img" aria-labelledby="title description">
+  <title id="title">PyMAB</title>
+  <desc id="description">A compact slot machine with three star reels and a lever</desc>
+
+  <path
+    fill="#04191d"
+    stroke="#021013"
+    stroke-linejoin="round"
+    stroke-width="10"
+    d="M29 89c0-30 24-54 54-54h83c30 0 54 24 54 54v83c0 30-24 54-54 54H83c-30 0-54-24-54-54z"
+  />
+  <path
+    fill="none"
+    stroke="#99e7c6"
+    stroke-linejoin="round"
+    stroke-width="10"
+    d="M42 91c0-24 19-43 43-43h79c24 0 43 19 43 43v76c0 24-19 43-43 43H85c-24 0-43-19-43-43z"
+  />
+
+  <circle cx="72" cy="70" r="6" fill="#f2c56b" />
+  <circle cx="181" cy="70" r="6" fill="#f2c56b" />
+
+  <rect x="42" y="78" width="166" height="116" rx="26" fill="#f2c56b" />
+  <rect x="53" y="89" width="144" height="94" rx="18" fill="#04191d" />
+
+  <g>
+    <rect x="60" y="96" width="39" height="80" rx="12" fill="#effcf7" />
+    <circle cx="79.5" cy="96" r="12" fill="#99e7c6" />
+    <circle cx="79.5" cy="176" r="12" fill="#99e7c6" />
+    <path fill="#f2c56b" d="m79.5 115 5.2 10.5 11.6 1.7-8.4 8.2 2 11.5-10.4-5.4-10.4 5.4 2-11.5-8.4-8.2 11.6-1.7z" />
+  </g>
+  <g>
+    <rect x="108.5" y="96" width="39" height="80" rx="12" fill="#effcf7" />
+    <circle cx="128" cy="96" r="12" fill="#99e7c6" />
+    <circle cx="128" cy="176" r="12" fill="#99e7c6" />
+    <path fill="#f2c56b" d="m128 115 5.2 10.5 11.6 1.7-8.4 8.2 2 11.5-10.4-5.4-10.4 5.4 2-11.5-8.4-8.2 11.6-1.7z" />
+  </g>
+  <g>
+    <rect x="157" y="96" width="33" height="80" rx="12" fill="#effcf7" />
+    <circle cx="173.5" cy="96" r="12" fill="#99e7c6" />
+    <circle cx="173.5" cy="176" r="12" fill="#99e7c6" />
+    <path fill="#f2c56b" d="m173.5 115 5.2 10.5 11.6 1.7-8.4 8.2 2 11.5-10.4-5.4-10.4 5.4 2-11.5-8.4-8.2 11.6-1.7z" />
+  </g>
+
+  <path d="m210 138 20-61" fill="none" stroke="#021013" stroke-linecap="round" stroke-width="26" />
+  <path d="m210 138 20-61" fill="none" stroke="#f2c56b" stroke-linecap="round" stroke-width="13" />
+  <circle cx="210" cy="139" r="21" fill="#f2c56b" stroke="#021013" stroke-width="9" />
+  <circle cx="210" cy="139" r="8" fill="#04191d" />
+  <circle cx="231" cy="72" r="18" fill="#99e7c6" stroke="#021013" stroke-width="9" />
+</svg>
