@@ -13,31 +13,40 @@ version and targeted TOML updaters for the lockfiles. Keep the
 `x-release-please-version` annotation and the members' `version.workspace = true`
 declarations in place.
 
-The workflow includes a self-disabling bootstrap safeguard. If the shared Cargo
-version has no matching `v*` tag, it passes that version to Release Please as an
-explicit override. This is needed because the source and release manifest
+The workflow includes a self-disabling bootstrap safeguard. It first runs
+`github-release` so any merged, untagged release pull request becomes a tag and
+GitHub Release. It then checks GitHub for a tag matching the shared Cargo
+version. If that tag is still absent, it passes the version to `release-pr` as
+an explicit override. This is needed because the source and release manifest
 reached 2.0.0 before a matching v2 tag existed. Once the tag exists, the
 workflow stops supplying the override and Conventional Commit versioning
-resumes normally. The `bootstrap-sha` can then be removed.
+resumes normally. Checking the remote tag after `github-release` prevents a
+second 2.0.0 proposal. Only a confirmed HTTP 404 is treated as a missing tag;
+authentication, rate-limit, and network errors stop the workflow. The
+`bootstrap-sha` can then be removed.
 
 The workflow runs the pinned Release Please CLI rather than the GitHub Action
-wrapper. Release Please Action 5.0.0 accepts the `release-as` input but does not
-forward it in manifest mode. The CLI uses the same release engine and honors
-the override. Keep the CLI path until the action wrapper has shipped and been
-verified with manifest-mode `release-as` support.
+wrapper. It invokes `github-release` before `release-pr`; the first command
+finalizes merged release pull requests, and the second maintains the next
+proposal. Release Please Action 5.0.0 accepts the `release-as` input but does
+not forward it in manifest mode. The CLI uses the same release engine and
+honors the override. Keep the CLI path until the action wrapper has shipped and
+been verified with manifest-mode `release-as` support.
 
 ## One-time repository setup
 
 1. Configure the Release Please GitHub App credentials described in
    `.github/workflows/release-please.yml`.
 2. Create protected GitHub environments named `crates-io` and `pypi`, each with
-   a required reviewer.
+   a required reviewer. Complete this before merging the first release pull
+   request so the publication jobs cannot run without an approval gate.
 3. Configure the existing PyPI `pymab` project as a trusted publisher for
    repository `danielaLopes/pymab`, workflow `release.yml`, environment `pypi`.
 4. The first crates.io publication must allocate the crate name. Create a scoped
-   crates.io token that can publish only `pymab`, store it as the environment
-   secret `CRATES_IO_TOKEN`, and leave the repository variable
-   `CRATES_IO_TRUSTED_PUBLISHING` unset.
+   crates.io token that can publish only `pymab`, store it as the `crates-io`
+   environment secret `CRATES_IO_TOKEN`, and leave the repository variable
+   `CRATES_IO_TRUSTED_PUBLISHING` unset. Never paste this token into an issue,
+   pull request, workflow input, or chat.
 5. After that first crate exists, add a crates.io trusted-publishing rule for
    repository `danielaLopes/pymab`, workflow `release.yml`, environment
    `crates-io`. Set `CRATES_IO_TRUSTED_PUBLISHING=true`, remove the GitHub secret,

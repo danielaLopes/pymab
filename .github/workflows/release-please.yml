@@ -29,26 +29,6 @@ jobs:
           fetch-depth: 0
           persist-credentials: false
 
-      - name: Determine version override
-        id: release_version
-        shell: bash
-        env:
-          REQUESTED_RELEASE: ${{ inputs.release_as }}
-        run: |
-          set -euo pipefail
-
-          release_as="${REQUESTED_RELEASE}"
-          if [[ -z "${release_as}" ]]; then
-            workspace_version="$(
-              cargo metadata --no-deps --format-version 1 |
-                jq -er '[.packages[].version] | unique | if length == 1 then .[0] else error("workspace versions differ") end'
-            )"
-            if ! git show-ref --verify --quiet "refs/tags/v${workspace_version}"; then
-              release_as="${workspace_version}"
-            fi
-          fi
-          echo "release_as=${release_as}" >> "${GITHUB_OUTPUT}"
-
       - name: Create GitHub App token
         id: app_token
         uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
@@ -64,7 +44,52 @@ jobs:
         with:
           node-version: "24"
 
-      - name: Update Cargo workspace release and changelog
+      - name: Create release for merged release pull request
+        shell: bash
+        env:
+          RELEASE_PLEASE_TOKEN: ${{ steps.app_token.outputs.token }}
+        run: |
+          set -euo pipefail
+
+          npx --yes release-please@17.6.0 github-release \
+            --token="${RELEASE_PLEASE_TOKEN}" \
+            --repo-url="${GITHUB_REPOSITORY}" \
+            --target-branch=main \
+            --config-file=release-please-config.json \
+            --manifest-file=.release-please-manifest.json
+
+      - name: Determine version override
+        id: release_version
+        shell: bash
+        env:
+          GH_TOKEN: ${{ steps.app_token.outputs.token }}
+          REQUESTED_RELEASE: ${{ inputs.release_as }}
+        run: |
+          set -euo pipefail
+
+          release_as="${REQUESTED_RELEASE}"
+          if [[ -z "${release_as}" ]]; then
+            workspace_version="$(
+              cargo metadata --no-deps --format-version 1 |
+                jq -er '[.packages[].version] | unique | if length == 1 then .[0] else error("workspace versions differ") end'
+            )"
+            if tag_lookup_output="$(
+              gh api \
+                "repos/${GITHUB_REPOSITORY}/git/ref/tags/v${workspace_version}" \
+                --jq .ref 2>&1
+            )"; then
+              echo "Found ${tag_lookup_output}; no bootstrap override is needed."
+            elif [[ "${tag_lookup_output}" == *"HTTP 404"* ]]; then
+              release_as="${workspace_version}"
+            else
+              echo "Unable to verify the remote release tag:" >&2
+              echo "${tag_lookup_output}" >&2
+              exit 1
+            fi
+          fi
+          echo "release_as=${release_as}" >> "${GITHUB_OUTPUT}"
+
+      - name: Create or update next release pull request
         shell: bash
         env:
           RELEASE_AS: ${{ steps.release_version.outputs.release_as }}
@@ -76,7 +101,7 @@ jobs:
             release-pr
             --token="${RELEASE_PLEASE_TOKEN}"
             --repo-url="${GITHUB_REPOSITORY}"
-            --target-branch="${GITHUB_REF_NAME}"
+            --target-branch=main
             --config-file=release-please-config.json
             --manifest-file=.release-please-manifest.json
           )
