@@ -20,6 +20,12 @@ reached 2.0.0 before a matching v2 tag existed. Once the tag exists, the
 workflow stops supplying the override and Conventional Commit versioning
 resumes normally. The `bootstrap-sha` can then be removed.
 
+The workflow runs the pinned Release Please CLI rather than the GitHub Action
+wrapper. Release Please Action 5.0.0 accepts the `release-as` input but does not
+forward it in manifest mode. The CLI uses the same release engine and honors
+the override. Keep the CLI path until the action wrapper has shipped and been
+verified with manifest-mode `release-as` support.
+
 ## One-time repository setup
 
 1. Configure the Release Please GitHub App credentials described in

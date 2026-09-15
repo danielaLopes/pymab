@@ -35,6 +35,13 @@ WORKSPACE_MEMBER_MANIFESTS = (
     Path("crates/pymab-core/Cargo.toml"),
     Path("crates/pymab-python/Cargo.toml"),
 )
+RELEASE_WORKFLOW = Path(".github/workflows/release-please.yml")
+REQUIRED_RELEASE_CLI_FRAGMENTS = (
+    "release-please@17.6.0",
+    "--config-file=release-please-config.json",
+    "--manifest-file=.release-please-manifest.json",
+    '--release-as="${RELEASE_AS}"',
+)
 
 
 def release_configuration_errors() -> list[str]:
@@ -77,6 +84,18 @@ def release_configuration_errors() -> list[str]:
         manifest = tomllib.loads((ROOT / relative_path).read_text(encoding="utf-8"))
         if manifest.get("package", {}).get("version") != {"workspace": True}:
             errors.append(f"{relative_path} must inherit version.workspace")
+
+    release_workflow = (ROOT / RELEASE_WORKFLOW).read_text(encoding="utf-8")
+    if "googleapis/release-please-action@" in release_workflow:
+        errors.append(
+            f"{RELEASE_WORKFLOW} must use the CLI while the action drops "
+            "release-as in manifest mode"
+        )
+    for fragment in REQUIRED_RELEASE_CLI_FRAGMENTS:
+        if fragment not in release_workflow:
+            errors.append(
+                f"{RELEASE_WORKFLOW} is missing required CLI argument: {fragment}"
+            )
 
     return errors
 
