@@ -13,6 +13,12 @@ version and targeted TOML updaters for the lockfiles. Keep the
 `x-release-please-version` annotation and the members' `version.workspace = true`
 declarations in place.
 
+The `initial-version` setting is a bootstrap safeguard for the first automated
+v2 release. The source and release manifest reached 2.0.0 before a matching v2
+tag existed, so Release Please otherwise falls back to its 1.0.0 default. Once
+v2.0.0 has been released, the setting is ignored because the tag becomes the
+release baseline. It can then be removed together with `bootstrap-sha`.
+
 ## One-time repository setup
 
 1. Configure the Release Please GitHub App credentials described in

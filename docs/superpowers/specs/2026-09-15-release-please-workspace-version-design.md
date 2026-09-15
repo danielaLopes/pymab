@@ -33,12 +33,16 @@ the release pull request.
 3. Annotate `[workspace.package].version` in `Cargo.toml` with
    `x-release-please-version`.
 4. Keep the existing lockfile JSONPath updates unchanged.
-5. Update the release documentation to explain why the generic updater is
+5. Set `initial-version` to 2.0.0 while bootstrapping because the source and
+   manifest reached 2.0.0 before a corresponding release tag existed.
+6. Update the release documentation to explain why the generic updater is
    intentional and why member crates must continue inheriting the version.
 
 ## Release data flow
 
 1. Conventional Commits determine the next semantic version.
+   Until v2.0.0 is tagged, the configured initial version prevents Release
+   Please from falling back to 1.0.0.
 2. Release Please updates `.release-please-manifest.json` and `CHANGELOG.md`.
 3. The generic updater replaces the annotated workspace version.
 4. Targeted lockfile updaters replace the matching package versions.
