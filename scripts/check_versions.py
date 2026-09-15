@@ -44,6 +44,7 @@ REQUIRED_RELEASE_CLI_FRAGMENTS = (
     "--manifest-file=.release-please-manifest.json",
     '--release-as="${RELEASE_AS}"',
     '"repos/${GITHUB_REPOSITORY}/git/ref/tags/v${workspace_version}"',
+    '[[ "${tag_lookup_output}" == *"HTTP 404"* ]]',
 )
 REQUIRED_PUBLISH_WORKFLOW_FRAGMENTS = (
     "types: [published]",

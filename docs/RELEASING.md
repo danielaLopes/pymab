@@ -21,7 +21,9 @@ an explicit override. This is needed because the source and release manifest
 reached 2.0.0 before a matching v2 tag existed. Once the tag exists, the
 workflow stops supplying the override and Conventional Commit versioning
 resumes normally. Checking the remote tag after `github-release` prevents a
-second 2.0.0 proposal. The `bootstrap-sha` can then be removed.
+second 2.0.0 proposal. Only a confirmed HTTP 404 is treated as a missing tag;
+authentication, rate-limit, and network errors stop the workflow. The
+`bootstrap-sha` can then be removed.
 
 The workflow runs the pinned Release Please CLI rather than the GitHub Action
 wrapper. It invokes `github-release` before `release-pr`; the first command

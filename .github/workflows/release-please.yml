@@ -73,10 +73,18 @@ jobs:
               cargo metadata --no-deps --format-version 1 |
                 jq -er '[.packages[].version] | unique | if length == 1 then .[0] else error("workspace versions differ") end'
             )"
-            if ! gh api \
-              "repos/${GITHUB_REPOSITORY}/git/ref/tags/v${workspace_version}" \
-              >/dev/null 2>&1; then
+            if tag_lookup_output="$(
+              gh api \
+                "repos/${GITHUB_REPOSITORY}/git/ref/tags/v${workspace_version}" \
+                --jq .ref 2>&1
+            )"; then
+              echo "Found ${tag_lookup_output}; no bootstrap override is needed."
+            elif [[ "${tag_lookup_output}" == *"HTTP 404"* ]]; then
               release_as="${workspace_version}"
+            else
+              echo "Unable to verify the remote release tag:" >&2
+              echo "${tag_lookup_output}" >&2
+              exit 1
             fi
           fi
           echo "release_as=${release_as}" >> "${GITHUB_OUTPUT}"

@@ -16,7 +16,8 @@ Use the pinned Release Please CLI for both phases in their required order:
    pull request and creates the matching tag and GitHub release.
 2. Query GitHub for the workspace version's tag after `github-release` has run.
    Only retain the existing bootstrap override if the remote tag is still
-   absent.
+   absent. Treat only an HTTP 404 as absence; fail closed on authentication,
+   rate-limit, or network errors.
 3. Run `release-pr` with that self-disabling version override. This maintains
    the next release proposal after any pending release is finalized without
    reopening a proposal for the release that was just tagged.
