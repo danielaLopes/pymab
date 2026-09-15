@@ -5,6 +5,14 @@ workspace version, lock files, changelog, and release manifest. Do not choose or
 hard-code a future version in the workflows. A matching release publishes the
 public `pymab` Rust crate and the Python package from one tag.
 
+The release configuration deliberately uses Release Please's `simple` strategy.
+The Rust strategy tries to replace a literal version in every workspace member,
+but PyMAB's members inherit the single version from `[workspace.package]`.
+Release Please therefore uses its generic updater on the annotated workspace
+version and targeted TOML updaters for the lockfiles. Keep the
+`x-release-please-version` annotation and the members' `version.workspace = true`
+declarations in place.
+
 ## One-time repository setup
 
 1. Configure the Release Please GitHub App credentials described in
