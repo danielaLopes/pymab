@@ -654,7 +654,7 @@ dependencies = [
 
 [[package]]
 name = "pymab"
-version = "2.0.0"
+version = "2.0.1"
 dependencies = [
  "blake2",
  "clap",
@@ -671,7 +671,7 @@ dependencies = [
 
 [[package]]
 name = "pymab-python"
-version = "2.0.0"
+version = "2.0.1"
 dependencies = [
  "numpy",
  "pymab",
