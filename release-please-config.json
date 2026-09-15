@@ -6,7 +6,6 @@
   "packages": {
     ".": {
       "package-name": "pymab",
-      "initial-version": "2.0.0",
       "extra-files": [
         {
           "type": "generic",

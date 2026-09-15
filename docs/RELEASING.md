@@ -13,11 +13,12 @@ version and targeted TOML updaters for the lockfiles. Keep the
 `x-release-please-version` annotation and the members' `version.workspace = true`
 declarations in place.
 
-The `initial-version` setting is a bootstrap safeguard for the first automated
-v2 release. The source and release manifest reached 2.0.0 before a matching v2
-tag existed, so Release Please otherwise falls back to its 1.0.0 default. Once
-v2.0.0 has been released, the setting is ignored because the tag becomes the
-release baseline. It can then be removed together with `bootstrap-sha`.
+The workflow includes a self-disabling bootstrap safeguard. If the shared Cargo
+version has no matching `v*` tag, it passes that version to Release Please as an
+explicit override. This is needed because the source and release manifest
+reached 2.0.0 before a matching v2 tag existed. Once the tag exists, the
+workflow stops supplying the override and Conventional Commit versioning
+resumes normally. The `bootstrap-sha` can then be removed.
 
 ## One-time repository setup
 
