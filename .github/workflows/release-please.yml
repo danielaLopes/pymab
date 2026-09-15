@@ -59,11 +59,29 @@ jobs:
           permission-issues: write
           permission-pull-requests: write
 
-      - name: Update Cargo workspace release and changelog
-        uses: googleapis/release-please-action@45996ed1f6d02564a971a2fa1b5860e934307cf7 # v5.0.0
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
         with:
-          token: ${{ steps.app_token.outputs.token }}
-          target-branch: main
-          config-file: release-please-config.json
-          manifest-file: .release-please-manifest.json
-          release-as: ${{ steps.release_version.outputs.release_as }}
+          node-version: "24"
+
+      - name: Update Cargo workspace release and changelog
+        shell: bash
+        env:
+          RELEASE_AS: ${{ steps.release_version.outputs.release_as }}
+          RELEASE_PLEASE_TOKEN: ${{ steps.app_token.outputs.token }}
+        run: |
+          set -euo pipefail
+
+          args=(
+            release-pr
+            --token="${RELEASE_PLEASE_TOKEN}"
+            --repo-url="${GITHUB_REPOSITORY}"
+            --target-branch="${GITHUB_REF_NAME}"
+            --config-file=release-please-config.json
+            --manifest-file=.release-please-manifest.json
+          )
+          if [[ -n "${RELEASE_AS}" ]]; then
+            args+=(--release-as="${RELEASE_AS}")
+          fi
+
+          npx --yes release-please@17.6.0 "${args[@]}"
