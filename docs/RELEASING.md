@@ -5,6 +5,21 @@ workspace version, lock files, changelog, and release manifest. Do not choose or
 hard-code a future version in the workflows. A matching release publishes the
 public `pymab` Rust crate and the Python package from one tag.
 
+The release configuration deliberately uses Release Please's `simple` strategy.
+The Rust strategy tries to replace a literal version in every workspace member,
+but PyMAB's members inherit the single version from `[workspace.package]`.
+Release Please therefore uses its generic updater on the annotated workspace
+version and targeted TOML updaters for the lockfiles. Keep the
+`x-release-please-version` annotation and the members' `version.workspace = true`
+declarations in place.
+
+The workflow includes a self-disabling bootstrap safeguard. If the shared Cargo
+version has no matching `v*` tag, it passes that version to Release Please as an
+explicit override. This is needed because the source and release manifest
+reached 2.0.0 before a matching v2 tag existed. Once the tag exists, the
+workflow stops supplying the override and Conventional Commit versioning
+resumes normally. The `bootstrap-sha` can then be removed.
+
 ## One-time repository setup
 
 1. Configure the Release Please GitHub App credentials described in

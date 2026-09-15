@@ -41,7 +41,11 @@ def build(repository: Path, destination: Path) -> Path:
 
     cargo = (repository / "Cargo.toml").read_text(encoding="utf-8")
     workspace_package = cargo.partition("[workspace.package]")[2].partition("[")[0]
-    version_match = re.search(r'^version = "([^"]+)"$', workspace_package, re.MULTILINE)
+    version_match = re.search(
+        r'^version\s*=\s*"([^"]+)"\s*(?:#.*)?$',
+        workspace_package,
+        re.MULTILINE,
+    )
     if version_match is None:
         raise ValueError("Cargo.toml does not define workspace.package.version")
     version = version_match.group(1)

@@ -26,6 +26,7 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v6
         with:
+          fetch-depth: 0
           persist-credentials: false
 
       - name: Determine version override
@@ -37,6 +38,15 @@ jobs:
           set -euo pipefail
 
           release_as="${REQUESTED_RELEASE}"
+          if [[ -z "${release_as}" ]]; then
+            workspace_version="$(
+              cargo metadata --no-deps --format-version 1 |
+                jq -er '[.packages[].version] | unique | if length == 1 then .[0] else error("workspace versions differ") end'
+            )"
+            if ! git show-ref --verify --quiet "refs/tags/v${workspace_version}"; then
+              release_as="${workspace_version}"
+            fi
+          fi
           echo "release_as=${release_as}" >> "${GITHUB_OUTPUT}"
 
       - name: Create GitHub App token
