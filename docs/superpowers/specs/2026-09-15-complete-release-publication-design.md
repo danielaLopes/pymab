@@ -14,8 +14,12 @@ Use the pinned Release Please CLI for both phases in their required order:
 
 1. Run `github-release` against `main`. This detects a merged, untagged release
    pull request and creates the matching tag and GitHub release.
-2. Run `release-pr` with the existing self-disabling version override. This
-   maintains the next release proposal after any pending release is finalized.
+2. Query GitHub for the workspace version's tag after `github-release` has run.
+   Only retain the existing bootstrap override if the remote tag is still
+   absent.
+3. Run `release-pr` with that self-disabling version override. This maintains
+   the next release proposal after any pending release is finalized without
+   reopening a proposal for the release that was just tagged.
 
 Both commands use the same short-lived GitHub App token and the same manifest
 configuration. The GitHub release emits the existing `release: published`
@@ -57,4 +61,3 @@ the bootstrap token.
 4. Run `release-pr --dry-run` remotely and confirm normal proposal behavior.
 5. Run `cargo publish --dry-run -p pymab --locked`.
 6. Build and verify the Python distribution without uploading it.
-

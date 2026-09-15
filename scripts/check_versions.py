@@ -36,11 +36,21 @@ WORKSPACE_MEMBER_MANIFESTS = (
     Path("crates/pymab-python/Cargo.toml"),
 )
 RELEASE_WORKFLOW = Path(".github/workflows/release-please.yml")
+PUBLISH_WORKFLOW = Path(".github/workflows/release.yml")
 REQUIRED_RELEASE_CLI_FRAGMENTS = (
-    "release-please@17.6.0",
+    "release-please@17.6.0 github-release",
+    'release-please@17.6.0 "${args[@]}"',
     "--config-file=release-please-config.json",
     "--manifest-file=.release-please-manifest.json",
     '--release-as="${RELEASE_AS}"',
+    '"repos/${GITHUB_REPOSITORY}/git/ref/tags/v${workspace_version}"',
+)
+REQUIRED_PUBLISH_WORKFLOW_FRAGMENTS = (
+    "types: [published]",
+    "cargo publish -p pymab --locked --token",
+    "name: crates-io",
+    "name: pypi",
+    "needs: [metadata, verify, registry-state, publish-crate]",
 )
 
 
@@ -85,6 +95,12 @@ def release_configuration_errors() -> list[str]:
         if manifest.get("package", {}).get("version") != {"workspace": True}:
             errors.append(f"{relative_path} must inherit version.workspace")
 
+    bindings_manifest = tomllib.loads(
+        (ROOT / "crates/pymab-python/Cargo.toml").read_text(encoding="utf-8")
+    )
+    if bindings_manifest.get("package", {}).get("publish") is not False:
+        errors.append("crates/pymab-python/Cargo.toml must set publish = false")
+
     release_workflow = (ROOT / RELEASE_WORKFLOW).read_text(encoding="utf-8")
     if "googleapis/release-please-action@" in release_workflow:
         errors.append(
@@ -95,6 +111,23 @@ def release_configuration_errors() -> list[str]:
         if fragment not in release_workflow:
             errors.append(
                 f"{RELEASE_WORKFLOW} is missing required CLI argument: {fragment}"
+            )
+    github_release_position = release_workflow.find(
+        "release-please@17.6.0 github-release"
+    )
+    release_pr_position = release_workflow.find('release-please@17.6.0 "${args[@]}"')
+    if (
+        github_release_position >= 0
+        and release_pr_position >= 0
+        and github_release_position > release_pr_position
+    ):
+        errors.append(f"{RELEASE_WORKFLOW} must run github-release before release-pr")
+
+    publish_workflow = (ROOT / PUBLISH_WORKFLOW).read_text(encoding="utf-8")
+    for fragment in REQUIRED_PUBLISH_WORKFLOW_FRAGMENTS:
+        if fragment not in publish_workflow:
+            errors.append(
+                f"{PUBLISH_WORKFLOW} is missing required publication step: {fragment}"
             )
 
     return errors
