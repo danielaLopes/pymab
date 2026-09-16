@@ -27,6 +27,16 @@
 - `SimulationResult` is no longer re-exported from `pymab.simulation`. Import it
   from `pymab.results` or the package root.
 
+## [2.0.1](https://github.com/danielaLopes/pymab/compare/v2.0.0...v2.0.1) (2026-09-16)
+
+
+### Bug Fixes
+
+* complete release publication flow ([1dbd72b](https://github.com/danielaLopes/pymab/commit/1dbd72bac1c9412e4d738c53d574031f18924472))
+* fail closed on release tag lookup ([11aaf69](https://github.com/danielaLopes/pymab/commit/11aaf6969551f8e4ea50ddeeda0f5ca957e8ba41))
+* recover failed release publication ([b130b8f](https://github.com/danielaLopes/pymab/commit/b130b8f78e9ccc2288ef5d7bd9f953aa91d91f18))
+* recover v2.0.0 registry publication ([06a64c3](https://github.com/danielaLopes/pymab/commit/06a64c32ec14dca29bd570cc7793baa9e29a8e44))
+
 ## [2.0.0](https://github.com/danielaLopes/pymab/compare/v2.0.0...v2.0.0) (2026-09-15)
 
 
