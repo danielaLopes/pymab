@@ -3,12 +3,18 @@ name: Publish matching Rust and Python releases
 on:
   release:
     types: [published]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Existing published release tag to recover, for example v2.0.0
+        required: true
+        type: string
 
 permissions:
   contents: read
 
 concurrency:
-  group: release-${{ github.event.release.tag_name }}
+  group: release-${{ github.event.release.tag_name || inputs.tag }}
   cancel-in-progress: false
 
 jobs:
@@ -16,22 +22,49 @@ jobs:
     name: Validate release metadata
     runs-on: ubuntu-latest
     outputs:
+      tag: ${{ steps.target.outputs.tag }}
       version: ${{ steps.version.outputs.version }}
     steps:
+      - name: Resolve and validate published release target
+        id: target
+        env:
+          EVENT_TAG: ${{ github.event.release.tag_name }}
+          GH_TOKEN: ${{ github.token }}
+          INPUT_TAG: ${{ inputs.tag }}
+        shell: bash
+        run: |
+          if [[ "${GITHUB_EVENT_NAME}" == "release" ]]; then
+            tag="${EVENT_TAG}"
+          else
+            tag="${INPUT_TAG}"
+          fi
+          if [[ ! "${tag}" =~ ^v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$ ]]; then
+            echo "Release tag must be a stable semantic version such as v2.0.0" >&2
+            exit 1
+          fi
+          gh api "repos/${GITHUB_REPOSITORY}/git/ref/tags/${tag}" >/dev/null
+          published="$(gh api "repos/${GITHUB_REPOSITORY}/releases/tags/${tag}" --jq '(.draft == false and .prerelease == false)')"
+          if [[ "${published}" != "true" ]]; then
+            echo "Release ${tag} is not a published stable release" >&2
+            exit 1
+          fi
+          echo "tag=${tag}" >> "${GITHUB_OUTPUT}"
       - uses: actions/checkout@v6
         with:
           persist-credentials: false
-          ref: ${{ github.event.release.tag_name }}
+          ref: ${{ steps.target.outputs.tag }}
       - uses: actions/setup-python@v6
         with:
           python-version: "3.12"
       - name: Require tag and workspace version agreement
         id: version
+        env:
+          TARGET_TAG: ${{ steps.target.outputs.tag }}
         shell: bash
         run: |
           version="$(python -c "import tomllib; print(tomllib.load(open('Cargo.toml', 'rb'))['workspace']['package']['version'])")"
-          if [[ "${GITHUB_REF_NAME#v}" != "${version}" ]]; then
-            echo "Tag ${GITHUB_REF_NAME} does not match workspace version ${version}" >&2
+          if [[ "${TARGET_TAG#v}" != "${version}" ]]; then
+            echo "Tag ${TARGET_TAG} does not match workspace version ${version}" >&2
             exit 1
           fi
           echo "version=${version}" >> "${GITHUB_OUTPUT}"
@@ -44,7 +77,7 @@ jobs:
       - uses: actions/checkout@v6
         with:
           persist-credentials: false
-          ref: ${{ github.event.release.tag_name }}
+          ref: ${{ needs.metadata.outputs.tag }}
       - name: Install Rust MSRV
         run: |
           rustup toolchain install 1.83.0 --profile minimal
@@ -66,7 +99,7 @@ jobs:
       - uses: actions/checkout@v6
         with:
           persist-credentials: false
-          ref: ${{ github.event.release.tag_name }}
+          ref: ${{ needs.metadata.outputs.tag }}
       - uses: actions/setup-python@v6
         with:
           python-version: "3.12"
@@ -115,7 +148,7 @@ jobs:
       - uses: actions/checkout@v6
         with:
           persist-credentials: false
-          ref: ${{ github.event.release.tag_name }}
+          ref: ${{ needs.metadata.outputs.tag }}
       - uses: actions/setup-python@v6
         with:
           python-version: ${{ matrix.python-version }}
@@ -147,7 +180,7 @@ jobs:
       - uses: actions/checkout@v6
         with:
           persist-credentials: false
-          ref: ${{ github.event.release.tag_name }}
+          ref: ${{ needs.metadata.outputs.tag }}
       - uses: actions/setup-python@v6
         with:
           python-version: "3.12"
@@ -176,7 +209,7 @@ jobs:
         run: |
           mkdir -p target/package/extracted
           tar -xzf "target/package/pymab-${VERSION}.crate" -C target/package/extracted
-          cargo test --manifest-path "target/package/extracted/pymab-${VERSION}/Cargo.toml"
+          cargo check --lib --manifest-path "target/package/extracted/pymab-${VERSION}/Cargo.toml"
       - name: Validate Python distribution metadata
         run: |
           python -m pip install --disable-pip-version-check twine
@@ -205,7 +238,7 @@ jobs:
       - uses: actions/checkout@v6
         with:
           persist-credentials: false
-          ref: ${{ github.event.release.tag_name }}
+          ref: ${{ needs.metadata.outputs.tag }}
       - name: Query crates.io
         id: crate
         run: >-
@@ -231,7 +264,7 @@ jobs:
       - uses: actions/checkout@v6
         with:
           persist-credentials: false
-          ref: ${{ github.event.release.tag_name }}
+          ref: ${{ needs.metadata.outputs.tag }}
       - name: Install Rust MSRV
         if: needs.registry-state.outputs.crate-exists != 'true'
         run: |
@@ -310,7 +343,7 @@ jobs:
       - uses: actions/checkout@v6
         with:
           persist-credentials: false
-          ref: ${{ github.event.release.tag_name }}
+          ref: ${{ needs.metadata.outputs.tag }}
       - uses: actions/download-artifact@018cc2cf5baa6db3ef3c5f8a56943fffe632ef53 # v6
         with:
           name: verified-python-distributions
@@ -328,7 +361,7 @@ jobs:
       - name: Upload only missing release assets
         env:
           GH_TOKEN: ${{ github.token }}
-          TAG: ${{ github.event.release.tag_name }}
+          TAG: ${{ needs.metadata.outputs.tag }}
         shell: bash
         run: |
           existing="$(gh release view "${TAG}" --json assets --jq '.assets[].name')"

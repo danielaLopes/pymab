@@ -5,6 +5,15 @@ workspace version, lock files, changelog, and release manifest. Do not choose or
 hard-code a future version in the workflows. A matching release publishes the
 public `pymab` Rust crate and the Python package from one tag.
 
+`[workspace.package].version` in `Cargo.toml` is the only human-edited version
+authority. Workspace crates inherit it, Maturin exposes it as Python package
+metadata, and the web build copies the wheel version into
+`runtime-manifest.json`. Browser tests must compare the interface with that
+generated manifest instead of embedding a release number. `Cargo.lock`,
+`uv.lock`, and `.release-please-manifest.json` are synchronized tool state, not
+additional version authorities. `scripts/check_versions.py` rejects drift
+between them.
+
 The release configuration deliberately uses Release Please's `simple` strategy.
 The Rust strategy tries to replace a literal version in every workspace member,
 but PyMAB's members inherit the single version from `[workspace.package]`.
@@ -77,8 +86,11 @@ workflow then:
    x86-64/aarch64, macOS x86-64/arm64, and Windows x86-64.
 2. Tests every wheel on a runner with the matching operating system and CPU,
    including a forced Rust-backend experiment.
-3. Inspects every archive, checks versions and matrix completeness, builds the
-   packaged crate, and validates Python distribution metadata.
+3. Inspects every archive, checks versions and matrix completeness, compiles the
+   packaged library as a Rust 1.83 downstream consumer, and validates Python
+   distribution metadata. Full tests run separately against the locked
+   workspace; the extracted library check deliberately excludes development
+   dependencies that are not shipped to consumers.
 4. Queries both registries. It skips a publication only when that exact version
    already exists, allowing safe retry after a partial release.
 5. Publishes crates.io first and waits until the version is visible. PyPI cannot
@@ -94,6 +106,19 @@ Registry artifacts are immutable and must never be overwritten. If only
 crates.io succeeded, rerun the same workflow: the exact crate version is skipped
 and the verified Python artifacts proceed. The inverse ordering is prevented by
 the workflow dependency graph.
+
+If a published GitHub release fails before registry publication, run
+`Publish matching Rust and Python releases` manually and provide its existing
+stable tag, such as `v2.0.0`. The workflow confirms that the tag and published
+GitHub release exist, checks out that tag, and requires the tag to match the
+workspace version before it builds or publishes anything. Do not create a new
+tag for this recovery.
+
+GitHub associates a manually dispatched run with the branch from which it was
+started. The `crates-io` and `pypi` environments must therefore allow `main` as
+well as protected `v*` tags. The workflow still publishes only validated,
+existing release tags. Keep the required `crates-io` environment approval in
+place, especially while it holds the one-time bootstrap token.
 
 For a defective release, yank the affected crate version with `cargo yank` and
 yank the PyPI release through its project administration page. Publish a new

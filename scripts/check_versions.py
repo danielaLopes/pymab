@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 import importlib.metadata
 import json
+import re
 import tomllib
 from collections.abc import Sequence
 from pathlib import Path
@@ -37,6 +38,7 @@ WORKSPACE_MEMBER_MANIFESTS = (
 )
 RELEASE_WORKFLOW = Path(".github/workflows/release-please.yml")
 PUBLISH_WORKFLOW = Path(".github/workflows/release.yml")
+WEB_RUNTIME_SMOKE = Path("web/tests/runtime-smoke.spec.ts")
 REQUIRED_RELEASE_CLI_FRAGMENTS = (
     "release-please@17.6.0 github-release",
     'release-please@17.6.0 "${args[@]}"',
@@ -48,6 +50,11 @@ REQUIRED_RELEASE_CLI_FRAGMENTS = (
 )
 REQUIRED_PUBLISH_WORKFLOW_FRAGMENTS = (
     "types: [published]",
+    "workflow_dispatch:",
+    "tag: ${{ steps.target.outputs.tag }}",
+    "ref: ${{ needs.metadata.outputs.tag }}",
+    'gh api "repos/${GITHUB_REPOSITORY}/releases/tags/${tag}"',
+    "cargo check --lib --manifest-path",
     "cargo publish -p pymab --locked --token",
     "name: crates-io",
     "name: pypi",
@@ -130,6 +137,19 @@ def release_configuration_errors() -> list[str]:
             errors.append(
                 f"{PUBLISH_WORKFLOW} is missing required publication step: {fragment}"
             )
+    if "ref: ${{ github.event.release.tag_name }}" in publish_workflow:
+        errors.append(
+            f"{PUBLISH_WORKFLOW} must use the validated metadata tag for checkouts"
+        )
+
+    browser_test = (ROOT / WEB_RUNTIME_SMOKE).read_text(encoding="utf-8")
+    if re.search(r"[\"']v?\d+\.\d+\.\d+[\"']", browser_test):
+        errors.append(
+            f"{WEB_RUNTIME_SMOKE} must not contain a hard-coded release version"
+        )
+    for fragment in ("runtime-manifest.json", "pymabVersion"):
+        if fragment not in browser_test:
+            errors.append(f"{WEB_RUNTIME_SMOKE} must compare the UI with {fragment}")
 
     return errors
 
