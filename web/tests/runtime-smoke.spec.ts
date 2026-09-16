@@ -35,13 +35,19 @@ test("every policy route renders the shared history board", async ({ page, brows
 
 test("real PyMAB wheel completes a seeded epsilon decision", async ({ page }) => {
   await page.goto("./#/lesson/epsilon-greedy");
+  const runtimeManifest = (await page.evaluate(async () => {
+    const response = await fetch(new URL("runtime-manifest.json", document.baseURI));
+    if (!response.ok) throw new Error("Could not load runtime-manifest.json");
+    return response.json();
+  })) as { pymabVersion: string };
+  expect(runtimeManifest.pymabVersion).toMatch(/^\d+\.\d+\.\d+$/);
   const advance = page.getByRole("button", { name: "Advance one round" });
   await expect(advance).toBeEnabled({ timeout: 30_000 });
   await advance.click();
   await expect(page.getByText("Round 1: Relic found")).toBeVisible();
   await expect(page.getByRole("cell", { name: /Round 1, Star Path, chosen/ })).toBeVisible();
   await page.getByRole("button", { name: /Inspect PyMAB/ }).click();
-  await expect(page.getByText("2.0.0", { exact: true })).toBeVisible();
+  await expect(page.getByText(runtimeManifest.pymabVersion, { exact: true })).toBeVisible();
   const results = await new AxeBuilder({ page }).analyze();
   expect(results.violations).toEqual([]);
 });
