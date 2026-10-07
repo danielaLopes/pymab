@@ -100,8 +100,24 @@ def release_configuration_errors() -> list[str]:
 
     for relative_path in WORKSPACE_MEMBER_MANIFESTS:
         manifest = tomllib.loads((ROOT / relative_path).read_text(encoding="utf-8"))
-        if manifest.get("package", {}).get("version") != {"workspace": True}:
+        package = manifest.get("package", {})
+        if package.get("version") != {"workspace": True}:
             errors.append(f"{relative_path} must inherit version.workspace")
+        if package.get("name") == "pymab":
+            keywords = package.get("keywords", [])
+            if (
+                not isinstance(keywords, list)
+                or len(keywords) > 5
+                or any(
+                    not isinstance(keyword, str)
+                    or re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_+-]{0,19}", keyword) is None
+                    for keyword in keywords
+                )
+            ):
+                errors.append(
+                    f"{relative_path} keywords must meet crates.io rules: "
+                    "at most five ASCII keywords of up to 20 valid characters"
+                )
 
     bindings_manifest = tomllib.loads(
         (ROOT / "crates/pymab-python/Cargo.toml").read_text(encoding="utf-8")
