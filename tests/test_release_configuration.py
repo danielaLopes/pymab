@@ -9,6 +9,28 @@ def test_release_configuration_is_synchronized() -> None:
     assert check_versions.release_configuration_errors() == []
 
 
+def test_release_configuration_rejects_invalid_crate_keyword(
+    monkeypatch: MonkeyPatch, tmp_path: Path
+) -> None:
+    manifest = tmp_path / "Cargo.toml"
+    current = (
+        check_versions.ROOT / check_versions.WORKSPACE_MEMBER_MANIFESTS[0]
+    ).read_text(encoding="utf-8")
+    manifest.write_text(
+        current.replace('"reinforcement"', '"reinforcement-learning"', 1),
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(
+        check_versions,
+        "WORKSPACE_MEMBER_MANIFESTS",
+        (manifest, check_versions.WORKSPACE_MEMBER_MANIFESTS[1]),
+    )
+
+    errors = check_versions.release_configuration_errors()
+
+    assert any("keywords must meet crates.io rules" in error for error in errors)
+
+
 def test_release_configuration_rejects_hard_coded_browser_version(
     monkeypatch: MonkeyPatch, tmp_path: Path
 ) -> None:

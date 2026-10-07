@@ -8,7 +8,7 @@ license.workspace = true
 repository.workspace = true
 homepage.workspace = true
 description = "Reliable, reproducible multi-armed bandit policies and experiments."
-keywords = ["bandits", "reinforcement-learning", "experimentation"]
+keywords = ["bandits", "reinforcement", "experimentation"]
 categories = ["algorithms", "science"]
 
 [lib]
